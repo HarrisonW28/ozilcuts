@@ -272,6 +272,50 @@ export type BarberPortfolioResponse = {
   };
 };
 
+export type CustomerNote = {
+  id: number;
+  customer_user_id: number;
+  author_user_id: number;
+  body: string;
+  pinned: boolean;
+  created_at: string | null;
+  updated_at: string | null;
+  author?: {
+    id: number;
+    name: string;
+  } | null;
+};
+
+export type CreateCustomerNoteInput = {
+  body: string;
+  pinned?: boolean;
+};
+
+export type UpdateCustomerNoteInput = {
+  body?: string;
+  pinned?: boolean;
+};
+
+export type CustomerTag = {
+  id: number;
+  customer_user_id: number;
+  label: string;
+  created_by_user_id: number;
+  created_at: string | null;
+};
+
+export type CustomerNotesResponse = {
+  data: CustomerNote[];
+};
+
+export type CustomerTagsResponse = {
+  data: CustomerTag[];
+};
+
+export type CustomerTagSuggestionsResponse = {
+  data: string[];
+};
+
 export type ApiHealthResponse = {
   status: "ok";
 };

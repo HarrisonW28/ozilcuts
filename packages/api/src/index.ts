@@ -29,6 +29,16 @@ export {
   rescheduleAppointment,
 } from "./booking";
 export {
+  attachCustomerTag,
+  createCustomerNote,
+  deleteCustomerNote,
+  detachCustomerTag,
+  fetchCustomerNotes,
+  fetchCustomerTagSuggestions,
+  fetchCustomerTags,
+  updateCustomerNote,
+} from "./customerNotesTags";
+export {
   fetchCustomerProfile,
   updateCustomerProfile,
 } from "./customerProfile";
