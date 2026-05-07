@@ -6,6 +6,7 @@ use Database\Factories\AppointmentFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Appointment extends Model
 {
@@ -82,5 +83,13 @@ class Appointment extends Model
     public function customer(): BelongsTo
     {
         return $this->belongsTo(User::class, 'customer_user_id');
+    }
+
+    /**
+     * @return HasMany<HaircutPhoto, $this>
+     */
+    public function haircutPhotos(): HasMany
+    {
+        return $this->hasMany(HaircutPhoto::class)->orderBy('kind')->orderBy('id');
     }
 }

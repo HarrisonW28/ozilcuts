@@ -3,6 +3,8 @@
 use App\Http\Controllers\Api\V1\AppointmentCalendarController;
 use App\Http\Controllers\Api\V1\AppointmentCalendarLinkController;
 use App\Http\Controllers\Api\V1\AppointmentCancelController;
+use App\Http\Controllers\Api\V1\AppointmentHaircutPhotoIndexController;
+use App\Http\Controllers\Api\V1\AppointmentHaircutPhotoStoreController;
 use App\Http\Controllers\Api\V1\AppointmentHairProfileShowController;
 use App\Http\Controllers\Api\V1\AppointmentIndexController;
 use App\Http\Controllers\Api\V1\AppointmentPaymentIntentController;
@@ -21,11 +23,15 @@ use App\Http\Controllers\Api\V1\BarberIndexController;
 use App\Http\Controllers\Api\V1\BarberManageIndexController;
 use App\Http\Controllers\Api\V1\BarberManageStoreController;
 use App\Http\Controllers\Api\V1\BarberManageUpdateController;
+use App\Http\Controllers\Api\V1\BarberPortfolioController;
 use App\Http\Controllers\Api\V1\BarberShowController;
 use App\Http\Controllers\Api\V1\BarberSlotsController;
 use App\Http\Controllers\Api\V1\CurrentUserController;
 use App\Http\Controllers\Api\V1\CustomerProfileShowController;
 use App\Http\Controllers\Api\V1\CustomerProfileUpdateController;
+use App\Http\Controllers\Api\V1\HaircutPhotoDestroyController;
+use App\Http\Controllers\Api\V1\HaircutPhotoShowController;
+use App\Http\Controllers\Api\V1\HaircutPhotoUpdateController;
 use App\Http\Controllers\Api\V1\HairProfilePhotoDestroyController;
 use App\Http\Controllers\Api\V1\HairProfilePhotoShowController;
 use App\Http\Controllers\Api\V1\HairProfilePhotoStoreController;
@@ -58,6 +64,8 @@ Route::get('/barbers/{user}/availability', BarberAvailabilityPublicController::c
     ->middleware('throttle:60,1');
 Route::get('/barbers/{user}/slots', BarberSlotsController::class)
     ->middleware('throttle:60,1');
+Route::get('/barbers/{user}/portfolio', BarberPortfolioController::class)
+    ->middleware('throttle:60,1');
 
 Route::post('/auth/register', RegisterController::class)
     ->middleware('throttle:10,1');
@@ -76,6 +84,10 @@ Route::get('/appointments/{appointment}/calendar.ics', AppointmentCalendarContro
 Route::get('/hair-profile-photos/{photo}', HairProfilePhotoShowController::class)
     ->middleware(['signed', 'throttle:60,1'])
     ->name('hair-profile-photos.show');
+
+Route::get('/haircut-photos/{photo}', HaircutPhotoShowController::class)
+    ->middleware(['signed', 'throttle:60,1'])
+    ->name('haircut-photos.show');
 
 Route::middleware('auth:sanctum')->group(function (): void {
     Route::get('/user', CurrentUserController::class);
@@ -117,6 +129,14 @@ Route::middleware('auth:sanctum')->group(function (): void {
         ->middleware('throttle:30,1');
     Route::get('/appointments/{appointment}/hair-profile', AppointmentHairProfileShowController::class)
         ->middleware('throttle:60,1');
+    Route::get('/appointments/{appointment}/haircut-photos', AppointmentHaircutPhotoIndexController::class)
+        ->middleware('throttle:60,1');
+    Route::post('/appointments/{appointment}/haircut-photos', AppointmentHaircutPhotoStoreController::class)
+        ->middleware('throttle:30,1');
+    Route::patch('/haircut-photos/{photo}', HaircutPhotoUpdateController::class)
+        ->middleware('throttle:30,1');
+    Route::delete('/haircut-photos/{photo}', HaircutPhotoDestroyController::class)
+        ->middleware('throttle:30,1');
     Route::patch('/appointments/{appointment}/cancel', AppointmentCancelController::class)
         ->middleware('throttle:30,1');
     Route::patch('/appointments/{appointment}/reschedule', AppointmentRescheduleController::class)
