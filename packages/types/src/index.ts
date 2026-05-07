@@ -234,6 +234,20 @@ export type PaymentConfig = {
   currency: string;
 };
 
+export type AppointmentCalendarLink = {
+  url: string;
+  expires_in_seconds: number;
+};
+
+export type AppointmentPendingPayment = {
+  enabled: boolean;
+  currency: string;
+  publishable_key: string | null;
+  client_secret: string | null;
+  payment_status: AppointmentPaymentStatus | null;
+  deposit_cents: number;
+};
+
 export type CreateAppointmentInput = {
   service_id: number;
   barber_user_id: number;

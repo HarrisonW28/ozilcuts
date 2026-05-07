@@ -1,5 +1,7 @@
 import type {
+  AppointmentCalendarLink,
   AppointmentListFilters,
+  AppointmentPendingPayment,
   AppointmentRecord,
   BarberSlotsPayload,
   CreateAppointmentInput,
@@ -169,4 +171,42 @@ export async function rescheduleAppointment(
   }
 
   return payload as AppointmentRecord;
+}
+
+export async function fetchAppointmentCalendarLink(
+  token: string,
+  appointmentId: number,
+): Promise<AppointmentCalendarLink> {
+  const res = await fetch(
+    `${getApiBaseUrl()}/api/v1/appointments/${appointmentId}/calendar-url`,
+    {
+      headers: authJsonHeaders(token),
+      cache: "no-store",
+    },
+  );
+  if (!res.ok) {
+    const payload = await res.json().catch(() => ({}));
+    throw new ApiError("Failed to load calendar link", res.status, payload);
+  }
+
+  return res.json() as Promise<AppointmentCalendarLink>;
+}
+
+export async function fetchAppointmentPaymentIntent(
+  token: string,
+  appointmentId: number,
+): Promise<AppointmentPendingPayment> {
+  const res = await fetch(
+    `${getApiBaseUrl()}/api/v1/appointments/${appointmentId}/payment-intent`,
+    {
+      headers: authJsonHeaders(token),
+      cache: "no-store",
+    },
+  );
+  if (!res.ok) {
+    const payload = await res.json().catch(() => ({}));
+    throw new ApiError("Failed to load payment intent", res.status, payload);
+  }
+
+  return res.json() as Promise<AppointmentPendingPayment>;
 }

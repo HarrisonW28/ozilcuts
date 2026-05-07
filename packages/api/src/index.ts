@@ -22,6 +22,8 @@ export {
   cancelAppointment,
   createAppointment,
   fetchAppointment,
+  fetchAppointmentCalendarLink,
+  fetchAppointmentPaymentIntent,
   fetchBarberSlots,
   fetchMyAppointments,
   rescheduleAppointment,
