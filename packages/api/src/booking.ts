@@ -1,9 +1,11 @@
 import type {
+  AppointmentListFilters,
   AppointmentRecord,
   BarberSlotsPayload,
   CreateAppointmentInput,
   LaravelValidationPayload,
   Paginated,
+  RescheduleAppointmentInput,
 } from "@ozilcuts/types";
 
 import { ApiError, ApiValidationError } from "./auth";
@@ -17,15 +19,27 @@ function authJsonHeaders(token: string): HeadersInit {
   };
 }
 
+export type FetchBarberSlotsOptions = {
+  /** When set, the server treats the given appointment as if it didn't exist. */
+  excludeAppointmentId?: number;
+};
+
 export async function fetchBarberSlots(
   userId: number,
   serviceId: number,
   /** YYYY-MM-DD */
   date: string,
+  options: FetchBarberSlotsOptions = {},
 ): Promise<BarberSlotsPayload> {
   const url = new URL(`${getApiBaseUrl()}/api/v1/barbers/${userId}/slots`);
   url.searchParams.set("service_id", String(serviceId));
   url.searchParams.set("date", date);
+  if (options.excludeAppointmentId !== undefined) {
+    url.searchParams.set(
+      "exclude_appointment_id",
+      String(options.excludeAppointmentId),
+    );
+  }
   const res = await fetch(url.toString(), {
     headers: { Accept: "application/json" },
     cache: "no-store",
@@ -65,10 +79,16 @@ export async function createAppointment(
 
 export async function fetchMyAppointments(
   token: string,
-  page = 1,
+  filters: AppointmentListFilters = {},
 ): Promise<Paginated<AppointmentRecord>> {
   const url = new URL(`${getApiBaseUrl()}/api/v1/appointments`);
-  url.searchParams.set("page", String(page));
+  url.searchParams.set("page", String(filters.page ?? 1));
+  if (filters.status && filters.status !== "all") {
+    url.searchParams.set("status", filters.status);
+  }
+  if (filters.range && filters.range !== "all") {
+    url.searchParams.set("range", filters.range);
+  }
   const res = await fetch(url.toString(), {
     headers: authJsonHeaders(token),
     cache: "no-store",
@@ -79,4 +99,73 @@ export async function fetchMyAppointments(
   }
 
   return res.json() as Promise<Paginated<AppointmentRecord>>;
+}
+
+export async function fetchAppointment(
+  token: string,
+  appointmentId: number,
+): Promise<AppointmentRecord> {
+  const res = await fetch(
+    `${getApiBaseUrl()}/api/v1/appointments/${appointmentId}`,
+    {
+      headers: authJsonHeaders(token),
+      cache: "no-store",
+    },
+  );
+  if (!res.ok) {
+    const payload = await res.json().catch(() => ({}));
+    throw new ApiError("Failed to load appointment", res.status, payload);
+  }
+
+  return res.json() as Promise<AppointmentRecord>;
+}
+
+export async function cancelAppointment(
+  token: string,
+  appointmentId: number,
+): Promise<AppointmentRecord> {
+  const res = await fetch(
+    `${getApiBaseUrl()}/api/v1/appointments/${appointmentId}/cancel`,
+    {
+      method: "PATCH",
+      headers: authJsonHeaders(token),
+    },
+  );
+  const payload = (await res.json().catch(() => ({}))) as
+    | AppointmentRecord
+    | LaravelValidationPayload;
+  if (!res.ok) {
+    throw new ApiError("Failed to cancel appointment", res.status, payload);
+  }
+
+  return payload as AppointmentRecord;
+}
+
+export async function rescheduleAppointment(
+  token: string,
+  appointmentId: number,
+  body: RescheduleAppointmentInput,
+): Promise<AppointmentRecord> {
+  const res = await fetch(
+    `${getApiBaseUrl()}/api/v1/appointments/${appointmentId}/reschedule`,
+    {
+      method: "PATCH",
+      headers: authJsonHeaders(token),
+      body: JSON.stringify(body),
+    },
+  );
+  const payload = (await res.json().catch(() => ({}))) as
+    | AppointmentRecord
+    | LaravelValidationPayload;
+  if (!res.ok) {
+    if (res.status === 422) {
+      throw new ApiValidationError(
+        res.status,
+        payload as LaravelValidationPayload,
+      );
+    }
+    throw new ApiError("Failed to reschedule appointment", res.status, payload);
+  }
+
+  return payload as AppointmentRecord;
 }

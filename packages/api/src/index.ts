@@ -19,9 +19,12 @@ export {
 } from "./barberAvailability";
 export { fetchBarber, fetchBarbers } from "./barbers";
 export {
+  cancelAppointment,
   createAppointment,
+  fetchAppointment,
   fetchBarberSlots,
   fetchMyAppointments,
+  rescheduleAppointment,
 } from "./booking";
 export {
   createManagedBarber,

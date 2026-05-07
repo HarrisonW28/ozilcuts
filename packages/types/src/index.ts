@@ -206,3 +206,18 @@ export type CreateAppointmentInput = {
   starts_at: string;
   notes?: string | null;
 };
+
+export type RescheduleAppointmentInput = {
+  /** ISO 8601 (e.g. `2026-05-11T09:00:00`). */
+  starts_at: string;
+};
+
+export type AppointmentStatusFilter = "all" | "confirmed" | "cancelled";
+
+export type AppointmentRangeFilter = "all" | "upcoming" | "past";
+
+export type AppointmentListFilters = {
+  status?: AppointmentStatusFilter;
+  range?: AppointmentRangeFilter;
+  page?: number;
+};
