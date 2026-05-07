@@ -1,6 +1,12 @@
 "use client";
 
 import { SiteHeader } from "@/components/site-header";
+import { WeekAvailabilityCalendar } from "@/components/week-availability-calendar";
+import {
+  buildWeekDaysFromAvailability,
+  formatWeekRangeLabel,
+  startOfWeekSunday,
+} from "@/lib/calendar-week";
 import { useSessionProfile } from "@/lib/use-session-profile";
 import { ApiError, fetchBarber, fetchBarberAvailability } from "@ozilcuts/api";
 import { Button, Card, CardContent, CardHeader, CardTitle } from "@ozilcuts/ui";
@@ -12,7 +18,7 @@ import { BARBER_WEEKDAY_LABELS } from "@ozilcuts/types";
 import { motion, useReducedMotion } from "framer-motion";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 type DetailState =
   | { kind: "loading" }
@@ -91,6 +97,17 @@ export default function BarberDetailPage() {
     load(() => false);
   }, [load]);
 
+  const publicWeekStart = useMemo(() => startOfWeekSunday(new Date()), []);
+  const publicWeekLabel = formatWeekRangeLabel(publicWeekStart);
+  const publicCalendarDays = useMemo(
+    () =>
+      buildWeekDaysFromAvailability(
+        publicWeekStart,
+        state.kind === "ok" ? state.availability : null,
+      ),
+    [publicWeekStart, state],
+  );
+
   const motionInitial = reduceMotion
     ? { opacity: 1, y: 0 }
     : { opacity: 0, y: 8 };
@@ -106,7 +123,7 @@ export default function BarberDetailPage() {
           initial={motionInitial}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.35, ease: "easeOut" }}
-          className="mx-auto w-full max-w-2xl"
+          className="mx-auto w-full max-w-4xl"
         >
           {state.kind === "loading" ? (
             <p
@@ -206,6 +223,19 @@ export default function BarberDetailPage() {
                       Hours are not published yet for this barber.
                     </p>
                   )}
+                  {state.availability &&
+                  state.availability.weekdays.length > 0 ? (
+                    <div className="mt-6">
+                      <h3 className="mb-3 text-sm font-semibold text-foreground">
+                        This week
+                      </h3>
+                      <WeekAvailabilityCalendar
+                        weekLabel={publicWeekLabel}
+                        days={publicCalendarDays}
+                        className="rounded-lg border border-border/40 bg-muted/10 p-3 sm:p-4"
+                      />
+                    </div>
+                  ) : null}
                 </div>
               </CardContent>
             </Card>
