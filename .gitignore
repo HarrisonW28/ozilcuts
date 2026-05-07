@@ -1,0 +1,45 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build / caches
+.next/
+out/
+dist/
+build/
+.turbo
+*.tsbuildinfo
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# IDE / OS
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# Debug / logs
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# PHP / Laravel (apps/backend)
+apps/backend/vendor/
+apps/backend/.env
+apps/backend/.env.backup
+apps/backend/.phpunit.result.cache
+apps/backend/storage/*.key
+apps/backend/storage/logs/*
+!apps/backend/storage/logs/.gitignore
+apps/backend/bootstrap/cache/*
+!apps/backend/bootstrap/cache/.gitignore
+apps/backend/public/hot
+apps/backend/public/storage
+
+# Testing
+coverage/
