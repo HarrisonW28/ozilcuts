@@ -88,7 +88,7 @@ export default function ServicesPage() {
             className="mb-8"
             eyebrow={OZILCUTS_APP_NAME}
             title="Services & pricing"
-            description="Transparent durations and prices—pick what fits, then book when scheduling goes live."
+            description="Transparent durations and prices—pick what fits, then book your time."
           />
 
           {state.kind === "loading" ? (
@@ -158,8 +158,12 @@ export default function ServicesPage() {
                         </div>
                       </dl>
                     </CardContent>
-                    <CardFooter className="text-xs text-muted-foreground">
-                      Booking opens in a later sprint.
+                    <CardFooter className="flex justify-end">
+                      <Button asChild size="sm">
+                        <Link href={`/book?service_id=${svc.id}`}>
+                          Book this
+                        </Link>
+                      </Button>
                     </CardFooter>
                   </Card>
                 </li>
