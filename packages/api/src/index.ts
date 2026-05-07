@@ -12,6 +12,11 @@ export {
   registerUser,
 } from "./auth";
 export { getApiBaseUrl } from "./base";
+export {
+  fetchBarberAvailability,
+  fetchManageBarberAvailability,
+  replaceManageBarberAvailability,
+} from "./barberAvailability";
 export { fetchBarber, fetchBarbers } from "./barbers";
 export {
   createManagedBarber,

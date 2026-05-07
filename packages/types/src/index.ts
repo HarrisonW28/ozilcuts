@@ -22,6 +22,37 @@ export type BarberProfilePublic = {
   barber: BarberPublicRef;
 };
 
+/** 0 = Sunday … 6 = Saturday (matches PHP `date('w')`) */
+export const BARBER_WEEKDAY_LABELS = [
+  "Sunday",
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+] as const;
+
+export type BarberAvailabilityTimeWindow = {
+  starts_at: string;
+  ends_at: string;
+};
+
+export type BarberAvailabilityDay = {
+  weekday: number;
+  windows: BarberAvailabilityTimeWindow[];
+};
+
+export type BarberAvailabilityPayload = {
+  weekdays: BarberAvailabilityDay[];
+};
+
+export type BarberAvailabilityWindowInput = {
+  weekday: number;
+  starts_at: string;
+  ends_at: string;
+};
+
 export type BarberManageRow = {
   id: number;
   title: string | null;
