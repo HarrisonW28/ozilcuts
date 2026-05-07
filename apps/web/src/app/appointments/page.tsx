@@ -3,8 +3,17 @@
 import { SiteHeader } from "@/components/site-header";
 import { getStoredAuthToken } from "@/lib/auth-token";
 import { useSessionProfile } from "@/lib/use-session-profile";
-import { ApiError, fetchMyAppointments } from "@ozilcuts/api";
-import type { AppointmentRecord, Paginated } from "@ozilcuts/types";
+import {
+  ApiError,
+  cancelAppointment,
+  fetchMyAppointments,
+} from "@ozilcuts/api";
+import type {
+  AppointmentRangeFilter,
+  AppointmentRecord,
+  AppointmentStatusFilter,
+  Paginated,
+} from "@ozilcuts/types";
 import { OZILCUTS_APP_NAME } from "@ozilcuts/types";
 import {
   Button,
@@ -15,6 +24,7 @@ import {
   CardHeader,
   CardTitle,
   ScreenTitle,
+  cn,
 } from "@ozilcuts/ui";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
@@ -24,6 +34,21 @@ type ListState =
   | { kind: "loading" }
   | { kind: "ok"; page: Paginated<AppointmentRecord> }
   | { kind: "error"; message: string };
+
+const RANGE_OPTIONS: Array<{ value: AppointmentRangeFilter; label: string }> = [
+  { value: "upcoming", label: "Upcoming" },
+  { value: "past", label: "Past" },
+  { value: "all", label: "All" },
+];
+
+const STATUS_OPTIONS: Array<{
+  value: AppointmentStatusFilter;
+  label: string;
+}> = [
+  { value: "confirmed", label: "Confirmed" },
+  { value: "cancelled", label: "Cancelled" },
+  { value: "all", label: "Any status" },
+];
 
 function formatStart(iso: string | null): string {
   if (!iso) return "—";
@@ -38,37 +63,109 @@ function formatStart(iso: string | null): string {
   });
 }
 
+function isPast(iso: string | null): boolean {
+  if (!iso) return false;
+  const d = new Date(iso);
+  return !Number.isNaN(d.getTime()) && d.getTime() < Date.now();
+}
+
+function StatusBadge({ status }: { status: AppointmentRecord["status"] }) {
+  const styles =
+    status === "confirmed"
+      ? "border border-primary/30 bg-primary/10 text-primary"
+      : "border border-destructive/30 bg-destructive/10 text-destructive";
+
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium uppercase tracking-wide",
+        styles,
+      )}
+    >
+      {status}
+    </span>
+  );
+}
+
 export default function AppointmentsPage() {
   const { profile, signOut } = useSessionProfile();
   const [state, setState] = useState<ListState>({ kind: "idle" });
   const [page, setPage] = useState(1);
+  const [range, setRange] = useState<AppointmentRangeFilter>("upcoming");
+  const [status, setStatus] = useState<AppointmentStatusFilter>("confirmed");
+  const [actionBusyId, setActionBusyId] = useState<number | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
 
-  const load = useCallback(async (p: number) => {
-    const token = getStoredAuthToken();
-    if (!token) {
-      setState({ kind: "error", message: "Sign in required." });
+  const load = useCallback(
+    async (
+      p: number,
+      r: AppointmentRangeFilter,
+      s: AppointmentStatusFilter,
+    ) => {
+      const token = getStoredAuthToken();
+      if (!token) {
+        setState({ kind: "error", message: "Sign in required." });
 
-      return;
-    }
-    setState({ kind: "loading" });
-    try {
-      const data = await fetchMyAppointments(token, p);
-      setState({ kind: "ok", page: data });
-    } catch (e: unknown) {
-      const message =
-        e instanceof ApiError
-          ? e.message
-          : e instanceof Error
+        return;
+      }
+      setState({ kind: "loading" });
+      try {
+        const data = await fetchMyAppointments(token, {
+          page: p,
+          range: r,
+          status: s,
+        });
+        setState({ kind: "ok", page: data });
+      } catch (e: unknown) {
+        const message =
+          e instanceof ApiError
             ? e.message
-            : "Failed to load appointments.";
-      setState({ kind: "error", message });
-    }
-  }, []);
+            : e instanceof Error
+              ? e.message
+              : "Failed to load appointments.";
+        setState({ kind: "error", message });
+      }
+    },
+    [],
+  );
 
   useEffect(() => {
     if (profile.kind !== "ready") return;
-    void load(page);
-  }, [profile, page, load]);
+    void load(page, range, status);
+  }, [profile, page, range, status, load]);
+
+  function changeRange(next: AppointmentRangeFilter) {
+    setRange(next);
+    setPage(1);
+  }
+
+  function changeStatus(next: AppointmentStatusFilter) {
+    setStatus(next);
+    setPage(1);
+  }
+
+  async function onCancel(row: AppointmentRecord) {
+    const ok = window.confirm(
+      `Cancel ${row.service?.name ?? "this appointment"} on ${formatStart(row.starts_at)}?`,
+    );
+    if (!ok) return;
+    const token = getStoredAuthToken();
+    if (!token) return;
+    setActionBusyId(row.id);
+    setActionError(null);
+    try {
+      await cancelAppointment(token, row.id);
+      await load(page, range, status);
+    } catch (err) {
+      setActionError(
+        err instanceof ApiError
+          ? err.message
+          : "Could not cancel. Please try again.",
+      );
+    } finally {
+      setActionBusyId(null);
+    }
+  }
 
   return (
     <div className="flex min-h-dvh flex-1 flex-col">
@@ -111,6 +208,72 @@ export default function AppointmentsPage() {
 
           {profile.kind === "ready" ? (
             <>
+              <div
+                className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between"
+                aria-label="Appointment filters"
+              >
+                <div
+                  role="radiogroup"
+                  aria-label="Time range"
+                  className="flex flex-wrap gap-2"
+                >
+                  {RANGE_OPTIONS.map((opt) => {
+                    const checked = range === opt.value;
+
+                    return (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        role="radio"
+                        aria-checked={checked}
+                        onClick={() => changeRange(opt.value)}
+                        className={cn(
+                          "min-h-11 rounded-md border px-3 text-sm sm:min-h-9",
+                          checked
+                            ? "border-primary bg-primary text-primary-foreground"
+                            : "border-border bg-background text-foreground hover:bg-muted/60",
+                        )}
+                      >
+                        {opt.label}
+                      </button>
+                    );
+                  })}
+                </div>
+                <div
+                  role="radiogroup"
+                  aria-label="Status"
+                  className="flex flex-wrap gap-2"
+                >
+                  {STATUS_OPTIONS.map((opt) => {
+                    const checked = status === opt.value;
+
+                    return (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        role="radio"
+                        aria-checked={checked}
+                        onClick={() => changeStatus(opt.value)}
+                        className={cn(
+                          "min-h-11 rounded-md border px-3 text-sm sm:min-h-9",
+                          checked
+                            ? "border-primary bg-primary text-primary-foreground"
+                            : "border-border bg-background text-foreground hover:bg-muted/60",
+                        )}
+                      >
+                        {opt.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {actionError ? (
+                <p className="text-sm text-destructive" role="alert">
+                  {actionError}
+                </p>
+              ) : null}
+
               {state.kind === "loading" || state.kind === "idle" ? (
                 <p className="text-sm text-muted-foreground" role="status">
                   Loading list…
@@ -124,7 +287,7 @@ export default function AppointmentsPage() {
                     variant="secondary"
                     size="sm"
                     className="self-start"
-                    onClick={() => void load(page)}
+                    onClick={() => void load(page, range, status)}
                   >
                     Retry
                   </Button>
@@ -133,9 +296,9 @@ export default function AppointmentsPage() {
               {state.kind === "ok" && state.page.data.length === 0 ? (
                 <Card>
                   <CardHeader>
-                    <CardTitle>Nothing booked yet</CardTitle>
+                    <CardTitle>Nothing here</CardTitle>
                     <CardDescription>
-                      Book your first appointment to see it listed here.
+                      No appointments match these filters.
                     </CardDescription>
                   </CardHeader>
                   <CardFooter>
@@ -147,52 +310,90 @@ export default function AppointmentsPage() {
               ) : null}
               {state.kind === "ok" && state.page.data.length > 0 ? (
                 <ul className="flex flex-col gap-4">
-                  {state.page.data.map((row) => (
-                    <li key={row.id}>
-                      <Card>
-                        <CardHeader className="pb-2">
-                          <CardTitle className="text-base">
-                            {row.service?.name ?? "Service"}
-                          </CardTitle>
-                          <CardDescription>
-                            {formatStart(row.starts_at)}
-                          </CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-2 text-sm text-muted-foreground">
-                          {row.barber ? (
-                            <p>
-                              <span className="font-medium text-foreground">
-                                Barber:{" "}
-                              </span>
-                              {row.barber.name}
-                            </p>
-                          ) : null}
-                          {row.customer ? (
-                            <p>
-                              <span className="font-medium text-foreground">
-                                Customer:{" "}
-                              </span>
-                              {row.customer.name}
-                            </p>
-                          ) : null}
-                          <p>
-                            <span className="font-medium text-foreground">
-                              Status:{" "}
-                            </span>
-                            {row.status}
-                          </p>
-                          {row.notes ? (
-                            <p className="whitespace-pre-wrap">
-                              <span className="font-medium text-foreground">
-                                Notes:{" "}
-                              </span>
-                              {row.notes}
-                            </p>
-                          ) : null}
-                        </CardContent>
-                      </Card>
-                    </li>
-                  ))}
+                  {state.page.data.map((row) => {
+                    const past = isPast(row.starts_at);
+                    const canMutate =
+                      row.status === "confirmed" &&
+                      !past &&
+                      profile.kind === "ready";
+                    const isBusy = actionBusyId === row.id;
+
+                    return (
+                      <li key={row.id}>
+                        <Card>
+                          <CardHeader className="pb-2">
+                            <div className="flex flex-wrap items-start justify-between gap-2">
+                              <div>
+                                <CardTitle className="text-base">
+                                  {row.service?.name ?? "Service"}
+                                </CardTitle>
+                                <CardDescription>
+                                  {formatStart(row.starts_at)}
+                                </CardDescription>
+                              </div>
+                              <StatusBadge status={row.status} />
+                            </div>
+                          </CardHeader>
+                          <CardContent className="space-y-2 text-sm text-muted-foreground">
+                            {row.barber ? (
+                              <p>
+                                <span className="font-medium text-foreground">
+                                  Barber:{" "}
+                                </span>
+                                {row.barber.name}
+                              </p>
+                            ) : null}
+                            {row.customer ? (
+                              <p>
+                                <span className="font-medium text-foreground">
+                                  Customer:{" "}
+                                </span>
+                                {row.customer.name}
+                              </p>
+                            ) : null}
+                            {row.notes ? (
+                              <p className="whitespace-pre-wrap">
+                                <span className="font-medium text-foreground">
+                                  Notes:{" "}
+                                </span>
+                                {row.notes}
+                              </p>
+                            ) : null}
+                          </CardContent>
+                          <CardFooter className="flex flex-wrap gap-2">
+                            {canMutate ? (
+                              <>
+                                <Button asChild size="sm" variant="secondary">
+                                  <Link
+                                    href={`/appointments/${row.id}/reschedule`}
+                                  >
+                                    Reschedule
+                                  </Link>
+                                </Button>
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant="destructive"
+                                  disabled={isBusy}
+                                  onClick={() => void onCancel(row)}
+                                >
+                                  {isBusy ? "Cancelling…" : "Cancel"}
+                                </Button>
+                              </>
+                            ) : (
+                              <p className="text-xs text-muted-foreground">
+                                {row.status === "cancelled"
+                                  ? "Cancelled — contact us if you'd like to rebook."
+                                  : past
+                                    ? "Past appointments are read-only."
+                                    : "Read-only."}
+                              </p>
+                            )}
+                          </CardFooter>
+                        </Card>
+                      </li>
+                    );
+                  })}
                 </ul>
               ) : null}
               {state.kind === "ok" && state.page.meta.last_page > 1 ? (
