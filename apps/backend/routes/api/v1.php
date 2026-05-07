@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\V1\AppointmentHaircutPhotoStoreController;
 use App\Http\Controllers\Api\V1\AppointmentHairProfileShowController;
 use App\Http\Controllers\Api\V1\AppointmentIndexController;
 use App\Http\Controllers\Api\V1\AppointmentPaymentIntentController;
+use App\Http\Controllers\Api\V1\AppointmentRebookHintController;
 use App\Http\Controllers\Api\V1\AppointmentRescheduleController;
 use App\Http\Controllers\Api\V1\AppointmentShowController;
 use App\Http\Controllers\Api\V1\AppointmentStoreController;
@@ -27,6 +28,7 @@ use App\Http\Controllers\Api\V1\BarberPortfolioController;
 use App\Http\Controllers\Api\V1\BarberShowController;
 use App\Http\Controllers\Api\V1\BarberSlotsController;
 use App\Http\Controllers\Api\V1\CurrentUserController;
+use App\Http\Controllers\Api\V1\CustomerNextVisitController;
 use App\Http\Controllers\Api\V1\CustomerNoteDestroyController;
 use App\Http\Controllers\Api\V1\CustomerNoteIndexController;
 use App\Http\Controllers\Api\V1\CustomerNoteStoreController;
@@ -103,6 +105,8 @@ Route::middleware('auth:sanctum')->group(function (): void {
     Route::get('/customer/profile', CustomerProfileShowController::class);
     Route::patch('/customer/profile', CustomerProfileUpdateController::class)
         ->middleware('throttle:30,1');
+    Route::get('/customer/next-visit', CustomerNextVisitController::class)
+        ->middleware('throttle:60,1');
     Route::get('/customer/hair-profile', HairProfileShowController::class);
     Route::patch('/customer/hair-profile', HairProfileUpdateController::class)
         ->middleware('throttle:30,1');
@@ -135,6 +139,8 @@ Route::middleware('auth:sanctum')->group(function (): void {
         ->middleware('throttle:30,1');
     Route::get('/appointments/{appointment}/payment-intent', AppointmentPaymentIntentController::class)
         ->middleware('throttle:30,1');
+    Route::get('/appointments/{appointment}/rebook-hint', AppointmentRebookHintController::class)
+        ->middleware('throttle:60,1');
     Route::get('/appointments/{appointment}/hair-profile', AppointmentHairProfileShowController::class)
         ->middleware('throttle:60,1');
     Route::get('/customers/{user}/notes', CustomerNoteIndexController::class);
