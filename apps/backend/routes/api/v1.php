@@ -27,8 +27,16 @@ use App\Http\Controllers\Api\V1\BarberPortfolioController;
 use App\Http\Controllers\Api\V1\BarberShowController;
 use App\Http\Controllers\Api\V1\BarberSlotsController;
 use App\Http\Controllers\Api\V1\CurrentUserController;
+use App\Http\Controllers\Api\V1\CustomerNoteDestroyController;
+use App\Http\Controllers\Api\V1\CustomerNoteIndexController;
+use App\Http\Controllers\Api\V1\CustomerNoteStoreController;
+use App\Http\Controllers\Api\V1\CustomerNoteUpdateController;
 use App\Http\Controllers\Api\V1\CustomerProfileShowController;
 use App\Http\Controllers\Api\V1\CustomerProfileUpdateController;
+use App\Http\Controllers\Api\V1\CustomerTagDestroyController;
+use App\Http\Controllers\Api\V1\CustomerTagIndexController;
+use App\Http\Controllers\Api\V1\CustomerTagStoreController;
+use App\Http\Controllers\Api\V1\CustomerTagSuggestionsController;
 use App\Http\Controllers\Api\V1\HaircutPhotoDestroyController;
 use App\Http\Controllers\Api\V1\HaircutPhotoShowController;
 use App\Http\Controllers\Api\V1\HaircutPhotoUpdateController;
@@ -129,6 +137,19 @@ Route::middleware('auth:sanctum')->group(function (): void {
         ->middleware('throttle:30,1');
     Route::get('/appointments/{appointment}/hair-profile', AppointmentHairProfileShowController::class)
         ->middleware('throttle:60,1');
+    Route::get('/customers/{user}/notes', CustomerNoteIndexController::class);
+    Route::post('/customers/{user}/notes', CustomerNoteStoreController::class)
+        ->middleware('throttle:60,1');
+    Route::patch('/customer-notes/{note}', CustomerNoteUpdateController::class)
+        ->middleware('throttle:60,1');
+    Route::delete('/customer-notes/{note}', CustomerNoteDestroyController::class)
+        ->middleware('throttle:60,1');
+    Route::get('/customers/{user}/tags', CustomerTagIndexController::class);
+    Route::post('/customers/{user}/tags', CustomerTagStoreController::class)
+        ->middleware('throttle:60,1');
+    Route::delete('/customer-tags/{tag}', CustomerTagDestroyController::class)
+        ->middleware('throttle:60,1');
+    Route::get('/customer-tags/suggestions', CustomerTagSuggestionsController::class);
     Route::get('/appointments/{appointment}/haircut-photos', AppointmentHaircutPhotoIndexController::class)
         ->middleware('throttle:60,1');
     Route::post('/appointments/{appointment}/haircut-photos', AppointmentHaircutPhotoStoreController::class)
