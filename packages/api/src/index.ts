@@ -18,6 +18,12 @@ export {
   fetchManageBarbers,
   updateManagedBarberProfile,
 } from "./manageBarbers";
+export {
+  createManagedService,
+  deleteManagedService,
+  fetchManageServices,
+  updateManagedService,
+} from "./manageServices";
 export { fetchServices } from "./services";
 
 export async function fetchApiHealth(): Promise<ApiHealthResponse> {

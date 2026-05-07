@@ -36,6 +36,38 @@ export type BarberManageRow = {
   updated_at: string | null;
 };
 
+export type ServiceManageRow = {
+  id: number;
+  name: string;
+  slug: string;
+  description: string | null;
+  duration_minutes: number;
+  price_cents: number;
+  sort_order: number;
+  is_active: boolean;
+  updated_at: string | null;
+};
+
+export type CreateServiceInput = {
+  name: string;
+  slug?: string | null;
+  description?: string | null;
+  duration_minutes: number;
+  price_cents: number;
+  sort_order?: number;
+  is_active?: boolean;
+};
+
+export type UpdateServiceInput = {
+  name?: string;
+  slug?: string | null;
+  description?: string | null;
+  duration_minutes?: number;
+  price_cents?: number;
+  sort_order?: number;
+  is_active?: boolean;
+};
+
 export type LaravelPaginationLinks = {
   first: string | null;
   last: string | null;
