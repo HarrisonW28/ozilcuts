@@ -1,5 +1,6 @@
 "use client";
 
+import { CustomerNotesTagsSection } from "@/components/customer-notes-tags-section";
 import { DepositPayment } from "@/components/deposit-payment";
 import { HaircutPhotosSection } from "@/components/haircut-photos-section";
 import { SiteHeader } from "@/components/site-header";
@@ -530,6 +531,14 @@ export default function ConfirmationPage() {
             <HaircutPhotosSection
               appointmentId={appointment.id}
               viewerRole={isStaff ? "staff" : "customer"}
+            />
+          ) : null}
+
+          {isReady && appointment && isStaff && appointment.customer ? (
+            <CustomerNotesTagsSection
+              customerUserId={appointment.customer.id}
+              currentUserId={profile.user.id}
+              isAdmin={profile.user.role.slug === "admin"}
             />
           ) : null}
 
