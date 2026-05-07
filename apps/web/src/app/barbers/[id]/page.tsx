@@ -2,9 +2,13 @@
 
 import { SiteHeader } from "@/components/site-header";
 import { useSessionProfile } from "@/lib/use-session-profile";
-import { ApiError, fetchBarber } from "@ozilcuts/api";
+import { ApiError, fetchBarber, fetchBarberAvailability } from "@ozilcuts/api";
 import { Button, Card, CardContent, CardHeader, CardTitle } from "@ozilcuts/ui";
-import type { BarberProfilePublic } from "@ozilcuts/types";
+import type {
+  BarberAvailabilityPayload,
+  BarberProfilePublic,
+} from "@ozilcuts/types";
+import { BARBER_WEEKDAY_LABELS } from "@ozilcuts/types";
 import { motion, useReducedMotion } from "framer-motion";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -12,7 +16,11 @@ import { useCallback, useEffect, useState } from "react";
 
 type DetailState =
   | { kind: "loading" }
-  | { kind: "ok"; profile: BarberProfilePublic }
+  | {
+      kind: "ok";
+      profile: BarberProfilePublic;
+      availability: BarberAvailabilityPayload | null;
+    }
   | { kind: "error"; message: string; notFound?: boolean };
 
 export default function BarberDetailPage() {
@@ -40,10 +48,13 @@ export default function BarberDetailPage() {
         return;
       }
       setState({ kind: "loading" });
-      fetchBarber(userId)
-        .then((row) => {
+      Promise.all([
+        fetchBarber(userId),
+        fetchBarberAvailability(userId).catch(() => null),
+      ])
+        .then(([row, availability]) => {
           if (isCancelled()) return;
-          setState({ kind: "ok", profile: row });
+          setState({ kind: "ok", profile: row, availability });
         })
         .catch((err: unknown) => {
           if (isCancelled()) return;
@@ -166,6 +177,36 @@ export default function BarberDetailPage() {
                     No bio yet for this barber.
                   </p>
                 )}
+                <div className="border-t border-border/60 pt-4">
+                  <h3 className="text-sm font-semibold text-foreground">
+                    Availability
+                  </h3>
+                  {state.availability && state.availability.weekdays.length > 0 ? (
+                    <ul className="mt-3 space-y-3 text-sm text-muted-foreground">
+                      {state.availability.weekdays.map((day) => (
+                        <li key={day.weekday}>
+                          <span className="font-medium text-foreground">
+                            {BARBER_WEEKDAY_LABELS[day.weekday] ??
+                              `Day ${day.weekday}`}
+                          </span>
+                          <ul className="mt-1 list-inside list-disc">
+                            {day.windows.map((w) => (
+                              <li
+                                key={`${day.weekday}-${w.starts_at}-${w.ends_at}`}
+                              >
+                                {w.starts_at} – {w.ends_at}
+                              </li>
+                            ))}
+                          </ul>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="mt-2 text-sm text-muted-foreground">
+                      Hours are not published yet for this barber.
+                    </p>
+                  )}
+                </div>
               </CardContent>
             </Card>
           ) : null}

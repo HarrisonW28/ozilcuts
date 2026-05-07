@@ -34,6 +34,14 @@ export function SiteHeader({ profile, onSignOut }: SiteHeaderProps) {
           >
             Barbers
           </Link>
+          {profile.kind === "ready" && profile.user.role.slug === "barber" ? (
+            <Link
+              href="/barber/hours"
+              className="inline-flex min-h-11 items-center rounded-md px-2 py-2 text-muted-foreground underline-offset-4 transition-colors hover:bg-muted/60 hover:text-foreground hover:underline active:bg-muted/80 sm:min-h-0 sm:py-1.5"
+            >
+              Hours
+            </Link>
+          ) : null}
           {profile.kind === "ready" && profile.user.role.slug === "admin" ? (
             <>
               <Link
