@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Api\V1\AppointmentIndexController;
+use App\Http\Controllers\Api\V1\AppointmentStoreController;
 use App\Http\Controllers\Api\V1\Auth\GoogleOAuthCallbackController;
 use App\Http\Controllers\Api\V1\Auth\GoogleOAuthRedirectController;
 use App\Http\Controllers\Api\V1\Auth\LoginController;
@@ -13,6 +15,7 @@ use App\Http\Controllers\Api\V1\BarberManageIndexController;
 use App\Http\Controllers\Api\V1\BarberManageStoreController;
 use App\Http\Controllers\Api\V1\BarberManageUpdateController;
 use App\Http\Controllers\Api\V1\BarberShowController;
+use App\Http\Controllers\Api\V1\BarberSlotsController;
 use App\Http\Controllers\Api\V1\CurrentUserController;
 use App\Http\Controllers\Api\V1\HealthController;
 use App\Http\Controllers\Api\V1\ServiceIndexController;
@@ -32,6 +35,8 @@ Route::get('/barbers', BarberIndexController::class)
 Route::get('/barbers/{user}', BarberShowController::class)
     ->middleware('throttle:60,1');
 Route::get('/barbers/{user}/availability', BarberAvailabilityPublicController::class)
+    ->middleware('throttle:60,1');
+Route::get('/barbers/{user}/slots', BarberSlotsController::class)
     ->middleware('throttle:60,1');
 
 Route::post('/auth/register', RegisterController::class)
@@ -64,4 +69,7 @@ Route::middleware('auth:sanctum')->group(function (): void {
         ->middleware('throttle:30,1');
     Route::delete('/manage/services/{service}', ServiceManageDestroyController::class)
         ->middleware('throttle:30,1');
+    Route::get('/appointments', AppointmentIndexController::class);
+    Route::post('/appointments', AppointmentStoreController::class)
+        ->middleware('throttle:20,1');
 });
