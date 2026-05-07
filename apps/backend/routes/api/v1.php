@@ -1,7 +1,10 @@
 <?php
 
+use App\Http\Controllers\Api\V1\AppointmentCalendarController;
+use App\Http\Controllers\Api\V1\AppointmentCalendarLinkController;
 use App\Http\Controllers\Api\V1\AppointmentCancelController;
 use App\Http\Controllers\Api\V1\AppointmentIndexController;
+use App\Http\Controllers\Api\V1\AppointmentPaymentIntentController;
 use App\Http\Controllers\Api\V1\AppointmentRescheduleController;
 use App\Http\Controllers\Api\V1\AppointmentShowController;
 use App\Http\Controllers\Api\V1\AppointmentStoreController;
@@ -58,6 +61,10 @@ Route::get('/auth/google/redirect', GoogleOAuthRedirectController::class)
 Route::get('/auth/google/callback', GoogleOAuthCallbackController::class)
     ->middleware('throttle:20,1');
 
+Route::get('/appointments/{appointment}/calendar.ics', AppointmentCalendarController::class)
+    ->middleware(['signed', 'throttle:60,1'])
+    ->name('appointments.calendar');
+
 Route::middleware('auth:sanctum')->group(function (): void {
     Route::get('/user', CurrentUserController::class);
     Route::post('/auth/logout', LogoutController::class);
@@ -82,6 +89,10 @@ Route::middleware('auth:sanctum')->group(function (): void {
     Route::post('/appointments', AppointmentStoreController::class)
         ->middleware('throttle:20,1');
     Route::get('/appointments/{appointment}', AppointmentShowController::class);
+    Route::get('/appointments/{appointment}/calendar-url', AppointmentCalendarLinkController::class)
+        ->middleware('throttle:30,1');
+    Route::get('/appointments/{appointment}/payment-intent', AppointmentPaymentIntentController::class)
+        ->middleware('throttle:30,1');
     Route::patch('/appointments/{appointment}/cancel', AppointmentCancelController::class)
         ->middleware('throttle:30,1');
     Route::patch('/appointments/{appointment}/reschedule', AppointmentRescheduleController::class)
