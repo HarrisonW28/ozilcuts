@@ -414,6 +414,13 @@ export default function AppointmentsPage() {
                             ) : null}
                           </CardContent>
                           <CardFooter className="flex flex-wrap gap-2">
+                            <Button asChild size="sm" variant="outline">
+                              <Link
+                                href={`/appointments/${row.id}/confirmation`}
+                              >
+                                View
+                              </Link>
+                            </Button>
                             {canMutate ? (
                               <>
                                 <Button asChild size="sm" variant="secondary">

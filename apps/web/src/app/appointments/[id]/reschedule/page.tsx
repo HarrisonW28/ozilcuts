@@ -179,10 +179,13 @@ export default function ReschedulePage() {
     setSubmitBusy(true);
     setSubmitError(null);
     try {
-      await rescheduleAppointment(token, appointment.id, {
+      const updated = await rescheduleAppointment(token, appointment.id, {
         starts_at: selectedSlot,
       });
-      router.push("/appointments");
+      router.push(
+        `/appointments/${updated.id}/confirmation?just_rescheduled=1`,
+      );
+      return;
     } catch (err) {
       if (err instanceof ApiValidationError) {
         setSubmitError(err.firstMessage() ?? "Validation failed.");

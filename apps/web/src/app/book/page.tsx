@@ -1,6 +1,5 @@
 "use client";
 
-import { DepositPayment } from "@/components/deposit-payment";
 import { SiteHeader } from "@/components/site-header";
 import { getStoredAuthToken } from "@/lib/auth-token";
 import { useSessionProfile } from "@/lib/use-session-profile";
@@ -14,7 +13,6 @@ import {
 } from "@ozilcuts/api";
 import type {
   BarberProfilePublic,
-  CreateAppointmentResponse,
   ServiceSummary,
 } from "@ozilcuts/types";
 import { OZILCUTS_APP_NAME } from "@ozilcuts/types";
@@ -30,7 +28,7 @@ import {
   ScreenTitle,
 } from "@ozilcuts/ui";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 
 function formatUsd(cents: number): string {
@@ -67,6 +65,7 @@ type SlotsState =
 
 function BookingFlow() {
   const search = useSearchParams();
+  const router = useRouter();
   const initialServiceId = (() => {
     const raw = search.get("service_id");
     const n = raw ? Number.parseInt(raw, 10) : NaN;
@@ -84,9 +83,6 @@ function BookingFlow() {
   const [notes, setNotes] = useState("");
   const [bookBusy, setBookBusy] = useState(false);
   const [bookError, setBookError] = useState<string | null>(null);
-  const [confirmation, setConfirmation] =
-    useState<CreateAppointmentResponse | null>(null);
-  const [paymentDone, setPaymentDone] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -163,7 +159,8 @@ function BookingFlow() {
         starts_at: selectedSlot,
         notes: notes.trim() === "" ? null : notes.trim(),
       });
-      setConfirmation(booked);
+      router.push(`/appointments/${booked.id}/confirmation?just_booked=1`);
+      return;
     } catch (err) {
       if (err instanceof ApiValidationError) {
         setBookError(err.firstMessage() ?? "Validation failed.");
@@ -241,78 +238,7 @@ function BookingFlow() {
             </Card>
           ) : null}
 
-          {isReady && profile.user.role.slug === "customer" && confirmation ? (
-            (() => {
-              const needsPayment =
-                !paymentDone &&
-                confirmation.payment.enabled &&
-                confirmation.payment.client_secret !== null &&
-                confirmation.payment.publishable_key !== null &&
-                confirmation.deposit_cents > 0;
-
-              return (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>
-                      {needsPayment ? "Pay deposit" : "Booking confirmed"}
-                    </CardTitle>
-                    <CardDescription>
-                      {needsPayment
-                        ? "Your slot is held. Complete the deposit to lock it in."
-                        : "We’ve saved your appointment. You can review it on your appointments page."}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-2 text-sm">
-                    <p>
-                      <span className="font-medium">Service: </span>
-                      {confirmation.service?.name ?? "—"}
-                    </p>
-                    <p>
-                      <span className="font-medium">Barber: </span>
-                      {confirmation.barber?.name ?? "—"}
-                    </p>
-                    <p>
-                      <span className="font-medium">Starts: </span>
-                      {confirmation.starts_at}
-                    </p>
-                    {confirmation.deposit_cents > 0 ? (
-                      <p>
-                        <span className="font-medium">Deposit: </span>
-                        {formatUsd(confirmation.deposit_cents)}{" "}
-                        {paymentDone || confirmation.payment_status === "paid"
-                          ? "(paid)"
-                          : "(due now)"}
-                      </p>
-                    ) : null}
-                    {needsPayment &&
-                    confirmation.payment.client_secret &&
-                    confirmation.payment.publishable_key ? (
-                      <div className="pt-3">
-                        <DepositPayment
-                          clientSecret={confirmation.payment.client_secret}
-                          publishableKey={confirmation.payment.publishable_key}
-                          amountLabel={formatUsd(confirmation.deposit_cents)}
-                          onSucceeded={() => setPaymentDone(true)}
-                        />
-                      </div>
-                    ) : null}
-                  </CardContent>
-                  <CardFooter className="flex flex-wrap gap-2">
-                    <Button asChild>
-                      <Link href="/appointments">My appointments</Link>
-                    </Button>
-                    <Button asChild variant="outline">
-                      <Link href="/">Home</Link>
-                    </Button>
-                  </CardFooter>
-                </Card>
-              );
-            })()
-          ) : null}
-
-          {isReady &&
-          profile.user.role.slug === "customer" &&
-          !confirmation ? (
+          {isReady && profile.user.role.slug === "customer" ? (
             <Card>
               <CardHeader>
                 <CardTitle>Choose details</CardTitle>
