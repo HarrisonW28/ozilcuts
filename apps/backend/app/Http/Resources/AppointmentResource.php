@@ -22,12 +22,18 @@ class AppointmentResource extends JsonResource
             'starts_at' => $this->starts_at?->toIso8601String(),
             'ends_at' => $this->ends_at?->toIso8601String(),
             'notes' => $this->notes,
+            'deposit_cents' => (int) $this->deposit_cents,
+            'payment_status' => (string) $this->payment_status,
+            'amount_paid_cents' => (int) $this->amount_paid_cents,
+            'paid_at' => $this->paid_at?->toIso8601String(),
+            'refunded_at' => $this->refunded_at?->toIso8601String(),
             'service' => $this->whenLoaded('service', fn () => [
                 'id' => $this->service->id,
                 'name' => $this->service->name,
                 'slug' => $this->service->slug,
                 'duration_minutes' => $this->service->duration_minutes,
                 'price_cents' => $this->service->price_cents,
+                'deposit_cents' => $this->service->deposit_cents,
             ]),
             'barber' => $this->whenLoaded('barber', fn () => [
                 'id' => $this->barber->id,

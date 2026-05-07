@@ -134,6 +134,8 @@ final class BookingService
         return DB::transaction(function () use ($service, $barber, $customer, $start, $end, $data) {
             $this->assertNoOverlap($barber->id, $start, $end);
 
+            $deposit = (int) $service->deposit_cents;
+
             return Appointment::query()->create([
                 'service_id' => $service->id,
                 'barber_user_id' => $barber->id,
@@ -142,6 +144,10 @@ final class BookingService
                 'ends_at' => $end->toDateTimeString(),
                 'status' => Appointment::STATUS_CONFIRMED,
                 'notes' => $data['notes'] ?? null,
+                'deposit_cents' => $deposit,
+                'payment_status' => $deposit > 0
+                    ? Appointment::PAYMENT_REQUIRES_PAYMENT
+                    : Appointment::PAYMENT_NOT_REQUIRED,
             ]);
         });
     }

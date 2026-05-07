@@ -23,6 +23,7 @@ class ServiceManageResource extends JsonResource
             'description' => $this->description,
             'duration_minutes' => $this->duration_minutes,
             'price_cents' => $this->price_cents,
+            'deposit_cents' => (int) $this->deposit_cents,
             'sort_order' => $this->sort_order,
             'is_active' => $this->is_active,
             'updated_at' => $this->updated_at?->toIso8601String(),

@@ -21,16 +21,22 @@ use App\Http\Controllers\Api\V1\BarberShowController;
 use App\Http\Controllers\Api\V1\BarberSlotsController;
 use App\Http\Controllers\Api\V1\CurrentUserController;
 use App\Http\Controllers\Api\V1\HealthController;
+use App\Http\Controllers\Api\V1\PaymentConfigController;
 use App\Http\Controllers\Api\V1\ServiceIndexController;
 use App\Http\Controllers\Api\V1\ServiceManageDestroyController;
 use App\Http\Controllers\Api\V1\ServiceManageIndexController;
 use App\Http\Controllers\Api\V1\ServiceManageStoreController;
 use App\Http\Controllers\Api\V1\ServiceManageUpdateController;
+use App\Http\Controllers\Api\V1\StripeWebhookController;
 use App\Http\Controllers\Api\V1\UserIndexController;
 use App\Http\Controllers\Api\V1\UserShowController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/health', HealthController::class);
+Route::get('/payments/config', PaymentConfigController::class)
+    ->middleware('throttle:60,1');
+Route::post('/stripe/webhook', StripeWebhookController::class)
+    ->middleware('throttle:120,1');
 Route::get('/services', ServiceIndexController::class)
     ->middleware('throttle:60,1');
 Route::get('/barbers', BarberIndexController::class)

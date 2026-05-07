@@ -23,6 +23,7 @@ class ServiceResource extends JsonResource
             'description' => $this->description,
             'duration_minutes' => $this->duration_minutes,
             'price_cents' => $this->price_cents,
+            'deposit_cents' => (int) $this->deposit_cents,
         ];
     }
 }

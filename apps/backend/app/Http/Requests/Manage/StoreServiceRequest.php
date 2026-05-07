@@ -23,6 +23,7 @@ class StoreServiceRequest extends FormRequest
             'description' => ['nullable', 'string', 'max:5000'],
             'duration_minutes' => ['required', 'integer', 'min:1', 'max:600'],
             'price_cents' => ['required', 'integer', 'min:0', 'max:100000000'],
+            'deposit_cents' => ['sometimes', 'integer', 'min:0', 'max:100000000', 'lte:price_cents'],
             'sort_order' => ['sometimes', 'integer', 'min:0', 'max:1000000'],
             'is_active' => ['sometimes', 'boolean'],
         ];
