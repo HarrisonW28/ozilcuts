@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\V1\AppointmentCalendarController;
 use App\Http\Controllers\Api\V1\AppointmentCalendarLinkController;
 use App\Http\Controllers\Api\V1\AppointmentCancelController;
+use App\Http\Controllers\Api\V1\AppointmentHairProfileShowController;
 use App\Http\Controllers\Api\V1\AppointmentIndexController;
 use App\Http\Controllers\Api\V1\AppointmentPaymentIntentController;
 use App\Http\Controllers\Api\V1\AppointmentRescheduleController;
@@ -25,6 +26,11 @@ use App\Http\Controllers\Api\V1\BarberSlotsController;
 use App\Http\Controllers\Api\V1\CurrentUserController;
 use App\Http\Controllers\Api\V1\CustomerProfileShowController;
 use App\Http\Controllers\Api\V1\CustomerProfileUpdateController;
+use App\Http\Controllers\Api\V1\HairProfilePhotoDestroyController;
+use App\Http\Controllers\Api\V1\HairProfilePhotoShowController;
+use App\Http\Controllers\Api\V1\HairProfilePhotoStoreController;
+use App\Http\Controllers\Api\V1\HairProfileShowController;
+use App\Http\Controllers\Api\V1\HairProfileUpdateController;
 use App\Http\Controllers\Api\V1\HealthController;
 use App\Http\Controllers\Api\V1\PaymentConfigController;
 use App\Http\Controllers\Api\V1\ServiceIndexController;
@@ -67,11 +73,22 @@ Route::get('/appointments/{appointment}/calendar.ics', AppointmentCalendarContro
     ->middleware(['signed', 'throttle:60,1'])
     ->name('appointments.calendar');
 
+Route::get('/hair-profile-photos/{photo}', HairProfilePhotoShowController::class)
+    ->middleware(['signed', 'throttle:60,1'])
+    ->name('hair-profile-photos.show');
+
 Route::middleware('auth:sanctum')->group(function (): void {
     Route::get('/user', CurrentUserController::class);
     Route::post('/auth/logout', LogoutController::class);
     Route::get('/customer/profile', CustomerProfileShowController::class);
     Route::patch('/customer/profile', CustomerProfileUpdateController::class)
+        ->middleware('throttle:30,1');
+    Route::get('/customer/hair-profile', HairProfileShowController::class);
+    Route::patch('/customer/hair-profile', HairProfileUpdateController::class)
+        ->middleware('throttle:30,1');
+    Route::post('/customer/hair-profile/photos', HairProfilePhotoStoreController::class)
+        ->middleware('throttle:20,1');
+    Route::delete('/customer/hair-profile/photos/{photo}', HairProfilePhotoDestroyController::class)
         ->middleware('throttle:30,1');
     Route::get('/users', UserIndexController::class);
     Route::get('/users/{user}', UserShowController::class);
@@ -98,6 +115,8 @@ Route::middleware('auth:sanctum')->group(function (): void {
         ->middleware('throttle:30,1');
     Route::get('/appointments/{appointment}/payment-intent', AppointmentPaymentIntentController::class)
         ->middleware('throttle:30,1');
+    Route::get('/appointments/{appointment}/hair-profile', AppointmentHairProfileShowController::class)
+        ->middleware('throttle:60,1');
     Route::patch('/appointments/{appointment}/cancel', AppointmentCancelController::class)
         ->middleware('throttle:30,1');
     Route::patch('/appointments/{appointment}/reschedule', AppointmentRescheduleController::class)

@@ -78,6 +78,14 @@ class User extends Authenticatable
     }
 
     /**
+     * @return HasOne<HairProfile, $this>
+     */
+    public function hairProfile(): HasOne
+    {
+        return $this->hasOne(HairProfile::class);
+    }
+
+    /**
      * @param  non-empty-string  ...$slugs
      */
     public function hasRole(string ...$slugs): bool
