@@ -16,6 +16,18 @@ class Appointment extends Model
 
     public const STATUS_CANCELLED = 'cancelled';
 
+    public const PAYMENT_NOT_REQUIRED = 'not_required';
+
+    public const PAYMENT_REQUIRES_PAYMENT = 'requires_payment';
+
+    public const PAYMENT_PROCESSING = 'processing';
+
+    public const PAYMENT_PAID = 'paid';
+
+    public const PAYMENT_FAILED = 'failed';
+
+    public const PAYMENT_REFUNDED = 'refunded';
+
     /**
      * @var list<string>
      */
@@ -27,6 +39,12 @@ class Appointment extends Model
         'ends_at',
         'status',
         'notes',
+        'deposit_cents',
+        'payment_status',
+        'payment_intent_id',
+        'amount_paid_cents',
+        'paid_at',
+        'refunded_at',
     ];
 
     /**
@@ -37,6 +55,8 @@ class Appointment extends Model
         return [
             'starts_at' => 'datetime',
             'ends_at' => 'datetime',
+            'paid_at' => 'datetime',
+            'refunded_at' => 'datetime',
         ];
     }
 

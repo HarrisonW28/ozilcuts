@@ -20,6 +20,7 @@ class Service extends Model
         'description',
         'duration_minutes',
         'price_cents',
+        'deposit_cents',
         'sort_order',
         'is_active',
     ];

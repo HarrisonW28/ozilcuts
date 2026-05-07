@@ -26,6 +26,7 @@ class ServiceFactory extends Factory
             'description' => fake()->optional(0.7)->sentence(),
             'duration_minutes' => fake()->randomElement([15, 20, 30, 45, 60]),
             'price_cents' => fake()->numberBetween(1500, 8000),
+            'deposit_cents' => 0,
             'sort_order' => fake()->numberBetween(0, 100),
             'is_active' => true,
         ];
@@ -35,6 +36,13 @@ class ServiceFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'is_active' => false,
+        ]);
+    }
+
+    public function withDeposit(int $cents = 1500): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'deposit_cents' => $cents,
         ]);
     }
 }
