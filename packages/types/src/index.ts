@@ -141,6 +141,31 @@ export type UpdateBarberProfileInput = {
   is_published?: boolean;
 };
 
+export type CustomerProfile = {
+  id: number;
+  phone: string | null;
+  preferred_barber_user_id: number | null;
+  preferences: string | null;
+  marketing_opt_in: boolean;
+  updated_at: string | null;
+  user?: {
+    id: number;
+    name: string;
+    email: string;
+  };
+  preferred_barber?: {
+    id: number;
+    name: string;
+  } | null;
+};
+
+export type UpdateCustomerProfileInput = {
+  phone?: string | null;
+  preferred_barber_user_id?: number | null;
+  preferences?: string | null;
+  marketing_opt_in?: boolean;
+};
+
 export type ApiHealthResponse = {
   status: "ok";
 };
