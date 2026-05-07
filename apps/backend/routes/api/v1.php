@@ -23,6 +23,8 @@ use App\Http\Controllers\Api\V1\BarberManageUpdateController;
 use App\Http\Controllers\Api\V1\BarberShowController;
 use App\Http\Controllers\Api\V1\BarberSlotsController;
 use App\Http\Controllers\Api\V1\CurrentUserController;
+use App\Http\Controllers\Api\V1\CustomerProfileShowController;
+use App\Http\Controllers\Api\V1\CustomerProfileUpdateController;
 use App\Http\Controllers\Api\V1\HealthController;
 use App\Http\Controllers\Api\V1\PaymentConfigController;
 use App\Http\Controllers\Api\V1\ServiceIndexController;
@@ -68,6 +70,9 @@ Route::get('/appointments/{appointment}/calendar.ics', AppointmentCalendarContro
 Route::middleware('auth:sanctum')->group(function (): void {
     Route::get('/user', CurrentUserController::class);
     Route::post('/auth/logout', LogoutController::class);
+    Route::get('/customer/profile', CustomerProfileShowController::class);
+    Route::patch('/customer/profile', CustomerProfileUpdateController::class)
+        ->middleware('throttle:30,1');
     Route::get('/users', UserIndexController::class);
     Route::get('/users/{user}', UserShowController::class);
     Route::get('/manage/barbers', BarberManageIndexController::class);

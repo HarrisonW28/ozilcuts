@@ -70,6 +70,14 @@ class User extends Authenticatable
     }
 
     /**
+     * @return HasOne<CustomerProfile, $this>
+     */
+    public function customerProfile(): HasOne
+    {
+        return $this->hasOne(CustomerProfile::class);
+    }
+
+    /**
      * @param  non-empty-string  ...$slugs
      */
     public function hasRole(string ...$slugs): bool
