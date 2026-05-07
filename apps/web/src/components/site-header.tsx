@@ -41,12 +41,22 @@ export function SiteHeader({ profile, onSignOut }: SiteHeaderProps) {
             Book
           </Link>
           {profile.kind === "ready" ? (
-            <Link
-              href="/appointments"
-              className="inline-flex min-h-11 items-center rounded-md px-2 py-2 text-muted-foreground underline-offset-4 transition-colors hover:bg-muted/60 hover:text-foreground hover:underline active:bg-muted/80 sm:min-h-0 sm:py-1.5"
-            >
-              My appointments
-            </Link>
+            <>
+              {profile.user.role.slug === "customer" ? (
+                <Link
+                  href="/profile"
+                  className="inline-flex min-h-11 items-center rounded-md px-2 py-2 text-muted-foreground underline-offset-4 transition-colors hover:bg-muted/60 hover:text-foreground hover:underline active:bg-muted/80 sm:min-h-0 sm:py-1.5"
+                >
+                  Profile
+                </Link>
+              ) : null}
+              <Link
+                href="/appointments"
+                className="inline-flex min-h-11 items-center rounded-md px-2 py-2 text-muted-foreground underline-offset-4 transition-colors hover:bg-muted/60 hover:text-foreground hover:underline active:bg-muted/80 sm:min-h-0 sm:py-1.5"
+              >
+                My appointments
+              </Link>
+            </>
           ) : null}
           {profile.kind === "ready" && profile.user.role.slug === "barber" ? (
             <>
