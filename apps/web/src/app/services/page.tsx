@@ -156,6 +156,16 @@ export default function ServicesPage() {
                             {formatUsd(svc.price_cents)}
                           </dd>
                         </div>
+                        {svc.deposit_cents > 0 ? (
+                          <div className="col-span-2">
+                            <dt className="text-muted-foreground">
+                              Deposit due at booking
+                            </dt>
+                            <dd className="font-medium">
+                              {formatUsd(svc.deposit_cents)}
+                            </dd>
+                          </div>
+                        ) : null}
                       </dl>
                     </CardContent>
                     <CardFooter className="flex justify-end">

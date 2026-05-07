@@ -12,6 +12,8 @@
     "@ozilcuts/api": "workspace:^",
     "@ozilcuts/types": "workspace:^",
     "@ozilcuts/ui": "workspace:^",
+    "@stripe/react-stripe-js": "^6.3.0",
+    "@stripe/stripe-js": "^9.4.0",
     "framer-motion": "^12.38.0",
     "lucide-react": "^1.14.0",
     "next": "15.5.16",

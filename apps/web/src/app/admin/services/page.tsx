@@ -44,6 +44,7 @@ export default function AdminServicesPage() {
   const [cDescription, setCDescription] = useState("");
   const [cDuration, setCDuration] = useState("30");
   const [cPriceCents, setCPriceCents] = useState("3500");
+  const [cDepositCents, setCDepositCents] = useState("0");
   const [cSort, setCSort] = useState("0");
   const [cActive, setCActive] = useState(true);
   const [createBusy, setCreateBusy] = useState(false);
@@ -58,6 +59,7 @@ export default function AdminServicesPage() {
   const [eDescription, setEDescription] = useState("");
   const [eDuration, setEDuration] = useState("");
   const [ePriceCents, setEPriceCents] = useState("");
+  const [eDepositCents, setEDepositCents] = useState("");
   const [eSort, setESort] = useState("");
   const [eActive, setEActive] = useState(true);
   const [editBusy, setEditBusy] = useState(false);
@@ -103,6 +105,7 @@ export default function AdminServicesPage() {
     try {
       const duration = Number.parseInt(cDuration, 10);
       const price = Number.parseInt(cPriceCents, 10);
+      const deposit = Number.parseInt(cDepositCents, 10);
       const sort = Number.parseInt(cSort, 10);
       await createManagedService(token, {
         name: cName,
@@ -110,6 +113,7 @@ export default function AdminServicesPage() {
         description: cDescription.trim() === "" ? null : cDescription.trim(),
         duration_minutes: Number.isFinite(duration) ? duration : 30,
         price_cents: Number.isFinite(price) ? price : 0,
+        deposit_cents: Number.isFinite(deposit) ? deposit : 0,
         sort_order: Number.isFinite(sort) ? sort : 0,
         is_active: cActive,
       });
@@ -118,6 +122,7 @@ export default function AdminServicesPage() {
       setCDescription("");
       setCDuration("30");
       setCPriceCents("3500");
+      setCDepositCents("0");
       setCSort("0");
       setCActive(true);
       await load(page);
@@ -145,6 +150,7 @@ export default function AdminServicesPage() {
     setEDescription(row.description ?? "");
     setEDuration(String(row.duration_minutes));
     setEPriceCents(String(row.price_cents));
+    setEDepositCents(String(row.deposit_cents));
     setESort(String(row.sort_order));
     setEActive(row.is_active);
     setEditError(null);
@@ -163,6 +169,7 @@ export default function AdminServicesPage() {
     try {
       const duration = Number.parseInt(eDuration, 10);
       const price = Number.parseInt(ePriceCents, 10);
+      const deposit = Number.parseInt(eDepositCents, 10);
       const sort = Number.parseInt(eSort, 10);
       await updateManagedService(token, serviceId, {
         name: eName,
@@ -170,6 +177,7 @@ export default function AdminServicesPage() {
         description: eDescription.trim() === "" ? null : eDescription.trim(),
         duration_minutes: Number.isFinite(duration) ? duration : undefined,
         price_cents: Number.isFinite(price) ? price : undefined,
+        deposit_cents: Number.isFinite(deposit) ? deposit : undefined,
         sort_order: Number.isFinite(sort) ? sort : undefined,
         is_active: eActive,
       });
@@ -303,7 +311,7 @@ export default function AdminServicesPage() {
                         onChange={(ev) => setCDescription(ev.target.value)}
                       />
                     </div>
-                    <div className="grid gap-4 sm:grid-cols-3">
+                    <div className="grid gap-4 sm:grid-cols-2">
                       <div className="flex flex-col gap-2">
                         <Label htmlFor="c-svc-dur">Duration (minutes)</Label>
                         <Input
@@ -323,6 +331,26 @@ export default function AdminServicesPage() {
                           onChange={(ev) => setCPriceCents(ev.target.value)}
                           required
                         />
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <Label htmlFor="c-svc-deposit">Deposit (cents)</Label>
+                        <Input
+                          id="c-svc-deposit"
+                          inputMode="numeric"
+                          value={cDepositCents}
+                          onChange={(ev) => setCDepositCents(ev.target.value)}
+                          aria-invalid={
+                            createFieldErrors.deposit_cents ? true : undefined
+                          }
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Set to 0 to disable. Must not exceed the price.
+                        </p>
+                        {createFieldErrors.deposit_cents ? (
+                          <p className="text-sm text-destructive">
+                            {createFieldErrors.deposit_cents}
+                          </p>
+                        ) : null}
                       </div>
                       <div className="flex flex-col gap-2">
                         <Label htmlFor="c-svc-sort">Sort order</Label>
@@ -435,7 +463,7 @@ export default function AdminServicesPage() {
                                     }
                                   />
                                 </div>
-                                <div className="grid gap-4 sm:grid-cols-3">
+                                <div className="grid gap-4 sm:grid-cols-2">
                                   <div className="flex flex-col gap-2">
                                     <Label htmlFor={`e-dur-${row.id}`}>
                                       Duration (min)
@@ -459,6 +487,19 @@ export default function AdminServicesPage() {
                                       value={ePriceCents}
                                       onChange={(ev) =>
                                         setEPriceCents(ev.target.value)
+                                      }
+                                    />
+                                  </div>
+                                  <div className="flex flex-col gap-2">
+                                    <Label htmlFor={`e-deposit-${row.id}`}>
+                                      Deposit (cents)
+                                    </Label>
+                                    <Input
+                                      id={`e-deposit-${row.id}`}
+                                      inputMode="numeric"
+                                      value={eDepositCents}
+                                      onChange={(ev) =>
+                                        setEDepositCents(ev.target.value)
                                       }
                                     />
                                   </div>
@@ -529,6 +570,14 @@ export default function AdminServicesPage() {
                                     Price:{" "}
                                   </span>
                                   {row.price_cents}¢
+                                </p>
+                                <p className="text-sm text-muted-foreground">
+                                  <span className="font-medium text-foreground">
+                                    Deposit:{" "}
+                                  </span>
+                                  {row.deposit_cents > 0
+                                    ? `${row.deposit_cents}¢`
+                                    : "None"}
                                 </p>
                                 <p className="text-sm text-muted-foreground">
                                   <span className="font-medium text-foreground">

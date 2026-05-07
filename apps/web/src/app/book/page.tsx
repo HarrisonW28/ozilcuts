@@ -1,5 +1,6 @@
 "use client";
 
+import { DepositPayment } from "@/components/deposit-payment";
 import { SiteHeader } from "@/components/site-header";
 import { getStoredAuthToken } from "@/lib/auth-token";
 import { useSessionProfile } from "@/lib/use-session-profile";
@@ -12,8 +13,8 @@ import {
   fetchServices,
 } from "@ozilcuts/api";
 import type {
-  AppointmentRecord,
   BarberProfilePublic,
+  CreateAppointmentResponse,
   ServiceSummary,
 } from "@ozilcuts/types";
 import { OZILCUTS_APP_NAME } from "@ozilcuts/types";
@@ -83,9 +84,9 @@ function BookingFlow() {
   const [notes, setNotes] = useState("");
   const [bookBusy, setBookBusy] = useState(false);
   const [bookError, setBookError] = useState<string | null>(null);
-  const [confirmation, setConfirmation] = useState<AppointmentRecord | null>(
-    null,
-  );
+  const [confirmation, setConfirmation] =
+    useState<CreateAppointmentResponse | null>(null);
+  const [paymentDone, setPaymentDone] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -241,37 +242,72 @@ function BookingFlow() {
           ) : null}
 
           {isReady && profile.user.role.slug === "customer" && confirmation ? (
-            <Card>
-              <CardHeader>
-                <CardTitle>Booking confirmed</CardTitle>
-                <CardDescription>
-                  We’ve saved your appointment. You can review it on your
-                  appointments page.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-2 text-sm">
-                <p>
-                  <span className="font-medium">Service: </span>
-                  {confirmation.service?.name ?? "—"}
-                </p>
-                <p>
-                  <span className="font-medium">Barber: </span>
-                  {confirmation.barber?.name ?? "—"}
-                </p>
-                <p>
-                  <span className="font-medium">Starts: </span>
-                  {confirmation.starts_at}
-                </p>
-              </CardContent>
-              <CardFooter className="flex flex-wrap gap-2">
-                <Button asChild>
-                  <Link href="/appointments">My appointments</Link>
-                </Button>
-                <Button asChild variant="outline">
-                  <Link href="/">Home</Link>
-                </Button>
-              </CardFooter>
-            </Card>
+            (() => {
+              const needsPayment =
+                !paymentDone &&
+                confirmation.payment.enabled &&
+                confirmation.payment.client_secret !== null &&
+                confirmation.payment.publishable_key !== null &&
+                confirmation.deposit_cents > 0;
+
+              return (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>
+                      {needsPayment ? "Pay deposit" : "Booking confirmed"}
+                    </CardTitle>
+                    <CardDescription>
+                      {needsPayment
+                        ? "Your slot is held. Complete the deposit to lock it in."
+                        : "We’ve saved your appointment. You can review it on your appointments page."}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-2 text-sm">
+                    <p>
+                      <span className="font-medium">Service: </span>
+                      {confirmation.service?.name ?? "—"}
+                    </p>
+                    <p>
+                      <span className="font-medium">Barber: </span>
+                      {confirmation.barber?.name ?? "—"}
+                    </p>
+                    <p>
+                      <span className="font-medium">Starts: </span>
+                      {confirmation.starts_at}
+                    </p>
+                    {confirmation.deposit_cents > 0 ? (
+                      <p>
+                        <span className="font-medium">Deposit: </span>
+                        {formatUsd(confirmation.deposit_cents)}{" "}
+                        {paymentDone || confirmation.payment_status === "paid"
+                          ? "(paid)"
+                          : "(due now)"}
+                      </p>
+                    ) : null}
+                    {needsPayment &&
+                    confirmation.payment.client_secret &&
+                    confirmation.payment.publishable_key ? (
+                      <div className="pt-3">
+                        <DepositPayment
+                          clientSecret={confirmation.payment.client_secret}
+                          publishableKey={confirmation.payment.publishable_key}
+                          amountLabel={formatUsd(confirmation.deposit_cents)}
+                          onSucceeded={() => setPaymentDone(true)}
+                        />
+                      </div>
+                    ) : null}
+                  </CardContent>
+                  <CardFooter className="flex flex-wrap gap-2">
+                    <Button asChild>
+                      <Link href="/appointments">My appointments</Link>
+                    </Button>
+                    <Button asChild variant="outline">
+                      <Link href="/">Home</Link>
+                    </Button>
+                  </CardFooter>
+                </Card>
+              );
+            })()
           ) : null}
 
           {isReady &&
@@ -444,6 +480,14 @@ function BookingFlow() {
                           {selectedService.duration_minutes} min ·{" "}
                           {formatUsd(selectedService.price_cents)}
                         </p>
+                        {selectedService.deposit_cents > 0 ? (
+                          <p className="mt-1 text-muted-foreground">
+                            Deposit due now:{" "}
+                            <span className="font-medium text-foreground">
+                              {formatUsd(selectedService.deposit_cents)}
+                            </span>
+                          </p>
+                        ) : null}
                       </div>
                     ) : null}
 

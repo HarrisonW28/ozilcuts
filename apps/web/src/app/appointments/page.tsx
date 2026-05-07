@@ -9,6 +9,7 @@ import {
   fetchMyAppointments,
 } from "@ozilcuts/api";
 import type {
+  AppointmentPaymentStatus,
   AppointmentRangeFilter,
   AppointmentRecord,
   AppointmentStatusFilter,
@@ -83,6 +84,52 @@ function StatusBadge({ status }: { status: AppointmentRecord["status"] }) {
       )}
     >
       {status}
+    </span>
+  );
+}
+
+function formatUsd(cents: number): string {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+  }).format(cents / 100);
+}
+
+const PAYMENT_LABELS: Record<AppointmentPaymentStatus, string> = {
+  not_required: "No deposit",
+  requires_payment: "Deposit due",
+  processing: "Processing",
+  paid: "Deposit paid",
+  failed: "Payment failed",
+  refunded: "Refunded",
+};
+
+function PaymentBadge({
+  status,
+  depositCents,
+}: {
+  status: AppointmentPaymentStatus;
+  depositCents: number;
+}) {
+  if (status === "not_required" || depositCents === 0) return null;
+
+  const styles =
+    status === "paid"
+      ? "border border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+      : status === "refunded"
+        ? "border border-muted-foreground/30 bg-muted/40 text-muted-foreground"
+        : status === "failed"
+          ? "border border-destructive/30 bg-destructive/10 text-destructive"
+          : "border border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300";
+
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium",
+        styles,
+      )}
+    >
+      {PAYMENT_LABELS[status]} · {formatUsd(depositCents)}
     </span>
   );
 }
@@ -331,7 +378,13 @@ export default function AppointmentsPage() {
                                   {formatStart(row.starts_at)}
                                 </CardDescription>
                               </div>
-                              <StatusBadge status={row.status} />
+                              <div className="flex flex-wrap items-center gap-2">
+                                <StatusBadge status={row.status} />
+                                <PaymentBadge
+                                  status={row.payment_status}
+                                  depositCents={row.deposit_cents}
+                                />
+                              </div>
                             </div>
                           </CardHeader>
                           <CardContent className="space-y-2 text-sm text-muted-foreground">
