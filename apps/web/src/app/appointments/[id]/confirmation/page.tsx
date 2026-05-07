@@ -8,11 +8,13 @@ import {
   ApiError,
   fetchAppointment,
   fetchAppointmentCalendarLink,
+  fetchAppointmentHairProfile,
   fetchAppointmentPaymentIntent,
 } from "@ozilcuts/api";
 import type {
   AppointmentPendingPayment,
   AppointmentRecord,
+  HairProfile,
 } from "@ozilcuts/types";
 import { OZILCUTS_APP_NAME } from "@ozilcuts/types";
 import {
@@ -149,6 +151,9 @@ export default function ConfirmationPage() {
     null,
   );
   const [paymentDone, setPaymentDone] = useState(false);
+  const [customerHairProfile, setCustomerHairProfile] =
+    useState<HairProfile | null>(null);
+  const [hairProfileError, setHairProfileError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     const token = getStoredAuthToken();
@@ -215,6 +220,45 @@ export default function ConfirmationPage() {
     isReady && appointment !== null
       ? appointment.customer?.id === profile.user.id
       : false;
+  const isAssignedBarber =
+    isReady && appointment !== null
+      ? appointment.barber?.id === profile.user.id
+      : false;
+  const isStaff =
+    isReady &&
+    (isAssignedBarber || profile.user.role.slug === "admin");
+
+  useEffect(() => {
+    if (!isStaff || !appointment) {
+      setCustomerHairProfile(null);
+      setHairProfileError(null);
+
+      return;
+    }
+    const token = getStoredAuthToken();
+    if (!token) return;
+
+    let cancelled = false;
+    setHairProfileError(null);
+    fetchAppointmentHairProfile(token, appointment.id)
+      .then((res) => {
+        if (cancelled) return;
+        setCustomerHairProfile(res.data);
+      })
+      .catch((err: unknown) => {
+        if (cancelled) return;
+        setCustomerHairProfile(null);
+        setHairProfileError(
+          err instanceof ApiError
+            ? err.message
+            : "Could not load the customer hair profile.",
+        );
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isStaff, appointment]);
 
   return (
     <div className="flex min-h-dvh flex-1 flex-col">
@@ -381,6 +425,103 @@ export default function ConfirmationPage() {
                   </Button>
                 ) : null}
               </CardFooter>
+            </Card>
+          ) : null}
+
+          {isReady && appointment && isStaff ? (
+            <Card>
+              <CardHeader>
+                <CardTitle>Customer hair profile</CardTitle>
+                <CardDescription>
+                  {appointment.customer?.name
+                    ? `${appointment.customer.name}'s preferences and reference photos.`
+                    : "Customer preferences and reference photos."}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3 text-sm">
+                {hairProfileError ? (
+                  <p className="text-destructive" role="alert">
+                    {hairProfileError}
+                  </p>
+                ) : null}
+                {!hairProfileError && customerHairProfile === null ? (
+                  <p className="text-muted-foreground">
+                    The customer hasn&rsquo;t filled in a hair profile yet.
+                  </p>
+                ) : null}
+                {customerHairProfile ? (
+                  <>
+                    <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                      <div>
+                        <dt className="text-muted-foreground">Type</dt>
+                        <dd className="font-medium capitalize">
+                          {customerHairProfile.hair_type ?? "—"}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt className="text-muted-foreground">Thickness</dt>
+                        <dd className="font-medium capitalize">
+                          {customerHairProfile.hair_thickness ?? "—"}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt className="text-muted-foreground">Length</dt>
+                        <dd className="font-medium capitalize">
+                          {customerHairProfile.hair_length
+                            ? customerHairProfile.hair_length.replace(/_/g, " ")
+                            : "—"}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt className="text-muted-foreground">Scalp</dt>
+                        <dd className="font-medium capitalize">
+                          {customerHairProfile.scalp_condition ?? "—"}
+                        </dd>
+                      </div>
+                    </dl>
+                    {customerHairProfile.preferred_clipper_guard ? (
+                      <p>
+                        <span className="font-medium">Clipper guard: </span>
+                        {customerHairProfile.preferred_clipper_guard}
+                      </p>
+                    ) : null}
+                    {customerHairProfile.allergies ? (
+                      <p>
+                        <span className="font-medium">Allergies: </span>
+                        {customerHairProfile.allergies}
+                      </p>
+                    ) : null}
+                    {customerHairProfile.styling_notes ? (
+                      <p className="whitespace-pre-wrap rounded-md bg-muted/40 p-3">
+                        <span className="font-medium">Notes: </span>
+                        {customerHairProfile.styling_notes}
+                      </p>
+                    ) : null}
+                    {customerHairProfile.photos.length > 0 ? (
+                      <ul className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                        {customerHairProfile.photos.map((photo) => (
+                          <li key={photo.id} className="space-y-1">
+                            <div className="relative aspect-square w-full overflow-hidden rounded-md bg-muted/40">
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img
+                                src={photo.url}
+                                alt={photo.caption ?? "Hair reference"}
+                                className="absolute inset-0 h-full w-full object-cover"
+                                loading="lazy"
+                              />
+                            </div>
+                            {photo.caption ? (
+                              <p className="text-xs text-muted-foreground">
+                                {photo.caption}
+                              </p>
+                            ) : null}
+                          </li>
+                        ))}
+                      </ul>
+                    ) : null}
+                  </>
+                ) : null}
+              </CardContent>
             </Card>
           ) : null}
 

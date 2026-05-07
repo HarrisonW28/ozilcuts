@@ -360,6 +360,23 @@ export default function ProfilePage() {
             </Card>
           ) : null}
 
+          {isCustomer && state.kind === "ok" ? (
+            <Card>
+              <CardHeader>
+                <CardTitle>Hair profile</CardTitle>
+                <CardDescription>
+                  Tell your barber about your hair type, sensitivities, and the
+                  styles you love. Add reference photos too.
+                </CardDescription>
+              </CardHeader>
+              <CardFooter>
+                <Button asChild variant="outline">
+                  <Link href="/profile/hair">Manage hair profile</Link>
+                </Button>
+              </CardFooter>
+            </Card>
+          ) : null}
+
           <p className="text-center text-sm text-muted-foreground">
             <Link href="/" className="underline-offset-4 hover:underline">
               Home
