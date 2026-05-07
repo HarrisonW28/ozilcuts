@@ -5,9 +5,12 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreAppointmentRequest;
 use App\Http\Resources\AppointmentResource;
+use App\Mail\AppointmentConfirmedMail;
+use App\Models\Appointment;
 use App\Services\Booking\BookingService;
 use App\Services\Payments\PaymentService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Mail;
 use RuntimeException;
 
 final class AppointmentStoreController extends Controller
@@ -38,6 +41,8 @@ final class AppointmentStoreController extends Controller
         $clientSecret = $payments->ensureDepositIntent($appointment);
         $appointment->load(['service', 'barber', 'customer']);
 
+        $this->dispatchConfirmation($appointment);
+
         $body = (new AppointmentResource($appointment))->toArray($request);
         $body['payment'] = [
             'enabled' => $payments->isEnabled(),
@@ -47,5 +52,20 @@ final class AppointmentStoreController extends Controller
         ];
 
         return response()->json($body, 201);
+    }
+
+    private function dispatchConfirmation(Appointment $appointment): void
+    {
+        $customer = $appointment->customer;
+        if ($customer === null) {
+            return;
+        }
+
+        $mail = Mail::to($customer->email);
+        $barberEmail = $appointment->barber?->email;
+        if ($barberEmail !== null && $barberEmail !== $customer->email) {
+            $mail->cc($barberEmail);
+        }
+        $mail->queue(new AppointmentConfirmedMail($appointment));
     }
 }
