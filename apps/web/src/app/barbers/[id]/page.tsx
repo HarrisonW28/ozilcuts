@@ -194,6 +194,13 @@ export default function BarberDetailPage() {
                     No bio yet for this barber.
                   </p>
                 )}
+                <div>
+                  <Button asChild variant="outline" size="sm">
+                    <Link href={`/barbers/${userId}/portfolio`}>
+                      View portfolio
+                    </Link>
+                  </Button>
+                </div>
                 <div className="border-t border-border/60 pt-4">
                   <h3 className="text-sm font-semibold text-foreground">
                     Availability

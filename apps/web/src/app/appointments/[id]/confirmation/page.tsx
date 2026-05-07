@@ -1,6 +1,7 @@
 "use client";
 
 import { DepositPayment } from "@/components/deposit-payment";
+import { HaircutPhotosSection } from "@/components/haircut-photos-section";
 import { SiteHeader } from "@/components/site-header";
 import { getStoredAuthToken } from "@/lib/auth-token";
 import { useSessionProfile } from "@/lib/use-session-profile";
@@ -523,6 +524,13 @@ export default function ConfirmationPage() {
                 ) : null}
               </CardContent>
             </Card>
+          ) : null}
+
+          {isReady && appointment ? (
+            <HaircutPhotosSection
+              appointmentId={appointment.id}
+              viewerRole={isStaff ? "staff" : "customer"}
+            />
           ) : null}
 
           {isReady &&
