@@ -5,6 +5,9 @@ use App\Http\Controllers\Api\V1\Auth\GoogleOAuthRedirectController;
 use App\Http\Controllers\Api\V1\Auth\LoginController;
 use App\Http\Controllers\Api\V1\Auth\LogoutController;
 use App\Http\Controllers\Api\V1\Auth\RegisterController;
+use App\Http\Controllers\Api\V1\BarberAvailabilityManageReplaceController;
+use App\Http\Controllers\Api\V1\BarberAvailabilityManageShowController;
+use App\Http\Controllers\Api\V1\BarberAvailabilityPublicController;
 use App\Http\Controllers\Api\V1\BarberIndexController;
 use App\Http\Controllers\Api\V1\BarberManageIndexController;
 use App\Http\Controllers\Api\V1\BarberManageStoreController;
@@ -28,6 +31,8 @@ Route::get('/barbers', BarberIndexController::class)
     ->middleware('throttle:60,1');
 Route::get('/barbers/{user}', BarberShowController::class)
     ->middleware('throttle:60,1');
+Route::get('/barbers/{user}/availability', BarberAvailabilityPublicController::class)
+    ->middleware('throttle:60,1');
 
 Route::post('/auth/register', RegisterController::class)
     ->middleware('throttle:10,1');
@@ -48,6 +53,9 @@ Route::middleware('auth:sanctum')->group(function (): void {
     Route::post('/manage/barbers', BarberManageStoreController::class)
         ->middleware('throttle:20,1');
     Route::patch('/manage/barbers/{user}/profile', BarberManageUpdateController::class)
+        ->middleware('throttle:30,1');
+    Route::get('/manage/barbers/{user}/availability', BarberAvailabilityManageShowController::class);
+    Route::put('/manage/barbers/{user}/availability', BarberAvailabilityManageReplaceController::class)
         ->middleware('throttle:30,1');
     Route::get('/manage/services', ServiceManageIndexController::class);
     Route::post('/manage/services', ServiceManageStoreController::class)

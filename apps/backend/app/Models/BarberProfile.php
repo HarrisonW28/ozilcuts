@@ -6,6 +6,7 @@ use Database\Factories\BarberProfileFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class BarberProfile extends Model
 {
@@ -39,5 +40,13 @@ class BarberProfile extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * @return HasMany<BarberAvailabilityWindow, $this>
+     */
+    public function availabilityWindows(): HasMany
+    {
+        return $this->hasMany(BarberAvailabilityWindow::class);
     }
 }
