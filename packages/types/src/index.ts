@@ -445,3 +445,18 @@ export type AppointmentListFilters = {
   range?: AppointmentRangeFilter;
   page?: number;
 };
+
+export type RebookSuggestion = {
+  service_id: number;
+  barber_user_id: number;
+  /** ISO date (YYYY-MM-DD). Suggested date to pre-select on /book. */
+  suggested_date: string;
+  /** Average days between past appointments with this barber. */
+  interval_days: number;
+  /** Number of confirmed past appointments used to compute the cadence. */
+  sample_size: number;
+  /** ISO timestamp of the source appointment, when applicable. */
+  last_appointment_at: string | null;
+  service: ServiceSummary | null;
+  barber: BarberPublicRef | null;
+};

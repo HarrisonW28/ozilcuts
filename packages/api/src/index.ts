@@ -58,6 +58,10 @@ export {
 } from "./haircutPhotos";
 export { fetchPaymentConfig } from "./payments";
 export {
+  fetchAppointmentRebookHint,
+  fetchNextVisitSuggestion,
+} from "./rebookSuggestions";
+export {
   createManagedBarber,
   fetchManageBarbers,
   updateManagedBarberProfile,
