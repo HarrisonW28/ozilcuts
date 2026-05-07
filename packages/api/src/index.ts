@@ -39,6 +39,13 @@ export {
   updateHairProfile,
   uploadHairProfilePhoto,
 } from "./hairProfile";
+export {
+  deleteHaircutPhoto,
+  fetchAppointmentHaircutPhotos,
+  fetchBarberPortfolio,
+  updateHaircutPhoto,
+  uploadHaircutPhoto,
+} from "./haircutPhotos";
 export { fetchPaymentConfig } from "./payments";
 export {
   createManagedBarber,

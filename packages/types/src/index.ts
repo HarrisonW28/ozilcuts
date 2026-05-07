@@ -234,6 +234,44 @@ export type AppointmentHairProfileResponse = {
   data: HairProfile | null;
 };
 
+export const HAIRCUT_PHOTO_KINDS = ["before", "after"] as const;
+export type HaircutPhotoKind = (typeof HAIRCUT_PHOTO_KINDS)[number];
+
+export type HaircutPhoto = {
+  id: number;
+  appointment_id: number;
+  kind: HaircutPhotoKind;
+  caption: string | null;
+  mime_type: string;
+  size_bytes: number;
+  is_public: boolean;
+  customer_consent: boolean;
+  uploaded_by_user_id: number;
+  created_at: string | null;
+  url: string;
+};
+
+export type AppointmentHaircutPhotosResponse = {
+  data: HaircutPhoto[];
+};
+
+export type UpdateHaircutPhotoInput = {
+  caption?: string | null;
+  kind?: HaircutPhotoKind;
+  is_public?: boolean;
+  customer_consent?: boolean;
+};
+
+export type BarberPortfolioResponse = {
+  data: HaircutPhoto[];
+  meta: {
+    current_page: number;
+    last_page: number;
+    per_page: number;
+    total: number;
+  };
+};
+
 export type ApiHealthResponse = {
   status: "ok";
 };
