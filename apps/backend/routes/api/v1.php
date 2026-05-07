@@ -13,6 +13,10 @@ use App\Http\Controllers\Api\V1\BarberShowController;
 use App\Http\Controllers\Api\V1\CurrentUserController;
 use App\Http\Controllers\Api\V1\HealthController;
 use App\Http\Controllers\Api\V1\ServiceIndexController;
+use App\Http\Controllers\Api\V1\ServiceManageDestroyController;
+use App\Http\Controllers\Api\V1\ServiceManageIndexController;
+use App\Http\Controllers\Api\V1\ServiceManageStoreController;
+use App\Http\Controllers\Api\V1\ServiceManageUpdateController;
 use App\Http\Controllers\Api\V1\UserIndexController;
 use App\Http\Controllers\Api\V1\UserShowController;
 use Illuminate\Support\Facades\Route;
@@ -44,5 +48,12 @@ Route::middleware('auth:sanctum')->group(function (): void {
     Route::post('/manage/barbers', BarberManageStoreController::class)
         ->middleware('throttle:20,1');
     Route::patch('/manage/barbers/{user}/profile', BarberManageUpdateController::class)
+        ->middleware('throttle:30,1');
+    Route::get('/manage/services', ServiceManageIndexController::class);
+    Route::post('/manage/services', ServiceManageStoreController::class)
+        ->middleware('throttle:30,1');
+    Route::patch('/manage/services/{service}', ServiceManageUpdateController::class)
+        ->middleware('throttle:30,1');
+    Route::delete('/manage/services/{service}', ServiceManageDestroyController::class)
         ->middleware('throttle:30,1');
 });
