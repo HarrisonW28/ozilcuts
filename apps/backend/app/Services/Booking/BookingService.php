@@ -24,8 +24,12 @@ final class BookingService
      *
      * @return list<string> ISO 8601 timestamps (`Y-m-d\TH:i:s`)
      */
-    public function availableSlots(User $barber, Service $service, CarbonImmutable $date): array
-    {
+    public function availableSlots(
+        User $barber,
+        Service $service,
+        CarbonImmutable $date,
+        ?int $excludeAppointmentId = null,
+    ): array {
         $profile = $barber->barberProfile;
         if ($profile === null || ! $profile->is_published) {
             return [];
@@ -56,6 +60,10 @@ final class BookingService
         $existing = Appointment::query()
             ->where('barber_user_id', $barber->id)
             ->where('status', Appointment::STATUS_CONFIRMED)
+            ->when(
+                $excludeAppointmentId !== null,
+                fn ($q) => $q->where('id', '!=', $excludeAppointmentId),
+            )
             ->whereBetween('starts_at', [
                 $dayStart->toDateTimeString(),
                 $dayStart->addDay()->toDateTimeString(),
@@ -121,32 +129,10 @@ final class BookingService
         $start = CarbonImmutable::parse($data['starts_at']);
         $end = $start->addMinutes((int) $service->duration_minutes);
 
-        $weekday = (int) $start->dayOfWeek;
-        $startTime = $start->format('H:i:s');
-        $endTime = $end->format('H:i:s');
-
-        $coversWindow = $profile->availabilityWindows()
-            ->where('weekday', $weekday)
-            ->where('starts_at', '<=', $startTime)
-            ->where('ends_at', '>=', $endTime)
-            ->exists();
-
-        if (! $coversWindow) {
-            throw new RuntimeException('Selected time is outside the barber’s availability.');
-        }
+        $this->assertAvailabilityCovers($profile, $start, $end);
 
         return DB::transaction(function () use ($service, $barber, $customer, $start, $end, $data) {
-            $overlap = Appointment::query()
-                ->where('barber_user_id', $barber->id)
-                ->where('status', Appointment::STATUS_CONFIRMED)
-                ->where('starts_at', '<', $end->toDateTimeString())
-                ->where('ends_at', '>', $start->toDateTimeString())
-                ->lockForUpdate()
-                ->exists();
-
-            if ($overlap) {
-                throw new RuntimeException('Selected time is no longer available.');
-            }
+            $this->assertNoOverlap($barber->id, $start, $end);
 
             return Appointment::query()->create([
                 'service_id' => $service->id,
@@ -158,6 +144,101 @@ final class BookingService
                 'notes' => $data['notes'] ?? null,
             ]);
         });
+    }
+
+    public function reschedule(Appointment $appointment, CarbonImmutable $newStart): Appointment
+    {
+        if ($appointment->status !== Appointment::STATUS_CONFIRMED) {
+            throw new RuntimeException('Only confirmed appointments can be rescheduled.');
+        }
+
+        $service = $appointment->service;
+        if (! $service instanceof Service) {
+            throw new RuntimeException('Appointment is missing its service.');
+        }
+
+        $barber = $appointment->barber;
+        if (! $barber instanceof User) {
+            throw new RuntimeException('Appointment is missing its barber.');
+        }
+
+        $profile = $barber->barberProfile;
+        if (! $profile instanceof BarberProfile || ! $profile->is_published) {
+            throw new RuntimeException('Barber is no longer bookable.');
+        }
+
+        $newEnd = $newStart->addMinutes((int) $service->duration_minutes);
+
+        $this->assertAvailabilityCovers($profile, $newStart, $newEnd);
+
+        return DB::transaction(function () use ($appointment, $newStart, $newEnd) {
+            $this->assertNoOverlap(
+                (int) $appointment->barber_user_id,
+                $newStart,
+                $newEnd,
+                excludeAppointmentId: (int) $appointment->id,
+            );
+
+            $appointment->update([
+                'starts_at' => $newStart->toDateTimeString(),
+                'ends_at' => $newEnd->toDateTimeString(),
+            ]);
+
+            $appointment->refresh();
+
+            return $appointment;
+        });
+    }
+
+    public function cancel(Appointment $appointment): Appointment
+    {
+        if ($appointment->status === Appointment::STATUS_CANCELLED) {
+            return $appointment;
+        }
+
+        $appointment->update(['status' => Appointment::STATUS_CANCELLED]);
+        $appointment->refresh();
+
+        return $appointment;
+    }
+
+    private function assertAvailabilityCovers(
+        BarberProfile $profile,
+        CarbonImmutable $start,
+        CarbonImmutable $end,
+    ): void {
+        $covers = $profile->availabilityWindows()
+            ->where('weekday', (int) $start->dayOfWeek)
+            ->where('starts_at', '<=', $start->format('H:i:s'))
+            ->where('ends_at', '>=', $end->format('H:i:s'))
+            ->exists();
+
+        if (! $covers) {
+            throw new RuntimeException('Selected time is outside the barber’s availability.');
+        }
+    }
+
+    private function assertNoOverlap(
+        int $barberUserId,
+        CarbonImmutable $start,
+        CarbonImmutable $end,
+        ?int $excludeAppointmentId = null,
+    ): void {
+        $overlap = Appointment::query()
+            ->where('barber_user_id', $barberUserId)
+            ->where('status', Appointment::STATUS_CONFIRMED)
+            ->when(
+                $excludeAppointmentId !== null,
+                fn ($q) => $q->where('id', '!=', $excludeAppointmentId),
+            )
+            ->where('starts_at', '<', $end->toDateTimeString())
+            ->where('ends_at', '>', $start->toDateTimeString())
+            ->lockForUpdate()
+            ->exists();
+
+        if ($overlap) {
+            throw new RuntimeException('Selected time is no longer available.');
+        }
     }
 
     private function combineDateTime(CarbonImmutable $date, string $time): CarbonImmutable

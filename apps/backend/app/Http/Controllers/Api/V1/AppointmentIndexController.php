@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\AppointmentResource;
 use App\Models\Appointment;
 use App\Models\Role;
+use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
@@ -18,9 +19,12 @@ final class AppointmentIndexController extends Controller
             abort(401);
         }
 
-        $query = Appointment::query()
-            ->with(['service', 'barber', 'customer'])
-            ->orderBy('starts_at');
+        $filters = $request->validate([
+            'status' => ['sometimes', 'in:confirmed,cancelled,all'],
+            'range' => ['sometimes', 'in:upcoming,past,all'],
+        ]);
+
+        $query = Appointment::query()->with(['service', 'barber', 'customer']);
 
         if ($user->isAdmin()) {
             // No additional scope.
@@ -28,6 +32,21 @@ final class AppointmentIndexController extends Controller
             $query->where('barber_user_id', $user->id);
         } else {
             $query->where('customer_user_id', $user->id);
+        }
+
+        $status = $filters['status'] ?? 'all';
+        if ($status !== 'all') {
+            $query->where('status', $status);
+        }
+
+        $range = $filters['range'] ?? 'all';
+        $now = CarbonImmutable::now()->toDateTimeString();
+        if ($range === 'upcoming') {
+            $query->where('starts_at', '>=', $now)->orderBy('starts_at');
+        } elseif ($range === 'past') {
+            $query->where('starts_at', '<', $now)->orderByDesc('starts_at');
+        } else {
+            $query->orderBy('starts_at');
         }
 
         return AppointmentResource::collection($query->paginate(20));

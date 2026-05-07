@@ -1,6 +1,9 @@
 <?php
 
+use App\Http\Controllers\Api\V1\AppointmentCancelController;
 use App\Http\Controllers\Api\V1\AppointmentIndexController;
+use App\Http\Controllers\Api\V1\AppointmentRescheduleController;
+use App\Http\Controllers\Api\V1\AppointmentShowController;
 use App\Http\Controllers\Api\V1\AppointmentStoreController;
 use App\Http\Controllers\Api\V1\Auth\GoogleOAuthCallbackController;
 use App\Http\Controllers\Api\V1\Auth\GoogleOAuthRedirectController;
@@ -72,4 +75,9 @@ Route::middleware('auth:sanctum')->group(function (): void {
     Route::get('/appointments', AppointmentIndexController::class);
     Route::post('/appointments', AppointmentStoreController::class)
         ->middleware('throttle:20,1');
+    Route::get('/appointments/{appointment}', AppointmentShowController::class);
+    Route::patch('/appointments/{appointment}/cancel', AppointmentCancelController::class)
+        ->middleware('throttle:30,1');
+    Route::patch('/appointments/{appointment}/reschedule', AppointmentRescheduleController::class)
+        ->middleware('throttle:30,1');
 });

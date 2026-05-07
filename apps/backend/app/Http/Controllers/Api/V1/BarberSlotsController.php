@@ -17,6 +17,7 @@ final class BarberSlotsController extends Controller
         $data = $request->validate([
             'service_id' => ['required', 'integer', 'exists:services,id'],
             'date' => ['required', 'date_format:Y-m-d'],
+            'exclude_appointment_id' => ['sometimes', 'integer', 'exists:appointments,id'],
         ]);
 
         $service = Service::query()->where('is_active', true)->find($data['service_id']);
@@ -30,7 +31,12 @@ final class BarberSlotsController extends Controller
         }
 
         $date = CarbonImmutable::createFromFormat('Y-m-d', $data['date'])->startOfDay();
-        $slots = $booking->availableSlots($user, $service, $date);
+        $slots = $booking->availableSlots(
+            $user,
+            $service,
+            $date,
+            isset($data['exclude_appointment_id']) ? (int) $data['exclude_appointment_id'] : null,
+        );
 
         return response()->json([
             'date' => $date->format('Y-m-d'),
