@@ -164,3 +164,45 @@ export type LaravelValidationPayload = {
   message?: string;
   errors?: Record<string, string[]>;
 };
+
+export type BarberSlotsPayload = {
+  date: string;
+  service_id: number;
+  duration_minutes: number;
+  /** ISO 8601 starts (no timezone offset). */
+  slots: string[];
+};
+
+export type AppointmentStatus = "confirmed" | "cancelled";
+
+export type AppointmentRecord = {
+  id: number;
+  status: AppointmentStatus;
+  starts_at: string | null;
+  ends_at: string | null;
+  notes: string | null;
+  service?: {
+    id: number;
+    name: string;
+    slug: string;
+    duration_minutes: number;
+    price_cents: number;
+  };
+  barber?: {
+    id: number;
+    name: string;
+  };
+  customer?: {
+    id: number;
+    name: string;
+    email: string;
+  };
+};
+
+export type CreateAppointmentInput = {
+  service_id: number;
+  barber_user_id: number;
+  /** ISO 8601 (e.g. `2026-05-11T09:00:00`). */
+  starts_at: string;
+  notes?: string | null;
+};
