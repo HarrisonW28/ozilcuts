@@ -166,6 +166,74 @@ export type UpdateCustomerProfileInput = {
   marketing_opt_in?: boolean;
 };
 
+export const HAIR_TYPE_OPTIONS = [
+  "straight",
+  "wavy",
+  "curly",
+  "coily",
+] as const;
+export type HairType = (typeof HAIR_TYPE_OPTIONS)[number];
+
+export const HAIR_THICKNESS_OPTIONS = ["fine", "medium", "thick"] as const;
+export type HairThickness = (typeof HAIR_THICKNESS_OPTIONS)[number];
+
+export const HAIR_LENGTH_OPTIONS = [
+  "very_short",
+  "short",
+  "medium",
+  "long",
+] as const;
+export type HairLength = (typeof HAIR_LENGTH_OPTIONS)[number];
+
+export const SCALP_CONDITION_OPTIONS = [
+  "normal",
+  "dry",
+  "oily",
+  "sensitive",
+] as const;
+export type ScalpCondition = (typeof SCALP_CONDITION_OPTIONS)[number];
+
+export type HairProfilePhoto = {
+  id: number;
+  caption: string | null;
+  mime_type: string;
+  size_bytes: number;
+  created_at: string | null;
+  url: string;
+};
+
+export type HairProfile = {
+  id: number;
+  hair_type: HairType | null;
+  hair_thickness: HairThickness | null;
+  hair_length: HairLength | null;
+  scalp_condition: ScalpCondition | null;
+  preferred_clipper_guard: string | null;
+  allergies: string | null;
+  styling_notes: string | null;
+  updated_at: string | null;
+  photos: HairProfilePhoto[];
+  user?: {
+    id: number;
+    name: string;
+    email: string;
+  };
+};
+
+export type UpdateHairProfileInput = {
+  hair_type?: HairType | null;
+  hair_thickness?: HairThickness | null;
+  hair_length?: HairLength | null;
+  scalp_condition?: ScalpCondition | null;
+  preferred_clipper_guard?: string | null;
+  allergies?: string | null;
+  styling_notes?: string | null;
+};
+
+export type AppointmentHairProfileResponse = {
+  data: HairProfile | null;
+};
+
 export type ApiHealthResponse = {
   status: "ok";
 };
