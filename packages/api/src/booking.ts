@@ -3,6 +3,7 @@ import type {
   AppointmentRecord,
   BarberSlotsPayload,
   CreateAppointmentInput,
+  CreateAppointmentResponse,
   LaravelValidationPayload,
   Paginated,
   RescheduleAppointmentInput,
@@ -55,14 +56,14 @@ export async function fetchBarberSlots(
 export async function createAppointment(
   token: string,
   body: CreateAppointmentInput,
-): Promise<AppointmentRecord> {
+): Promise<CreateAppointmentResponse> {
   const res = await fetch(`${getApiBaseUrl()}/api/v1/appointments`, {
     method: "POST",
     headers: authJsonHeaders(token),
     body: JSON.stringify(body),
   });
   const payload = (await res.json().catch(() => ({}))) as
-    | AppointmentRecord
+    | CreateAppointmentResponse
     | LaravelValidationPayload;
   if (!res.ok) {
     if (res.status === 422) {
@@ -74,7 +75,7 @@ export async function createAppointment(
     throw new ApiError("Failed to book appointment", res.status, payload);
   }
 
-  return payload as AppointmentRecord;
+  return payload as CreateAppointmentResponse;
 }
 
 export async function fetchMyAppointments(

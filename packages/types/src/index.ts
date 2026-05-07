@@ -7,6 +7,7 @@ export type ServiceSummary = {
   description: string | null;
   duration_minutes: number;
   price_cents: number;
+  deposit_cents: number;
 };
 
 export type BarberPublicRef = {
@@ -74,6 +75,7 @@ export type ServiceManageRow = {
   description: string | null;
   duration_minutes: number;
   price_cents: number;
+  deposit_cents: number;
   sort_order: number;
   is_active: boolean;
   updated_at: string | null;
@@ -85,6 +87,7 @@ export type CreateServiceInput = {
   description?: string | null;
   duration_minutes: number;
   price_cents: number;
+  deposit_cents?: number;
   sort_order?: number;
   is_active?: boolean;
 };
@@ -95,6 +98,7 @@ export type UpdateServiceInput = {
   description?: string | null;
   duration_minutes?: number;
   price_cents?: number;
+  deposit_cents?: number;
   sort_order?: number;
   is_active?: boolean;
 };
@@ -175,18 +179,32 @@ export type BarberSlotsPayload = {
 
 export type AppointmentStatus = "confirmed" | "cancelled";
 
+export type AppointmentPaymentStatus =
+  | "not_required"
+  | "requires_payment"
+  | "processing"
+  | "paid"
+  | "failed"
+  | "refunded";
+
 export type AppointmentRecord = {
   id: number;
   status: AppointmentStatus;
   starts_at: string | null;
   ends_at: string | null;
   notes: string | null;
+  deposit_cents: number;
+  payment_status: AppointmentPaymentStatus;
+  amount_paid_cents: number;
+  paid_at: string | null;
+  refunded_at: string | null;
   service?: {
     id: number;
     name: string;
     slug: string;
     duration_minutes: number;
     price_cents: number;
+    deposit_cents: number;
   };
   barber?: {
     id: number;
@@ -197,6 +215,23 @@ export type AppointmentRecord = {
     name: string;
     email: string;
   };
+};
+
+export type AppointmentPaymentMeta = {
+  enabled: boolean;
+  currency: string;
+  publishable_key: string | null;
+  client_secret: string | null;
+};
+
+export type CreateAppointmentResponse = AppointmentRecord & {
+  payment: AppointmentPaymentMeta;
+};
+
+export type PaymentConfig = {
+  enabled: boolean;
+  publishable_key: string | null;
+  currency: string;
 };
 
 export type CreateAppointmentInput = {

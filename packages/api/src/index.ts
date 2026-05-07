@@ -26,6 +26,7 @@ export {
   fetchMyAppointments,
   rescheduleAppointment,
 } from "./booking";
+export { fetchPaymentConfig } from "./payments";
 export {
   createManagedBarber,
   fetchManageBarbers,
