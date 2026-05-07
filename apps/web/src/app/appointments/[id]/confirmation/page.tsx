@@ -12,11 +12,13 @@ import {
   fetchAppointmentCalendarLink,
   fetchAppointmentHairProfile,
   fetchAppointmentPaymentIntent,
+  fetchAppointmentRebookHint,
 } from "@ozilcuts/api";
 import type {
   AppointmentPendingPayment,
   AppointmentRecord,
   HairProfile,
+  RebookSuggestion,
 } from "@ozilcuts/types";
 import { OZILCUTS_APP_NAME } from "@ozilcuts/types";
 import {
@@ -45,6 +47,26 @@ function formatUsd(cents: number): string {
     style: "currency",
     currency: "USD",
   }).format(cents / 100);
+}
+
+function formatIsoDate(date: string): string {
+  const [y, m, d] = date.split("-").map((s) => Number.parseInt(s, 10));
+  if (!y || !m || !d) return date;
+  const dt = new Date(y, m - 1, d);
+  return dt.toLocaleDateString(undefined, {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+  });
+}
+
+function buildBookAgainHref(suggestion: RebookSuggestion): string {
+  const params = new URLSearchParams({
+    service: String(suggestion.service_id),
+    barber: String(suggestion.barber_user_id),
+    date: suggestion.suggested_date,
+  });
+  return `/book?${params.toString()}`;
 }
 
 function formatLong(iso: string | null): string {
@@ -156,6 +178,7 @@ export default function ConfirmationPage() {
   const [customerHairProfile, setCustomerHairProfile] =
     useState<HairProfile | null>(null);
   const [hairProfileError, setHairProfileError] = useState<string | null>(null);
+  const [rebookHint, setRebookHint] = useState<RebookSuggestion | null>(null);
 
   const load = useCallback(async () => {
     const token = getStoredAuthToken();
@@ -229,6 +252,42 @@ export default function ConfirmationPage() {
   const isStaff =
     isReady &&
     (isAssignedBarber || profile.user.role.slug === "admin");
+  const isAdmin = isReady && profile.user.role.slug === "admin";
+  const isPastAppointment =
+    appointment !== null &&
+    appointment.starts_at !== null &&
+    !Number.isNaN(new Date(appointment.starts_at).getTime()) &&
+    new Date(appointment.starts_at).getTime() < Date.now();
+  const canSuggestRebook =
+    isReady &&
+    appointment !== null &&
+    appointment.status === "confirmed" &&
+    isPastAppointment &&
+    (isCustomer || isAdmin);
+
+  useEffect(() => {
+    if (!canSuggestRebook || !appointment) {
+      setRebookHint(null);
+      return;
+    }
+    const token = getStoredAuthToken();
+    if (!token) return;
+
+    let cancelled = false;
+    fetchAppointmentRebookHint(token, appointment.id)
+      .then((res) => {
+        if (cancelled) return;
+        setRebookHint(res);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setRebookHint(null);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [canSuggestRebook, appointment]);
 
   useEffect(() => {
     if (!isStaff || !appointment) {
@@ -419,10 +478,31 @@ export default function ConfirmationPage() {
                 <Button asChild variant="secondary" size="sm">
                   <Link href="/appointments">My appointments</Link>
                 </Button>
-                {appointment.status === "confirmed" && isCustomer ? (
+                {appointment.status === "confirmed" &&
+                isCustomer &&
+                !isPastAppointment ? (
                   <Button asChild variant="outline" size="sm">
                     <Link href={`/appointments/${appointment.id}/reschedule`}>
                       Reschedule
+                    </Link>
+                  </Button>
+                ) : null}
+                {canSuggestRebook && rebookHint ? (
+                  <Button asChild size="sm">
+                    <Link href={buildBookAgainHref(rebookHint)}>
+                      Book this again
+                      <span className="ml-1 text-xs opacity-80">
+                        · suggested {formatIsoDate(rebookHint.suggested_date)}
+                      </span>
+                    </Link>
+                  </Button>
+                ) : null}
+                {canSuggestRebook && !rebookHint && appointment.service && appointment.barber ? (
+                  <Button asChild size="sm">
+                    <Link
+                      href={`/book?service=${appointment.service.id}&barber=${appointment.barber.id}`}
+                    >
+                      Book this again
                     </Link>
                   </Button>
                 ) : null}

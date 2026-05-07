@@ -7,6 +7,7 @@ import {
   ApiError,
   cancelAppointment,
   fetchMyAppointments,
+  fetchNextVisitSuggestion,
 } from "@ozilcuts/api";
 import type {
   AppointmentPaymentStatus,
@@ -14,6 +15,7 @@ import type {
   AppointmentRecord,
   AppointmentStatusFilter,
   Paginated,
+  RebookSuggestion,
 } from "@ozilcuts/types";
 import { OZILCUTS_APP_NAME } from "@ozilcuts/types";
 import {
@@ -62,6 +64,35 @@ function formatStart(iso: string | null): string {
     hour: "numeric",
     minute: "2-digit",
   });
+}
+
+function formatIsoDate(date: string): string {
+  const [y, m, d] = date.split("-").map((s) => Number.parseInt(s, 10));
+  if (!y || !m || !d) return date;
+  const dt = new Date(y, m - 1, d);
+  return dt.toLocaleDateString(undefined, {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+  });
+}
+
+function buildBookAgainFromRowHref(row: AppointmentRecord): string | null {
+  if (!row.service || !row.barber) return null;
+  const params = new URLSearchParams({
+    service: String(row.service.id),
+    barber: String(row.barber.id),
+  });
+  return `/book?${params.toString()}`;
+}
+
+function buildBookAgainFromHintHref(hint: RebookSuggestion): string {
+  const params = new URLSearchParams({
+    service: String(hint.service_id),
+    barber: String(hint.barber_user_id),
+    date: hint.suggested_date,
+  });
+  return `/book?${params.toString()}`;
 }
 
 function isPast(iso: string | null): boolean {
@@ -142,6 +173,8 @@ export default function AppointmentsPage() {
   const [status, setStatus] = useState<AppointmentStatusFilter>("confirmed");
   const [actionBusyId, setActionBusyId] = useState<number | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [nextVisit, setNextVisit] = useState<RebookSuggestion | null>(null);
+  const [nextVisitDismissed, setNextVisitDismissed] = useState(false);
 
   const load = useCallback(
     async (
@@ -180,6 +213,31 @@ export default function AppointmentsPage() {
     if (profile.kind !== "ready") return;
     void load(page, range, status);
   }, [profile, page, range, status, load]);
+
+  useEffect(() => {
+    if (profile.kind !== "ready") return;
+    if (profile.user.role.slug !== "customer") {
+      setNextVisit(null);
+      return;
+    }
+    const token = getStoredAuthToken();
+    if (!token) return;
+
+    let cancelled = false;
+    fetchNextVisitSuggestion(token)
+      .then((res) => {
+        if (cancelled) return;
+        setNextVisit(res);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setNextVisit(null);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [profile]);
 
   function changeRange(next: AppointmentRangeFilter) {
     setRange(next);
@@ -248,6 +306,39 @@ export default function AppointmentsPage() {
                 </Button>
                 <Button asChild variant="outline">
                   <Link href="/register">Create account</Link>
+                </Button>
+              </CardFooter>
+            </Card>
+          ) : null}
+
+          {profile.kind === "ready" &&
+          profile.user.role.slug === "customer" &&
+          nextVisit &&
+          !nextVisitDismissed ? (
+            <Card className="border-primary/40 bg-primary/5">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base">
+                  Time for your next visit?
+                </CardTitle>
+                <CardDescription>
+                  {nextVisit.barber && nextVisit.service
+                    ? `Based on your visits with ${nextVisit.barber.name}, you usually book ${nextVisit.service.name} every ${nextVisit.interval_days} days. Suggested for ${formatIsoDate(nextVisit.suggested_date)}.`
+                    : `Suggested for ${formatIsoDate(nextVisit.suggested_date)}.`}
+                </CardDescription>
+              </CardHeader>
+              <CardFooter className="flex flex-wrap gap-2">
+                <Button asChild size="sm">
+                  <Link href={buildBookAgainFromHintHref(nextVisit)}>
+                    Book it
+                  </Link>
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setNextVisitDismissed(true)}
+                >
+                  Not now
                 </Button>
               </CardFooter>
             </Card>
@@ -364,6 +455,16 @@ export default function AppointmentsPage() {
                       !past &&
                       profile.kind === "ready";
                     const isBusy = actionBusyId === row.id;
+                    const isCustomer =
+                      profile.kind === "ready" &&
+                      profile.user.role.slug === "customer" &&
+                      row.customer?.id === profile.user.id;
+                    const bookAgainHref =
+                      isCustomer &&
+                      row.status === "confirmed" &&
+                      past
+                        ? buildBookAgainFromRowHref(row)
+                        : null;
 
                     return (
                       <li key={row.id}>
@@ -440,7 +541,13 @@ export default function AppointmentsPage() {
                                   {isBusy ? "Cancelling…" : "Cancel"}
                                 </Button>
                               </>
-                            ) : (
+                            ) : null}
+                            {bookAgainHref ? (
+                              <Button asChild size="sm" variant="secondary">
+                                <Link href={bookAgainHref}>Book again</Link>
+                              </Button>
+                            ) : null}
+                            {!canMutate && !bookAgainHref ? (
                               <p className="text-xs text-muted-foreground">
                                 {row.status === "cancelled"
                                   ? "Cancelled — contact us if you'd like to rebook."
@@ -448,7 +555,7 @@ export default function AppointmentsPage() {
                                     ? "Past appointments are read-only."
                                     : "Read-only."}
                               </p>
-                            )}
+                            ) : null}
                           </CardFooter>
                         </Card>
                       </li>

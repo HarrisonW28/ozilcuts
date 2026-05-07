@@ -63,21 +63,38 @@ type SlotsState =
   | { kind: "ok"; slots: string[] }
   | { kind: "error"; message: string };
 
+function parsePositiveIntParam(value: string | null): number | null {
+  if (value === null) return null;
+  const n = Number.parseInt(value, 10);
+  return Number.isFinite(n) && n > 0 ? n : null;
+}
+
+function parseIsoDateParam(value: string | null, fallback: string): string {
+  if (value === null) return fallback;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return fallback;
+  return value < fallback ? fallback : value;
+}
+
 function BookingFlow() {
   const search = useSearchParams();
   const router = useRouter();
-  const initialServiceId = (() => {
-    const raw = search.get("service_id");
-    const n = raw ? Number.parseInt(raw, 10) : NaN;
-    return Number.isFinite(n) && n > 0 ? n : null;
-  })();
+  const today = todayIso();
+  // Read all prefill params once, on initial render. The booking page is the
+  // landing target for "book again" links from confirmation/appointments.
+  const initialServiceId =
+    parsePositiveIntParam(search.get("service_id")) ??
+    parsePositiveIntParam(search.get("service"));
+  const initialBarberId =
+    parsePositiveIntParam(search.get("barber_user_id")) ??
+    parsePositiveIntParam(search.get("barber"));
+  const initialDate = parseIsoDateParam(search.get("date"), today);
 
   const { profile, signOut } = useSessionProfile();
 
   const [catalog, setCatalog] = useState<CatalogState>({ kind: "loading" });
   const [serviceId, setServiceId] = useState<number | null>(initialServiceId);
-  const [barberId, setBarberId] = useState<number | null>(null);
-  const [date, setDate] = useState<string>(todayIso());
+  const [barberId, setBarberId] = useState<number | null>(initialBarberId);
+  const [date, setDate] = useState<string>(initialDate);
   const [slots, setSlots] = useState<SlotsState>({ kind: "idle" });
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
   const [notes, setNotes] = useState("");
@@ -90,6 +107,20 @@ function BookingFlow() {
       .then(([services, barbers]) => {
         if (cancelled) return;
         setCatalog({ kind: "ok", services, barbers });
+        setServiceId((current) =>
+          current !== null && services.some((s) => s.id === current)
+            ? current
+            : current !== null
+              ? null
+              : current,
+        );
+        setBarberId((current) =>
+          current !== null && barbers.some((b) => b.barber.id === current)
+            ? current
+            : current !== null
+              ? null
+              : current,
+        );
       })
       .catch((err: unknown) => {
         if (cancelled) return;
