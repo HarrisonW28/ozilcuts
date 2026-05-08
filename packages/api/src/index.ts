@@ -13,6 +13,10 @@ export {
 } from "./auth";
 export { getApiBaseUrl } from "./base";
 export {
+  fetchBarberAnalytics,
+  fetchBarberAnalyticsCompare,
+} from "./barberAnalytics";
+export {
   fetchBarberAvailability,
   fetchManageBarberAvailability,
   replaceManageBarberAvailability,

@@ -446,6 +446,72 @@ export type AppointmentListFilters = {
   page?: number;
 };
 
+export type BarberAnalyticsSummary = {
+  barber_user_id: number;
+  barber_name: string;
+  /** YYYY-MM-DD */
+  from: string;
+  /** YYYY-MM-DD */
+  to: string;
+  appointments_total: number;
+  appointments_confirmed: number;
+  appointments_cancelled: number;
+  /** 0..1 */
+  cancellation_rate: number;
+  booked_cents: number;
+  collected_cents: number;
+  booked_minutes: number;
+  available_minutes: number;
+  /** 0..1 */
+  utilization_pct: number;
+  customers_total: number;
+  repeat_customers: number;
+};
+
+export type BarberAnalyticsTopService = {
+  service_id: number;
+  service_name: string;
+  count: number;
+  booked_cents: number;
+};
+
+export type BarberAnalyticsTopCustomer = {
+  customer_user_id: number;
+  customer_name: string;
+  visits: number;
+  booked_cents: number;
+};
+
+export type BarberAnalyticsSeriesPoint = {
+  /** YYYY-MM-DD */
+  bucket: string;
+  appointments_count: number;
+  booked_cents: number;
+  collected_cents: number;
+};
+
+export type BarberAnalyticsReport = {
+  summary: BarberAnalyticsSummary;
+  top_services: BarberAnalyticsTopService[];
+  top_customers: BarberAnalyticsTopCustomer[];
+  series: BarberAnalyticsSeriesPoint[];
+};
+
+export type BarberAnalyticsRangeFilters = {
+  /** YYYY-MM-DD */
+  from: string;
+  /** YYYY-MM-DD */
+  to: string;
+};
+
+export type BarberAnalyticsCompareResponse = {
+  /** YYYY-MM-DD */
+  from: string;
+  /** YYYY-MM-DD */
+  to: string;
+  rows: BarberAnalyticsSummary[];
+};
+
 export const REVENUE_REPORT_GRANULARITIES = ["day", "month"] as const;
 
 export type RevenueReportGranularity =
