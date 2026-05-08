@@ -37,6 +37,7 @@ export {
   fetchCustomerAnalyticsAggregate,
   fetchMyVisitsSummary,
 } from "./customerAnalytics";
+export { fetchOperationalInsights } from "./operationalInsights";
 export {
   attachCustomerTag,
   createCustomerNote,

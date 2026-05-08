@@ -1,5 +1,8 @@
 export const OZILCUTS_APP_NAME = "Ozilcuts" as const;
 
+export const DEPOSIT_POLICIES = ["always", "first_time_customer"] as const;
+export type DepositPolicy = (typeof DEPOSIT_POLICIES)[number];
+
 export type ServiceSummary = {
   id: number;
   name: string;
@@ -8,6 +11,7 @@ export type ServiceSummary = {
   duration_minutes: number;
   price_cents: number;
   deposit_cents: number;
+  deposit_policy: DepositPolicy;
 };
 
 export type BarberPublicRef = {
@@ -76,6 +80,7 @@ export type ServiceManageRow = {
   duration_minutes: number;
   price_cents: number;
   deposit_cents: number;
+  deposit_policy: DepositPolicy;
   sort_order: number;
   is_active: boolean;
   updated_at: string | null;
@@ -88,6 +93,7 @@ export type CreateServiceInput = {
   duration_minutes: number;
   price_cents: number;
   deposit_cents?: number;
+  deposit_policy?: DepositPolicy;
   sort_order?: number;
   is_active?: boolean;
 };
@@ -99,6 +105,7 @@ export type UpdateServiceInput = {
   duration_minutes?: number;
   price_cents?: number;
   deposit_cents?: number;
+  deposit_policy?: DepositPolicy;
   sort_order?: number;
   is_active?: boolean;
 };
@@ -501,6 +508,59 @@ export type CustomerAnalyticsResponse = {
 };
 
 export type CustomerAnalyticsRangeFilters = {
+  /** YYYY-MM-DD */
+  from: string;
+  /** YYYY-MM-DD */
+  to: string;
+};
+
+export type OperationsTodayBlock = {
+  /** YYYY-MM-DD */
+  date: string;
+  confirmed: number;
+  cancelled: number;
+  deposits_collected_cents: number;
+  deposits_pending_cents: number;
+};
+
+export type OperationsWeekBlock = {
+  /** YYYY-MM-DD */
+  from: string;
+  /** YYYY-MM-DD */
+  to: string;
+  confirmed: number;
+  cancelled: number;
+  /** 0..1 fraction. */
+  cancel_rate: number;
+  deposits_collected_cents: number;
+  deposits_pending_cents: number;
+};
+
+export type OperationsHeatmapCell = {
+  /** Sunday=0..Saturday=6 (Carbon dayOfWeek). */
+  weekday: number;
+  weekday_label: string;
+  /** 0..23 */
+  hour: number;
+  count: number;
+};
+
+export type OperationsLeadTimeBucket = {
+  label: string;
+  count: number;
+};
+
+export type OperationalInsightsReport = {
+  today: OperationsTodayBlock;
+  week: OperationsWeekBlock;
+  range: { from: string; to: string };
+  /** 7×24 = 168 cells, dense. */
+  peak_heatmap: OperationsHeatmapCell[];
+  booking_lead_time: OperationsLeadTimeBucket[];
+  cancellation_lead_time: OperationsLeadTimeBucket[];
+};
+
+export type OperationalInsightsRangeFilters = {
   /** YYYY-MM-DD */
   from: string;
   /** YYYY-MM-DD */
