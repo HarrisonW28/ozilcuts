@@ -30,6 +30,8 @@ use App\Http\Controllers\Api\V1\BarberPortfolioController;
 use App\Http\Controllers\Api\V1\BarberShowController;
 use App\Http\Controllers\Api\V1\BarberSlotsController;
 use App\Http\Controllers\Api\V1\CurrentUserController;
+use App\Http\Controllers\Api\V1\CustomerAnalyticsAggregateController;
+use App\Http\Controllers\Api\V1\CustomerAnalyticsShowController;
 use App\Http\Controllers\Api\V1\CustomerNextVisitController;
 use App\Http\Controllers\Api\V1\CustomerNoteDestroyController;
 use App\Http\Controllers\Api\V1\CustomerNoteIndexController;
@@ -41,6 +43,7 @@ use App\Http\Controllers\Api\V1\CustomerTagDestroyController;
 use App\Http\Controllers\Api\V1\CustomerTagIndexController;
 use App\Http\Controllers\Api\V1\CustomerTagStoreController;
 use App\Http\Controllers\Api\V1\CustomerTagSuggestionsController;
+use App\Http\Controllers\Api\V1\CustomerVisitsSummaryController;
 use App\Http\Controllers\Api\V1\HaircutPhotoDestroyController;
 use App\Http\Controllers\Api\V1\HaircutPhotoShowController;
 use App\Http\Controllers\Api\V1\HaircutPhotoUpdateController;
@@ -177,6 +180,12 @@ Route::middleware('auth:sanctum')->group(function (): void {
     Route::get('/admin/reports/revenue.csv', RevenueReportCsvController::class)
         ->middleware('throttle:30,1');
     Route::get('/admin/reports/barbers', BarberAnalyticsCompareController::class)
+        ->middleware('throttle:60,1');
+    Route::get('/admin/reports/customers', CustomerAnalyticsAggregateController::class)
+        ->middleware('throttle:60,1');
+    Route::get('/admin/customers/{user}/analytics', CustomerAnalyticsShowController::class)
+        ->middleware('throttle:60,1');
+    Route::get('/customer/visits', CustomerVisitsSummaryController::class)
         ->middleware('throttle:60,1');
     Route::get('/barbers/{user}/analytics', BarberAnalyticsController::class)
         ->middleware('throttle:60,1');
