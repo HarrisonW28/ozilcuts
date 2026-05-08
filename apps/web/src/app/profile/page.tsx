@@ -394,6 +394,25 @@ export default function ProfilePage() {
             </Card>
           ) : null}
 
+          {profile.kind === "ready" ? (
+            <Card>
+              <CardHeader>
+                <CardTitle>Notifications</CardTitle>
+                <CardDescription>
+                  Choose which appointment updates we send by email and which
+                  appear in your in-app inbox.
+                </CardDescription>
+              </CardHeader>
+              <CardFooter>
+                <Button asChild variant="outline">
+                  <Link href="/profile/notifications">
+                    Manage notification preferences
+                  </Link>
+                </Button>
+              </CardFooter>
+            </Card>
+          ) : null}
+
           <p className="text-center text-sm text-muted-foreground">
             <Link href="/" className="underline-offset-4 hover:underline">
               Home

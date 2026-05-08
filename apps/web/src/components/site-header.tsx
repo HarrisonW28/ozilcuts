@@ -1,6 +1,7 @@
 "use client";
 
 import { ModeToggle } from "@/components/mode-toggle";
+import { NotificationsBell } from "@/components/notifications-bell";
 import type { ProfileState } from "@/lib/use-session-profile";
 import { Button, buttonVariants, cn } from "@ozilcuts/ui";
 import { OZILCUTS_APP_NAME } from "@ozilcuts/types";
@@ -185,6 +186,7 @@ export function SiteHeader({ profile, onSignOut }: SiteHeaderProps) {
         ) : null}
         {profile.kind === "ready" ? (
           <>
+            <NotificationsBell enabled />
             <span className="max-w-[9rem] truncate font-medium text-foreground sm:hidden">
               {profile.user.name.split(" ")[0] ?? profile.user.name}
             </span>
