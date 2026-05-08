@@ -53,6 +53,12 @@ use App\Http\Controllers\Api\V1\HairProfilePhotoStoreController;
 use App\Http\Controllers\Api\V1\HairProfileShowController;
 use App\Http\Controllers\Api\V1\HairProfileUpdateController;
 use App\Http\Controllers\Api\V1\HealthController;
+use App\Http\Controllers\Api\V1\NotificationIndexController;
+use App\Http\Controllers\Api\V1\NotificationMarkAllReadController;
+use App\Http\Controllers\Api\V1\NotificationMarkReadController;
+use App\Http\Controllers\Api\V1\NotificationPreferenceShowController;
+use App\Http\Controllers\Api\V1\NotificationPreferenceUpdateController;
+use App\Http\Controllers\Api\V1\NotificationUnreadCountController;
 use App\Http\Controllers\Api\V1\OperationalInsightsController;
 use App\Http\Controllers\Api\V1\PaymentConfigController;
 use App\Http\Controllers\Api\V1\RevenueReportController;
@@ -188,6 +194,18 @@ Route::middleware('auth:sanctum')->group(function (): void {
         ->middleware('throttle:60,1');
     Route::get('/admin/reports/operations', OperationalInsightsController::class)
         ->middleware('throttle:60,1');
+    Route::get('/notifications', NotificationIndexController::class)
+        ->middleware('throttle:120,1');
+    Route::get('/notifications/unread-count', NotificationUnreadCountController::class)
+        ->middleware('throttle:240,1');
+    Route::patch('/notifications/read-all', NotificationMarkAllReadController::class)
+        ->middleware('throttle:30,1');
+    Route::patch('/notifications/{notification}/read', NotificationMarkReadController::class)
+        ->middleware('throttle:120,1');
+    Route::get('/notification-preferences', NotificationPreferenceShowController::class)
+        ->middleware('throttle:60,1');
+    Route::put('/notification-preferences', NotificationPreferenceUpdateController::class)
+        ->middleware('throttle:30,1');
     Route::get('/customer/visits', CustomerVisitsSummaryController::class)
         ->middleware('throttle:60,1');
     Route::get('/barbers/{user}/analytics', BarberAnalyticsController::class)
