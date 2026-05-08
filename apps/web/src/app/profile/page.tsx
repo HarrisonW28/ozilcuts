@@ -377,6 +377,23 @@ export default function ProfilePage() {
             </Card>
           ) : null}
 
+          {profile.kind === "ready" && profile.user.role.slug === "customer" ? (
+            <Card>
+              <CardHeader>
+                <CardTitle>Visit history</CardTitle>
+                <CardDescription>
+                  See your total visits, spend, average cadence, and recent
+                  appointments.
+                </CardDescription>
+              </CardHeader>
+              <CardFooter>
+                <Button asChild variant="outline">
+                  <Link href="/profile/visits">View my visits</Link>
+                </Button>
+              </CardFooter>
+            </Card>
+          ) : null}
+
           <p className="text-center text-sm text-muted-foreground">
             <Link href="/" className="underline-offset-4 hover:underline">
               Home
