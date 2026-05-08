@@ -490,14 +490,23 @@ export default function AdminBarbersPage() {
                                   </span>
                                   {row.is_published ? "Yes" : "No"}
                                 </p>
-                                <Button
-                                  type="button"
-                                  variant="secondary"
-                                  size="sm"
-                                  onClick={() => startEdit(row)}
-                                >
-                                  Edit
-                                </Button>
+                                <div className="flex flex-wrap gap-2">
+                                  <Button
+                                    type="button"
+                                    variant="secondary"
+                                    size="sm"
+                                    onClick={() => startEdit(row)}
+                                  >
+                                    Edit
+                                  </Button>
+                                  <Button asChild size="sm" variant="outline">
+                                    <Link
+                                      href={`/admin/barbers/${row.user.id}/analytics`}
+                                    >
+                                      Analytics
+                                    </Link>
+                                  </Button>
+                                </div>
                               </>
                             )}
                           </CardContent>
