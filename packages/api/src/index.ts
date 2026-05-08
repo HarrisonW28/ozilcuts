@@ -62,6 +62,10 @@ export {
   fetchNextVisitSuggestion,
 } from "./rebookSuggestions";
 export {
+  downloadRevenueReportCsv,
+  fetchRevenueReport,
+} from "./revenueReport";
+export {
   createManagedBarber,
   fetchManageBarbers,
   updateManagedBarberProfile,

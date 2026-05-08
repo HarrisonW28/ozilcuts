@@ -446,6 +446,64 @@ export type AppointmentListFilters = {
   page?: number;
 };
 
+export const REVENUE_REPORT_GRANULARITIES = ["day", "month"] as const;
+
+export type RevenueReportGranularity =
+  (typeof REVENUE_REPORT_GRANULARITIES)[number];
+
+export type RevenueReportSummary = {
+  /** YYYY-MM-DD */
+  from: string;
+  /** YYYY-MM-DD */
+  to: string;
+  booked_cents: number;
+  collected_cents: number;
+  refunded_cents: number;
+  net_collected_cents: number;
+  booked_appointments: number;
+  paid_appointments: number;
+};
+
+export type RevenueByBarberRow = {
+  barber_user_id: number;
+  barber_name: string;
+  booked_cents: number;
+  collected_cents: number;
+  booked_appointments: number;
+};
+
+export type RevenueByServiceRow = {
+  service_id: number;
+  service_name: string;
+  booked_cents: number;
+  collected_cents: number;
+  booked_appointments: number;
+};
+
+export type RevenueSeriesPoint = {
+  /** YYYY-MM-DD for day, YYYY-MM for month */
+  bucket: string;
+  booked_cents: number;
+  collected_cents: number;
+  booked_appointments: number;
+};
+
+export type RevenueReportFilters = {
+  /** YYYY-MM-DD */
+  from: string;
+  /** YYYY-MM-DD */
+  to: string;
+  granularity?: RevenueReportGranularity;
+};
+
+export type RevenueReport = {
+  summary: RevenueReportSummary;
+  by_barber: RevenueByBarberRow[];
+  by_service: RevenueByServiceRow[];
+  series: RevenueSeriesPoint[];
+  granularity: RevenueReportGranularity;
+};
+
 export type RebookSuggestion = {
   service_id: number;
   barber_user_id: number;
