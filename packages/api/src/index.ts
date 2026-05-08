@@ -37,6 +37,14 @@ export {
   fetchCustomerAnalyticsAggregate,
   fetchMyVisitsSummary,
 } from "./customerAnalytics";
+export {
+  fetchNotificationPreferences,
+  fetchNotificationUnreadCount,
+  fetchNotifications,
+  markAllNotificationsRead,
+  markNotificationRead,
+  updateNotificationPreferences,
+} from "./notifications";
 export { fetchOperationalInsights } from "./operationalInsights";
 export {
   attachCustomerTag,

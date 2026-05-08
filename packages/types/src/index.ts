@@ -567,6 +567,60 @@ export type OperationalInsightsRangeFilters = {
   to: string;
 };
 
+export const NOTIFICATION_EVENTS = [
+  "appointment.confirmed",
+  "appointment.cancelled",
+  "appointment.rescheduled",
+] as const;
+export type NotificationEvent = (typeof NOTIFICATION_EVENTS)[number];
+
+export const NOTIFICATION_CHANNELS = ["mail", "inapp"] as const;
+export type NotificationChannel = (typeof NOTIFICATION_CHANNELS)[number];
+
+export type NotificationData = {
+  appointment_id?: number;
+  service_name?: string | null;
+  barber_name?: string | null;
+  customer_name?: string | null;
+  /** ISO 8601 */
+  starts_at?: string | null;
+  /** ISO 8601 */
+  previous_starts_at?: string | null;
+  // Forward-compatible fallback for unknown payload keys.
+  [extra: string]: unknown;
+};
+
+export type NotificationRecord = {
+  id: number;
+  type: NotificationEvent;
+  data: NotificationData;
+  /** ISO 8601 */
+  read_at: string | null;
+  /** ISO 8601 */
+  created_at: string | null;
+};
+
+export type NotificationPreferenceRow = {
+  event_key: NotificationEvent;
+  channel: NotificationChannel;
+  enabled: boolean;
+};
+
+export type NotificationPreferencesResponse = {
+  preferences: NotificationPreferenceRow[];
+  events: { key: NotificationEvent; label: string; description: string }[];
+  channels: { key: NotificationChannel; label: string }[];
+};
+
+export type NotificationUnreadCountResponse = {
+  unread: number;
+};
+
+export type NotificationMarkAllReadResponse = {
+  updated: number;
+  unread: number;
+};
+
 export type BarberAnalyticsSummary = {
   barber_user_id: number;
   barber_name: string;
