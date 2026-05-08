@@ -27,9 +27,17 @@ class ServiceFactory extends Factory
             'duration_minutes' => fake()->randomElement([15, 20, 30, 45, 60]),
             'price_cents' => fake()->numberBetween(1500, 8000),
             'deposit_cents' => 0,
+            'deposit_policy' => Service::DEPOSIT_POLICY_ALWAYS,
             'sort_order' => fake()->numberBetween(0, 100),
             'is_active' => true,
         ];
+    }
+
+    public function depositFirstTimeOnly(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'deposit_policy' => Service::DEPOSIT_POLICY_FIRST_TIME_CUSTOMER,
+        ]);
     }
 
     public function inactive(): static

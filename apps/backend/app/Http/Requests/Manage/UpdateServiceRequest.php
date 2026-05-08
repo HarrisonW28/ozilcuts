@@ -32,6 +32,7 @@ class UpdateServiceRequest extends FormRequest
             'duration_minutes' => ['sometimes', 'integer', 'min:1', 'max:600'],
             'price_cents' => ['sometimes', 'integer', 'min:0', 'max:100000000'],
             'deposit_cents' => ['sometimes', 'integer', 'min:0', 'max:100000000'],
+            'deposit_policy' => ['sometimes', 'string', Rule::in(Service::DEPOSIT_POLICIES)],
             'sort_order' => ['sometimes', 'integer', 'min:0', 'max:1000000'],
             'is_active' => ['sometimes', 'boolean'],
         ];

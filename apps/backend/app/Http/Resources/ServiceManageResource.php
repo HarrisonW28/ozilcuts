@@ -24,6 +24,7 @@ class ServiceManageResource extends JsonResource
             'duration_minutes' => $this->duration_minutes,
             'price_cents' => $this->price_cents,
             'deposit_cents' => (int) $this->deposit_cents,
+            'deposit_policy' => (string) ($this->deposit_policy ?? Service::DEPOSIT_POLICY_ALWAYS),
             'sort_order' => $this->sort_order,
             'is_active' => $this->is_active,
             'updated_at' => $this->updated_at?->toIso8601String(),

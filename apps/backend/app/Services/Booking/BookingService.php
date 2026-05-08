@@ -134,7 +134,7 @@ final class BookingService
         return DB::transaction(function () use ($service, $barber, $customer, $start, $end, $data) {
             $this->assertNoOverlap($barber->id, $start, $end);
 
-            $deposit = (int) $service->deposit_cents;
+            $deposit = $this->depositForBooking($service, $customer);
 
             return Appointment::query()->create([
                 'service_id' => $service->id,
@@ -245,6 +245,32 @@ final class BookingService
         if ($overlap) {
             throw new RuntimeException('Selected time is no longer available.');
         }
+    }
+
+    /**
+     * Resolve the deposit (in cents) to take for this booking based on the
+     * service's deposit policy and the customer's prior history.
+     */
+    private function depositForBooking(Service $service, User $customer): int
+    {
+        $configured = (int) $service->deposit_cents;
+        if ($configured <= 0) {
+            return 0;
+        }
+
+        $policy = (string) ($service->deposit_policy ?? Service::DEPOSIT_POLICY_ALWAYS);
+        if ($policy !== Service::DEPOSIT_POLICY_FIRST_TIME_CUSTOMER) {
+            return $configured;
+        }
+
+        // First-time-customer policy: only collect when the customer has no
+        // prior confirmed appointments anywhere in the system.
+        $hasPrior = Appointment::query()
+            ->where('customer_user_id', $customer->id)
+            ->where('status', Appointment::STATUS_CONFIRMED)
+            ->exists();
+
+        return $hasPrior ? 0 : $configured;
     }
 
     private function combineDateTime(CarbonImmutable $date, string $time): CarbonImmutable
