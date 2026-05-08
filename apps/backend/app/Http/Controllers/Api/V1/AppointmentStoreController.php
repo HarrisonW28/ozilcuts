@@ -7,10 +7,12 @@ use App\Http\Requests\StoreAppointmentRequest;
 use App\Http\Resources\AppointmentResource;
 use App\Mail\AppointmentConfirmedMail;
 use App\Models\Appointment;
+use App\Notifications\NotificationEvents;
 use App\Services\Booking\BookingService;
+use App\Services\Notifications\AppointmentNotificationPayload;
+use App\Services\Notifications\NotificationService;
 use App\Services\Payments\PaymentService;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Mail;
 use RuntimeException;
 
 final class AppointmentStoreController extends Controller
@@ -19,6 +21,7 @@ final class AppointmentStoreController extends Controller
         StoreAppointmentRequest $request,
         BookingService $booking,
         PaymentService $payments,
+        NotificationService $notifications,
     ): JsonResponse {
         $user = $request->user();
         if ($user === null) {
@@ -41,7 +44,7 @@ final class AppointmentStoreController extends Controller
         $clientSecret = $payments->ensureDepositIntent($appointment);
         $appointment->load(['service', 'barber', 'customer']);
 
-        $this->dispatchConfirmation($appointment);
+        $this->dispatchConfirmation($appointment, $notifications);
 
         $body = (new AppointmentResource($appointment))->toArray($request);
         $body['payment'] = [
@@ -54,18 +57,34 @@ final class AppointmentStoreController extends Controller
         return response()->json($body, 201);
     }
 
-    private function dispatchConfirmation(Appointment $appointment): void
-    {
+    private function dispatchConfirmation(
+        Appointment $appointment,
+        NotificationService $notifications,
+    ): void {
         $customer = $appointment->customer;
         if ($customer === null) {
             return;
         }
+        $barber = $appointment->barber;
+        $payload = AppointmentNotificationPayload::build($appointment);
 
-        $mail = Mail::to($customer->email);
-        $barberEmail = $appointment->barber?->email;
-        if ($barberEmail !== null && $barberEmail !== $customer->email) {
-            $mail->cc($barberEmail);
+        // Customer is the primary recipient: gets the email (with the
+        // barber CC'd) and an in-app notification.
+        $notifications->send(
+            $customer,
+            NotificationEvents::APPOINTMENT_CONFIRMED,
+            $payload,
+            mail: new AppointmentConfirmedMail($appointment),
+            mailCcEmails: $barber?->email !== null ? [$barber->email] : [],
+        );
+
+        // Barber gets their own in-app notification (already CC'd on the mail).
+        if ($barber !== null && $barber->id !== $customer->id) {
+            $notifications->send(
+                $barber,
+                NotificationEvents::APPOINTMENT_CONFIRMED,
+                $payload,
+            );
         }
-        $mail->queue(new AppointmentConfirmedMail($appointment));
     }
 }
