@@ -12,6 +12,8 @@ use App\Http\Controllers\Api\V1\AppointmentRebookHintController;
 use App\Http\Controllers\Api\V1\AppointmentRescheduleController;
 use App\Http\Controllers\Api\V1\AppointmentShowController;
 use App\Http\Controllers\Api\V1\AppointmentStoreController;
+use App\Http\Controllers\Api\V1\BarberAnalyticsCompareController;
+use App\Http\Controllers\Api\V1\BarberAnalyticsController;
 use App\Http\Controllers\Api\V1\Auth\GoogleOAuthCallbackController;
 use App\Http\Controllers\Api\V1\Auth\GoogleOAuthRedirectController;
 use App\Http\Controllers\Api\V1\Auth\LoginController;
@@ -174,4 +176,8 @@ Route::middleware('auth:sanctum')->group(function (): void {
         ->middleware('throttle:60,1');
     Route::get('/admin/reports/revenue.csv', RevenueReportCsvController::class)
         ->middleware('throttle:30,1');
+    Route::get('/admin/reports/barbers', BarberAnalyticsCompareController::class)
+        ->middleware('throttle:60,1');
+    Route::get('/barbers/{user}/analytics', BarberAnalyticsController::class)
+        ->middleware('throttle:60,1');
 });
