@@ -49,6 +49,8 @@ use App\Http\Controllers\Api\V1\HairProfileShowController;
 use App\Http\Controllers\Api\V1\HairProfileUpdateController;
 use App\Http\Controllers\Api\V1\HealthController;
 use App\Http\Controllers\Api\V1\PaymentConfigController;
+use App\Http\Controllers\Api\V1\RevenueReportController;
+use App\Http\Controllers\Api\V1\RevenueReportCsvController;
 use App\Http\Controllers\Api\V1\ServiceIndexController;
 use App\Http\Controllers\Api\V1\ServiceManageDestroyController;
 use App\Http\Controllers\Api\V1\ServiceManageIndexController;
@@ -167,5 +169,9 @@ Route::middleware('auth:sanctum')->group(function (): void {
     Route::patch('/appointments/{appointment}/cancel', AppointmentCancelController::class)
         ->middleware('throttle:30,1');
     Route::patch('/appointments/{appointment}/reschedule', AppointmentRescheduleController::class)
+        ->middleware('throttle:30,1');
+    Route::get('/admin/reports/revenue', RevenueReportController::class)
+        ->middleware('throttle:60,1');
+    Route::get('/admin/reports/revenue.csv', RevenueReportCsvController::class)
         ->middleware('throttle:30,1');
 });
