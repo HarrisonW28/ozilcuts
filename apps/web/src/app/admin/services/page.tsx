@@ -11,7 +11,11 @@ import {
   fetchManageServices,
   updateManagedService,
 } from "@ozilcuts/api";
-import type { Paginated, ServiceManageRow } from "@ozilcuts/types";
+import type {
+  DepositPolicy,
+  Paginated,
+  ServiceManageRow,
+} from "@ozilcuts/types";
 import {
   Button,
   Card,
@@ -45,6 +49,8 @@ export default function AdminServicesPage() {
   const [cDuration, setCDuration] = useState("30");
   const [cPriceCents, setCPriceCents] = useState("3500");
   const [cDepositCents, setCDepositCents] = useState("0");
+  const [cDepositPolicy, setCDepositPolicy] =
+    useState<DepositPolicy>("always");
   const [cSort, setCSort] = useState("0");
   const [cActive, setCActive] = useState(true);
   const [createBusy, setCreateBusy] = useState(false);
@@ -60,6 +66,8 @@ export default function AdminServicesPage() {
   const [eDuration, setEDuration] = useState("");
   const [ePriceCents, setEPriceCents] = useState("");
   const [eDepositCents, setEDepositCents] = useState("");
+  const [eDepositPolicy, setEDepositPolicy] =
+    useState<DepositPolicy>("always");
   const [eSort, setESort] = useState("");
   const [eActive, setEActive] = useState(true);
   const [editBusy, setEditBusy] = useState(false);
@@ -114,6 +122,7 @@ export default function AdminServicesPage() {
         duration_minutes: Number.isFinite(duration) ? duration : 30,
         price_cents: Number.isFinite(price) ? price : 0,
         deposit_cents: Number.isFinite(deposit) ? deposit : 0,
+        deposit_policy: cDepositPolicy,
         sort_order: Number.isFinite(sort) ? sort : 0,
         is_active: cActive,
       });
@@ -123,6 +132,7 @@ export default function AdminServicesPage() {
       setCDuration("30");
       setCPriceCents("3500");
       setCDepositCents("0");
+      setCDepositPolicy("always");
       setCSort("0");
       setCActive(true);
       await load(page);
@@ -151,6 +161,7 @@ export default function AdminServicesPage() {
     setEDuration(String(row.duration_minutes));
     setEPriceCents(String(row.price_cents));
     setEDepositCents(String(row.deposit_cents));
+    setEDepositPolicy(row.deposit_policy);
     setESort(String(row.sort_order));
     setEActive(row.is_active);
     setEditError(null);
@@ -178,6 +189,7 @@ export default function AdminServicesPage() {
         duration_minutes: Number.isFinite(duration) ? duration : undefined,
         price_cents: Number.isFinite(price) ? price : undefined,
         deposit_cents: Number.isFinite(deposit) ? deposit : undefined,
+        deposit_policy: eDepositPolicy,
         sort_order: Number.isFinite(sort) ? sort : undefined,
         is_active: eActive,
       });
@@ -353,6 +365,28 @@ export default function AdminServicesPage() {
                         ) : null}
                       </div>
                       <div className="flex flex-col gap-2">
+                        <Label htmlFor="c-svc-policy">Deposit policy</Label>
+                        <select
+                          id="c-svc-policy"
+                          value={cDepositPolicy}
+                          onChange={(ev) =>
+                            setCDepositPolicy(
+                              ev.target.value as DepositPolicy,
+                            )
+                          }
+                          className="border-input bg-background text-foreground focus-visible:ring-ring/50 flex h-11 w-full rounded-lg border px-3 text-base shadow-sm outline-none focus-visible:ring-[3px] sm:h-10 sm:text-sm"
+                        >
+                          <option value="always">Every booking</option>
+                          <option value="first_time_customer">
+                            First-time customers only
+                          </option>
+                        </select>
+                        <p className="text-xs text-muted-foreground">
+                          With “first-time customers only”, returning
+                          customers skip the deposit.
+                        </p>
+                      </div>
+                      <div className="flex flex-col gap-2">
                         <Label htmlFor="c-svc-sort">Sort order</Label>
                         <Input
                           id="c-svc-sort"
@@ -504,6 +538,28 @@ export default function AdminServicesPage() {
                                     />
                                   </div>
                                   <div className="flex flex-col gap-2">
+                                    <Label htmlFor={`e-policy-${row.id}`}>
+                                      Deposit policy
+                                    </Label>
+                                    <select
+                                      id={`e-policy-${row.id}`}
+                                      value={eDepositPolicy}
+                                      onChange={(ev) =>
+                                        setEDepositPolicy(
+                                          ev.target.value as DepositPolicy,
+                                        )
+                                      }
+                                      className="border-input bg-background text-foreground focus-visible:ring-ring/50 flex h-11 w-full rounded-lg border px-3 text-base shadow-sm outline-none focus-visible:ring-[3px] sm:h-10 sm:text-sm"
+                                    >
+                                      <option value="always">
+                                        Every booking
+                                      </option>
+                                      <option value="first_time_customer">
+                                        First-time customers only
+                                      </option>
+                                    </select>
+                                  </div>
+                                  <div className="flex flex-col gap-2">
                                     <Label htmlFor={`e-sort-${row.id}`}>
                                       Sort
                                     </Label>
@@ -578,6 +634,16 @@ export default function AdminServicesPage() {
                                   {row.deposit_cents > 0
                                     ? `${row.deposit_cents}¢`
                                     : "None"}
+                                  {row.deposit_cents > 0 ? (
+                                    <span className="ml-2 text-xs">
+                                      (
+                                      {row.deposit_policy ===
+                                      "first_time_customer"
+                                        ? "first-time only"
+                                        : "every booking"}
+                                      )
+                                    </span>
+                                  ) : null}
                                 </p>
                                 <p className="text-sm text-muted-foreground">
                                   <span className="font-medium text-foreground">

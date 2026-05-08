@@ -159,10 +159,17 @@ export default function ServicesPage() {
                         {svc.deposit_cents > 0 ? (
                           <div className="col-span-2">
                             <dt className="text-muted-foreground">
-                              Deposit due at booking
+                              {svc.deposit_policy === "first_time_customer"
+                                ? "Deposit (first-time customers)"
+                                : "Deposit due at booking"}
                             </dt>
                             <dd className="font-medium">
                               {formatUsd(svc.deposit_cents)}
+                              {svc.deposit_policy === "first_time_customer" ? (
+                                <span className="ml-2 text-xs text-muted-foreground">
+                                  Returning customers skip this step.
+                                </span>
+                              ) : null}
                             </dd>
                           </div>
                         ) : null}
