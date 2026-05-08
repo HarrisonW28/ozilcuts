@@ -446,6 +446,67 @@ export type AppointmentListFilters = {
   page?: number;
 };
 
+export type CustomerRanking = {
+  customer_user_id: number;
+  customer_name: string;
+  visits: number;
+  total_spent_cents: number;
+  /** ISO 8601 */
+  last_visit_at: string | null;
+};
+
+export type CustomerLtvBucket = {
+  label: string;
+  min_cents: number;
+  max_cents: number | null;
+  customers: number;
+};
+
+export type CustomerAnalyticsAggregate = {
+  /** YYYY-MM-DD */
+  from: string;
+  /** YYYY-MM-DD */
+  to: string;
+  active_customers: number;
+  new_customers: number;
+  returning_customers: number;
+  visits_total: number;
+  visits_per_customer_avg: number;
+  /** Average days between consecutive visits across active customers. */
+  avg_interval_days: number | null;
+  ltv_distribution: CustomerLtvBucket[];
+  top_spenders: CustomerRanking[];
+  top_visitors: CustomerRanking[];
+};
+
+export type CustomerVisitSummary = {
+  customer_user_id: number;
+  customer_name: string;
+  customer_email: string;
+  total_visits: number;
+  total_spent_cents: number;
+  total_booked_cents: number;
+  /** ISO 8601 */
+  first_visit_at: string | null;
+  /** ISO 8601 */
+  last_visit_at: string | null;
+  avg_interval_days: number | null;
+  preferred_barber: { user_id: number; name: string } | null;
+  visits_by_status: { confirmed: number; cancelled: number };
+};
+
+export type CustomerAnalyticsResponse = {
+  summary: CustomerVisitSummary;
+  history: AppointmentRecord[];
+};
+
+export type CustomerAnalyticsRangeFilters = {
+  /** YYYY-MM-DD */
+  from: string;
+  /** YYYY-MM-DD */
+  to: string;
+};
+
 export type BarberAnalyticsSummary = {
   barber_user_id: number;
   barber_name: string;

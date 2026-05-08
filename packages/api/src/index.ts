@@ -33,6 +33,11 @@ export {
   rescheduleAppointment,
 } from "./booking";
 export {
+  fetchCustomerAnalytics,
+  fetchCustomerAnalyticsAggregate,
+  fetchMyVisitsSummary,
+} from "./customerAnalytics";
+export {
   attachCustomerTag,
   createCustomerNote,
   deleteCustomerNote,
