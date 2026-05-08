@@ -12,13 +12,13 @@ use App\Http\Controllers\Api\V1\AppointmentRebookHintController;
 use App\Http\Controllers\Api\V1\AppointmentRescheduleController;
 use App\Http\Controllers\Api\V1\AppointmentShowController;
 use App\Http\Controllers\Api\V1\AppointmentStoreController;
-use App\Http\Controllers\Api\V1\BarberAnalyticsCompareController;
-use App\Http\Controllers\Api\V1\BarberAnalyticsController;
 use App\Http\Controllers\Api\V1\Auth\GoogleOAuthCallbackController;
 use App\Http\Controllers\Api\V1\Auth\GoogleOAuthRedirectController;
 use App\Http\Controllers\Api\V1\Auth\LoginController;
 use App\Http\Controllers\Api\V1\Auth\LogoutController;
 use App\Http\Controllers\Api\V1\Auth\RegisterController;
+use App\Http\Controllers\Api\V1\BarberAnalyticsCompareController;
+use App\Http\Controllers\Api\V1\BarberAnalyticsController;
 use App\Http\Controllers\Api\V1\BarberAvailabilityManageReplaceController;
 use App\Http\Controllers\Api\V1\BarberAvailabilityManageShowController;
 use App\Http\Controllers\Api\V1\BarberAvailabilityPublicController;
@@ -53,6 +53,7 @@ use App\Http\Controllers\Api\V1\HairProfilePhotoStoreController;
 use App\Http\Controllers\Api\V1\HairProfileShowController;
 use App\Http\Controllers\Api\V1\HairProfileUpdateController;
 use App\Http\Controllers\Api\V1\HealthController;
+use App\Http\Controllers\Api\V1\OperationalInsightsController;
 use App\Http\Controllers\Api\V1\PaymentConfigController;
 use App\Http\Controllers\Api\V1\RevenueReportController;
 use App\Http\Controllers\Api\V1\RevenueReportCsvController;
@@ -184,6 +185,8 @@ Route::middleware('auth:sanctum')->group(function (): void {
     Route::get('/admin/reports/customers', CustomerAnalyticsAggregateController::class)
         ->middleware('throttle:60,1');
     Route::get('/admin/customers/{user}/analytics', CustomerAnalyticsShowController::class)
+        ->middleware('throttle:60,1');
+    Route::get('/admin/reports/operations', OperationalInsightsController::class)
         ->middleware('throttle:60,1');
     Route::get('/customer/visits', CustomerVisitsSummaryController::class)
         ->middleware('throttle:60,1');
