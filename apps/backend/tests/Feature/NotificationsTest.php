@@ -96,6 +96,28 @@ class NotificationsTest extends TestCase
             ->assertJsonCount(2, 'data');
     }
 
+    public function test_index_per_page_clamps_and_limits_results(): void
+    {
+        $user = User::factory()->create();
+        Notification::factory()->count(8)->create(['user_id' => $user->id]);
+
+        $response = $this->actingAs($user, 'sanctum')
+            ->getJson('/api/v1/notifications?per_page=3')
+            ->assertOk()
+            ->json();
+
+        $this->assertCount(3, $response['data']);
+        $this->assertSame(3, $response['meta']['per_page']);
+        $this->assertSame(8, $response['meta']['total']);
+
+        // Out-of-range values are clamped, not rejected.
+        $clamped = $this->actingAs($user, 'sanctum')
+            ->getJson('/api/v1/notifications?per_page=999')
+            ->assertOk()
+            ->json();
+        $this->assertSame(50, $clamped['meta']['per_page']);
+    }
+
     public function test_unread_count_endpoint(): void
     {
         $user = User::factory()->create();
