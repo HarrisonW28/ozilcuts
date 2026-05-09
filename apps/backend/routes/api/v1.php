@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\V1\AppointmentHairProfileShowController;
 use App\Http\Controllers\Api\V1\AppointmentIndexController;
 use App\Http\Controllers\Api\V1\AppointmentPaymentIntentController;
 use App\Http\Controllers\Api\V1\AppointmentRebookHintController;
+use App\Http\Controllers\Api\V1\AppointmentReminderController;
 use App\Http\Controllers\Api\V1\AppointmentRescheduleController;
 use App\Http\Controllers\Api\V1\AppointmentShowController;
 use App\Http\Controllers\Api\V1\AppointmentStoreController;
@@ -181,6 +182,8 @@ Route::middleware('auth:sanctum')->group(function (): void {
     Route::patch('/appointments/{appointment}/cancel', AppointmentCancelController::class)
         ->middleware('throttle:30,1');
     Route::patch('/appointments/{appointment}/reschedule', AppointmentRescheduleController::class)
+        ->middleware('throttle:30,1');
+    Route::post('/appointments/{appointment}/reminder', AppointmentReminderController::class)
         ->middleware('throttle:30,1');
     Route::get('/admin/reports/revenue', RevenueReportController::class)
         ->middleware('throttle:60,1');

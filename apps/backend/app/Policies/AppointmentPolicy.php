@@ -28,6 +28,31 @@ class AppointmentPolicy
         return $this->canMutate($user, $appointment);
     }
 
+    /**
+     * Manual reminders may be triggered by an admin or by the assigned
+     * barber on a confirmed, future appointment. Customers receive
+     * reminders automatically via the scheduler and have no need to
+     * fire one for themselves.
+     */
+    public function sendReminder(User $user, Appointment $appointment): bool
+    {
+        if ($appointment->status !== Appointment::STATUS_CONFIRMED) {
+            return false;
+        }
+        $start = $appointment->starts_at;
+        if ($start === null) {
+            return false;
+        }
+        if (CarbonImmutable::parse((string) $start)->lessThanOrEqualTo(CarbonImmutable::now())) {
+            return false;
+        }
+        if ($user->isAdmin()) {
+            return true;
+        }
+
+        return $appointment->barber_user_id === $user->id;
+    }
+
     private function canMutate(User $user, Appointment $appointment): bool
     {
         if ($user->isAdmin()) {
