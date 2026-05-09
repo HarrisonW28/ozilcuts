@@ -104,12 +104,12 @@ function DayColumn({
       aria-pressed={isFocused}
       aria-label={`${label}, ${headerCountLabel}`}
       className={cn(
-        "motion-interactive flex min-h-[44px] flex-col gap-2 rounded-lg p-3 text-left outline-none transition-colors sm:min-h-0 sm:min-w-0 sm:p-2",
+        "motion-interactive flex min-h-[44px] flex-col gap-2.5 rounded-xl p-3 text-left outline-none transition-colors sm:min-h-0 sm:min-w-0 sm:p-2.5 md:gap-2 md:p-2 lg:p-2.5",
         "focus-visible:ring-2 focus-visible:ring-ring",
         isFocused
-          ? "bg-muted/40 ring-1 ring-foreground/30"
-          : "hover:bg-muted/30",
-        isToday && !isFocused ? "ring-1 ring-primary/30" : null,
+          ? "bg-muted/35 ring-2 ring-primary/25"
+          : "hover:bg-muted/25",
+        isToday && !isFocused ? "ring-1 ring-primary/20" : null,
       )}
     >
       <div className="text-center sm:text-left">
@@ -131,7 +131,7 @@ function DayColumn({
       </div>
       <div
         className={cn(
-          "relative rounded-lg bg-muted/25 ring-1 ring-border/50",
+          "relative rounded-xl bg-muted/12 ring-1 ring-border/35",
           density === "compact" ? "h-40 sm:h-48" : "h-52 sm:h-64",
         )}
         role="img"
@@ -154,7 +154,7 @@ function DayColumn({
           return (
             <div
               key={`${w.starts_at}-${w.ends_at}`}
-              className="absolute inset-x-1 flex items-start justify-center overflow-hidden rounded-md border border-primary/35 bg-primary/10 px-0.5 py-0.5 text-center text-[0.6rem] font-medium leading-tight text-foreground/80 shadow-sm sm:inset-x-2 sm:text-xs"
+              className="absolute inset-x-1 flex items-start justify-center overflow-hidden rounded-md border border-primary/25 bg-primary/[0.07] px-0.5 py-0.5 text-center text-[0.6rem] font-medium leading-tight text-foreground/85 sm:inset-x-2 sm:text-xs"
               style={blockStyle(clipped.start, clipped.end)}
             >
               <span aria-hidden>
@@ -194,8 +194,8 @@ function DayColumn({
             className="pointer-events-none absolute inset-x-0 z-20 flex items-center"
             style={{ top: `${nowTopPct}%` }}
           >
-            <span className="-ml-1 inline-block h-2 w-2 rounded-full bg-destructive shadow" />
-            <span className="h-px flex-1 bg-destructive/70" />
+            <span className="-ml-0.5 inline-block size-2 rounded-full bg-primary shadow-[0_0_0_2px] shadow-background ring-1 ring-primary/30" />
+            <span className="h-px flex-1 bg-gradient-to-r from-primary/80 to-primary/15" />
           </div>
         ) : null}
       </div>
@@ -219,7 +219,7 @@ export function WeekAvailabilityCalendar({
       aria-label={`Availability calendar, ${weekLabel}`}
       className={cn("w-full", className)}
     >
-      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-7">
+      <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 md:grid-cols-7 md:gap-2 lg:gap-3">
         {days.map((day) => (
           <DayColumn
             key={day.date.toISOString()}
@@ -231,9 +231,9 @@ export function WeekAvailabilityCalendar({
           />
         ))}
       </div>
-      <p className="mt-4 text-center text-xs text-muted-foreground lg:text-left">
-        Timeline shows 6:00a–10:00p. Lighter areas: saved hours;
-        cards: confirmed appointments — tap to open.
+      <p className="mt-4 text-balance text-center text-xs leading-relaxed text-muted-foreground lg:text-left">
+        6:00a–10:00p · Shaded bands = hours on · Blocks = appointments (tap to
+        open).
       </p>
     </section>
   );

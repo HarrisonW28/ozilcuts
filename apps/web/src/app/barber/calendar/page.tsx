@@ -237,9 +237,9 @@ export default function BarberCalendarPage() {
       <SiteHeader profile={profile} onSignOut={signOut} />
       <main
         id="main-content"
-        className="flex flex-1 flex-col px-4 py-8 sm:px-8 sm:py-12"
+        className="page-main"
       >
-        <div className="mx-auto w-full max-w-6xl space-y-8">
+        <div className="mx-auto w-full max-w-6xl page-stack">
           <ScreenTitle
             eyebrow={OZILCUTS_APP_NAME}
             title="Chair"
@@ -364,14 +364,14 @@ export default function BarberCalendarPage() {
                               onClick={() => setFocusedDate(d.date)}
                               aria-pressed={selected}
                               className={cn(
-                                "motion-interactive min-w-[4.5rem] shrink-0 snap-start rounded-2xl border px-3 py-2.5 text-left transition-[background-color,box-shadow,border-color] duration-[var(--motion-duration-base)] ease-[var(--motion-ease-standard)] sm:min-w-[5.25rem]",
-                                "touch-manipulation active:scale-[0.98]",
+                                "motion-interactive min-w-[4.5rem] shrink-0 snap-start rounded-xl border px-3 py-2.5 text-left transition-[background-color,box-shadow,border-color] duration-[var(--motion-duration-base)] ease-[var(--motion-ease-standard)] sm:min-w-[5.25rem]",
+                                "touch-manipulation motion-safe:active:scale-[0.98]",
                                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                                 selected
-                                  ? "border-primary/50 bg-primary/10 shadow-sm ring-1 ring-primary/20"
-                                  : "border-border/60 bg-card/30 hover:border-border hover:bg-muted/30",
+                                  ? "border-primary/45 bg-primary/10 ring-2 ring-primary/25 shadow-none"
+                                  : "border-border/50 bg-card/50 hover:border-border/80 hover:bg-muted/25",
                                 today && !selected
-                                  ? "ring-1 ring-primary/25"
+                                  ? "ring-1 ring-primary/20"
                                   : null,
                               )}
                             >
@@ -510,7 +510,6 @@ export default function BarberCalendarPage() {
                     />
                     <DayTimelineCalendar
                       day={focusedDaySchedule}
-                      className="shadow-md"
                       density={density}
                     />
                   </section>
@@ -532,14 +531,11 @@ export default function BarberCalendarPage() {
                     <WeekAvailabilityCalendar
                       weekLabel={weekLabel}
                       days={calendarDays}
-                      className="rounded-2xl border border-border/40 bg-card/20 p-4 sm:p-5"
+                      className="dashboard-surface rounded-xl p-4 sm:p-5"
                       focusedDate={focusedDate}
                       onDayFocus={setFocusedDate}
                       density={density}
                     />
-                    <p className="mt-3 text-center text-xs text-muted-foreground lg:text-left">
-                      Light areas: hours on · Cards: confirmed — tap to open.
-                    </p>
                   </div>
                 </>
               ) : null}

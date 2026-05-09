@@ -136,9 +136,9 @@ export default function AdminCustomersReportPage() {
       <SiteHeader profile={profile} onSignOut={signOut} />
       <main
         id="main-content"
-        className="flex flex-1 flex-col px-4 py-8 sm:px-8 sm:py-12"
+        className="page-main"
       >
-        <div className="mx-auto w-full max-w-6xl space-y-6">
+        <div className="mx-auto w-full max-w-6xl page-stack">
           <ScreenTitle
             eyebrow={OZILCUTS_APP_NAME}
             title="Customers"
@@ -185,10 +185,12 @@ export default function AdminCustomersReportPage() {
 
           {isAdmin ? (
             <>
-              <Card>
+              <Card size="sm" className="dashboard-surface">
                 <CardHeader>
-                  <CardTitle>Filters</CardTitle>
-                  <CardDescription>Pick a date range.</CardDescription>
+                  <CardTitle className="text-base">Date range</CardTitle>
+                  <CardDescription>
+                    Customer metrics use visits starting in this window.
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <form
@@ -276,7 +278,7 @@ export default function AdminCustomersReportPage() {
                       <KpiCardSkeleton key={i} />
                     ))}
                   </section>
-                  <Card aria-hidden className="mt-6">
+                  <Card aria-hidden className="dashboard-surface mt-5 md:mt-6" size="sm">
                     <CardContent className="p-4">
                       <TableSkeleton rows={6} columns={4} />
                     </CardContent>
@@ -330,7 +332,7 @@ export default function AdminCustomersReportPage() {
                   </section>
 
                   <section aria-label="Lifetime value distribution">
-                    <Card>
+                    <Card size="sm" className="dashboard-surface">
                       <CardHeader className="pb-2">
                         <CardTitle className="text-base">
                           Lifetime value distribution
@@ -370,7 +372,7 @@ export default function AdminCustomersReportPage() {
                     aria-label="Top customers"
                     className="grid grid-cols-1 gap-4 lg:grid-cols-2"
                   >
-                    <Card>
+                    <Card size="sm" className="dashboard-surface">
                       <CardHeader className="pb-2">
                         <CardTitle className="text-base">
                           Top spenders
@@ -426,7 +428,7 @@ export default function AdminCustomersReportPage() {
                       </CardContent>
                     </Card>
 
-                    <Card>
+                    <Card size="sm" className="dashboard-surface">
                       <CardHeader className="pb-2">
                         <CardTitle className="text-base">
                           Top visitors

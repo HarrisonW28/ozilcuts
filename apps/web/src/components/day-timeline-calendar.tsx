@@ -194,12 +194,11 @@ export function DayTimelineCalendar({
     <section
       aria-label={`Day schedule, ${headerLabel}`}
       className={cn(
-        "overflow-hidden rounded-2xl border border-border/60 bg-card/40 shadow-sm",
-        "backdrop-blur-[2px]",
+        "dashboard-surface overflow-hidden rounded-xl",
         className,
       )}
     >
-      <header className="border-b border-border/50 px-4 py-3 sm:px-5 sm:py-3.5">
+      <header className="border-b border-border/40 px-4 py-3.5 sm:px-5 sm:py-4">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <div>
             <p
@@ -219,15 +218,15 @@ export function DayTimelineCalendar({
               {headerLabel}
             </h2>
           </div>
-          <p className="text-xs text-muted-foreground tabular-nums">
-            {day.bookings.length === 0
-              ? "No bookings"
-              : `${day.bookings.length} booking${
-                  day.bookings.length === 1 ? "" : "s"
-                }`}
-            <span className="mx-1.5 text-border">·</span>
-            6a–10p
-          </p>
+            <p className="text-xs text-muted-foreground tabular-nums">
+              {day.bookings.length === 0
+                ? "No bookings"
+                : `${day.bookings.length} booking${
+                    day.bookings.length === 1 ? "" : "s"
+                  }`}
+              <span className="mx-1.5 text-border/80">·</span>
+              6a–10p
+            </p>
         </div>
       </header>
 
@@ -244,8 +243,8 @@ export function DayTimelineCalendar({
         <div
           className={cn(
             "sticky top-0 z-20 w-12 shrink-0 select-none",
-            "relative border-r border-border/50 bg-background/90 py-0 backdrop-blur-md",
-            "supports-[backdrop-filter]:bg-background/70",
+            "relative border-r border-border/35 bg-muted/20 py-0 backdrop-blur-[1px]",
+            "dark:bg-muted/15",
             "sm:w-14",
           )}
           style={{ height: totalHeight }}
@@ -275,7 +274,7 @@ export function DayTimelineCalendar({
               <div
                 key={`line-${minute}`}
                 aria-hidden
-                className="pointer-events-none absolute inset-x-0 border-t border-border/25"
+                className="pointer-events-none absolute inset-x-0 border-t border-border/20"
                 style={{ top: y }}
               />
             );
@@ -288,7 +287,7 @@ export function DayTimelineCalendar({
               <div
                 key={`half-${minute}`}
                 aria-hidden
-                className="pointer-events-none absolute inset-x-0 border-t border-dashed border-border/15"
+                className="pointer-events-none absolute inset-x-0 border-t border-dashed border-border/10"
                 style={{ top: y }}
               />
             );
@@ -313,9 +312,9 @@ export function DayTimelineCalendar({
                 key={`${w.starts_at}-${w.ends_at}`}
                 aria-hidden
                 className={cn(
-                  "pointer-events-none absolute left-0 right-2 rounded-xl",
-                  "bg-primary/[0.07] ring-1 ring-inset ring-primary/10",
-                  "dark:bg-primary/[0.09]",
+                  "pointer-events-none absolute left-0 right-2 rounded-lg",
+                  "bg-primary/[0.06] ring-1 ring-inset ring-primary/[0.08]",
+                  "dark:bg-primary/[0.08]",
                 )}
                 style={{ top, height }}
               />

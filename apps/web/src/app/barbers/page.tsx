@@ -25,6 +25,13 @@ import { motion, useReducedMotion } from "framer-motion";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 
+function barberInitials(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "?";
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return `${parts[0][0] ?? ""}${parts[parts.length - 1]?.[0] ?? ""}`.toUpperCase();
+}
+
 type BarbersState =
   | { kind: "loading" }
   | { kind: "ok"; items: BarberProfilePublic[] }
@@ -73,19 +80,19 @@ export default function BarbersPage() {
       <SiteHeader profile={profile} onSignOut={signOut} />
       <main
         id="main-content"
-        className="flex flex-1 flex-col px-6 py-10 sm:px-8 sm:py-14"
+        className="page-main"
       >
         <motion.div
           initial={motionInitial}
           animate={{ opacity: 1, y: 0 }}
           transition={ozilcutsPageEnterTransition}
-          className="mx-auto w-full max-w-3xl"
+          className="mx-auto w-full max-w-5xl page-stack"
         >
           <ScreenTitle
-            className="mb-8"
             eyebrow={OZILCUTS_APP_NAME}
-            title="Our barbers"
-            description="Meet the team—bios and booking availability will expand in later sprints."
+            title="The team"
+            description="Barbers first—bios, portfolios, and booking windows stay in sync."
+            className="gap-5 pb-2 sm:gap-6"
           />
 
           {state.kind === "loading" ? (
@@ -127,14 +134,22 @@ export default function BarbersPage() {
 
           {state.kind === "ok" && state.items.length > 0 ? (
             <ul
-              className="grid list-none gap-4 sm:grid-cols-2"
+              className="grid list-none gap-6 sm:grid-cols-2 md:grid-cols-3 md:gap-7 lg:gap-8"
               aria-label="Barber directory"
             >
               {state.items.map((row) => (
                 <li key={row.id}>
-                  <Card className="h-full">
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-lg leading-snug">
+                  <Card className="h-full overflow-hidden border-border/55 shadow-sm dark:shadow-md">
+                    <div className="border-b border-border/40 bg-gradient-to-b from-muted/45 to-muted/15 px-5 py-7 dark:from-muted/25 dark:to-muted/8">
+                      <p className="text-3xl font-semibold tabular-nums tracking-tight text-foreground/90">
+                        {barberInitials(row.barber.name)}
+                      </p>
+                      <p className="mt-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                        Barber
+                      </p>
+                    </div>
+                    <CardHeader className="pb-2 pt-5">
+                      <CardTitle className="text-xl font-semibold leading-snug tracking-tight">
                         <Link
                           href={`/barbers/${row.barber.id}`}
                           className="underline-offset-4 hover:underline"
@@ -143,24 +158,34 @@ export default function BarbersPage() {
                         </Link>
                       </CardTitle>
                       {row.title ? (
-                        <CardDescription>{row.title}</CardDescription>
+                        <CardDescription className="text-sm">
+                          {row.title}
+                        </CardDescription>
                       ) : null}
                     </CardHeader>
                     <CardContent className="pb-2">
                       {row.bio ? (
-                        <p className="line-clamp-4 text-sm text-muted-foreground">
+                        <p className="line-clamp-4 text-sm leading-relaxed text-muted-foreground">
                           {row.bio}
                         </p>
                       ) : (
                         <p className="text-sm text-muted-foreground">
-                          Full bio on the profile page.
+                          Full story on the profile page.
                         </p>
                       )}
                     </CardContent>
-                    <CardFooter>
-                      <Button asChild variant="outline" size="sm" className="w-full">
-                        <Link href={`/barbers/${row.barber.id}`}>
-                          View profile
+                    <CardFooter className="flex flex-col gap-2 border-t border-border/35 bg-muted/[0.04] py-4 sm:flex-row dark:bg-muted/[0.03]">
+                      <Button
+                        asChild
+                        variant="outline"
+                        size="sm"
+                        className="w-full sm:flex-1"
+                      >
+                        <Link href={`/barbers/${row.barber.id}`}>Profile</Link>
+                      </Button>
+                      <Button asChild size="sm" className="w-full sm:flex-1">
+                        <Link href={`/barbers/${row.barber.id}/portfolio`}>
+                          Portfolio
                         </Link>
                       </Button>
                     </CardFooter>
@@ -170,7 +195,7 @@ export default function BarbersPage() {
             </ul>
           ) : null}
 
-          <p className="mt-10 text-center text-sm text-muted-foreground">
+          <p className="text-center text-sm text-muted-foreground">
             <Link href="/" className="underline-offset-4 hover:underline">
               Back to home
             </Link>

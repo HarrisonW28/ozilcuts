@@ -336,9 +336,9 @@ export default function ConfirmationPage() {
       <SiteHeader profile={profile} onSignOut={signOut} />
       <main
         id="main-content"
-        className="flex flex-1 flex-col px-4 py-8 sm:px-8 sm:py-12"
+        className="page-main"
       >
-        <div className="mx-auto w-full max-w-2xl space-y-6">
+        <div className="mx-auto w-full max-w-2xl page-stack">
           <ScreenTitle
             eyebrow={OZILCUTS_APP_NAME}
             title={
@@ -359,13 +359,13 @@ export default function ConfirmationPage() {
 
           {(justBooked || justRescheduled) && state.kind === "ok" ? (
             <div
-              className="rounded-lg border border-emerald-500/40 bg-emerald-500/5 p-3 text-sm text-emerald-700 dark:text-emerald-300"
+              className="motion-enter rounded-xl border border-emerald-500/35 bg-emerald-500/[0.07] px-4 py-3.5 text-sm leading-relaxed text-emerald-900 dark:text-emerald-200"
               role="status"
             >
-              {justBooked ? "Booking saved." : "Reschedule saved."}{" "}
+              {justBooked ? "You're all set." : "Reschedule saved."}{" "}
               {appointment?.payment_status === "requires_payment"
-                ? "Complete the deposit below to lock in your slot."
-                : "We've sent a confirmation email."}
+                ? "Pay the deposit below to hold your spot."
+                : "Check your email for the confirmation."}
             </div>
           ) : null}
 

@@ -195,13 +195,13 @@ export function NotificationsBell({ enabled }: Props) {
         aria-expanded={open}
         aria-controls={popoverId}
         onClick={handleToggle}
-        className="motion-interactive relative inline-flex h-9 min-h-9 min-w-9 items-center justify-center rounded-md border border-border bg-background text-sm text-foreground transition-colors hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className="motion-interactive relative inline-flex min-h-11 min-w-11 touch-manipulation items-center justify-center rounded-md border border-border bg-background text-sm text-foreground transition-colors hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:h-9 sm:min-h-9 sm:min-w-9"
       >
         <span aria-hidden="true">
           <svg
             viewBox="0 0 24 24"
-            width="16"
-            height="16"
+            width="18"
+            height="18"
             fill="none"
             stroke="currentColor"
             strokeWidth="2"
@@ -229,7 +229,7 @@ export function NotificationsBell({ enabled }: Props) {
           id={popoverId}
           role="dialog"
           aria-label="Notifications"
-          className="motion-popover fixed inset-x-2 top-[calc(env(safe-area-inset-top,0px)+3.5rem)] z-50 w-auto rounded-lg border border-border bg-background shadow-lg sm:absolute sm:inset-x-auto sm:right-0 sm:top-full sm:mt-2 sm:w-80"
+          className="motion-popover fixed inset-x-2 top-[calc(env(safe-area-inset-top,0px)+3.5rem)] z-50 max-h-[min(calc(100dvh-4.5rem-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px)),32rem)] w-auto overflow-hidden rounded-lg border border-border bg-background shadow-lg sm:absolute sm:inset-x-auto sm:right-0 sm:top-full sm:mt-2 sm:max-h-[min(70vh,32rem)] sm:w-80"
         >
           <div className="flex items-center justify-between border-b border-border px-3 py-2">
             <span className="text-sm font-medium text-foreground">
@@ -246,7 +246,7 @@ export function NotificationsBell({ enabled }: Props) {
             </Button>
           </div>
 
-          <div className="max-h-[60vh] overflow-y-auto">
+          <div className="max-h-[min(50vh,calc(100dvh-14rem))] overflow-y-auto overscroll-y-contain sm:max-h-[60vh]">
             {error && latest.length === 0 ? (
               <p
                 className="px-3 py-6 text-center text-sm text-destructive"
@@ -302,7 +302,7 @@ export function NotificationsBell({ enabled }: Props) {
                                 asChild
                                 size="sm"
                                 variant="secondary"
-                                className="h-7 px-2 text-xs"
+                                className="min-h-10 px-3 text-xs sm:h-7 sm:min-h-7 sm:px-2"
                               >
                                 <Link
                                   href={href}
@@ -320,7 +320,7 @@ export function NotificationsBell({ enabled }: Props) {
                                 type="button"
                                 size="sm"
                                 variant="ghost"
-                                className="h-7 px-2 text-xs"
+                                className="min-h-10 px-3 text-xs sm:h-7 sm:min-h-7 sm:px-2"
                                 onClick={() => void markRead(row.id)}
                               >
                                 Mark read
@@ -336,10 +336,10 @@ export function NotificationsBell({ enabled }: Props) {
             ) : null}
           </div>
 
-          <div className="border-t border-border px-3 py-2 text-right">
+          <div className="border-t border-border px-3 py-1 sm:py-2">
             <Link
               href="/notifications"
-              className="text-sm font-medium text-primary underline-offset-4 hover:underline"
+              className="motion-interactive -mr-1 inline-flex min-h-11 w-full touch-manipulation items-center justify-end rounded-md py-2 pr-1 text-sm font-medium text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               onClick={() => setOpen(false)}
             >
               See all

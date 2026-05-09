@@ -24,7 +24,7 @@ export default function OfflinePage() {
   return (
     <main
       id="main-content"
-      className="flex min-h-dvh flex-1 flex-col items-center justify-center px-6 py-10 sm:px-8 sm:py-16"
+      className="page-main-hero min-h-dvh"
     >
       <div className="motion-enter w-full max-w-md sm:max-w-lg">
         <Card>

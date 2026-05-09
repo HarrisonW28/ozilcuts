@@ -66,8 +66,18 @@ const config = {
       borderRadius: {
         lg: "var(--radius)",
         md: "var(--radius-md)",
-        sm: "calc(var(--radius-md) - 2px)",
-        xl: "calc(var(--radius-md) + 4px)",
+        sm: "var(--radius-sm)",
+        xl: "var(--radius-lg)",
+      },
+      boxShadow: {
+        xs: "var(--shadow-xs)",
+        sm: "var(--shadow-sm)",
+        md: "var(--shadow-md)",
+        lg: "var(--shadow-lg)",
+      },
+      letterSpacing: {
+        editorial: "-0.02em",
+        widecaps: "0.1em",
       },
       fontFamily: {
         sans: ["var(--font-geist-sans)", "system-ui", "sans-serif"],

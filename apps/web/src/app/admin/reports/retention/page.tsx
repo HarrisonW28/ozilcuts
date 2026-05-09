@@ -75,9 +75,9 @@ export default function AdminRetentionReportPage() {
       <SiteHeader profile={profile} onSignOut={signOut} />
       <main
         id="main-content"
-        className="flex flex-1 flex-col px-4 py-8 sm:px-8 sm:py-12"
+        className="page-main"
       >
-        <div className="mx-auto w-full max-w-5xl space-y-8">
+        <div className="mx-auto w-full max-w-5xl page-stack">
           <ScreenTitle
             eyebrow={OZILCUTS_APP_NAME}
             title="Retention preview"
@@ -114,7 +114,7 @@ export default function AdminRetentionReportPage() {
           ) : null}
 
           {isAdmin && state.kind === "ok" ? (
-            <div className="flex flex-col gap-8">
+            <div className="flex flex-col gap-5 md:gap-6">
               <div className="flex flex-wrap gap-2">
                 <Button
                   type="button"
@@ -129,9 +129,9 @@ export default function AdminRetentionReportPage() {
                 </Button>
               </div>
 
-              <Card>
+              <Card size="sm" className="dashboard-surface">
                 <CardHeader>
-                  <CardTitle>Due soon</CardTitle>
+                  <CardTitle className="text-base">Due soon</CardTitle>
                   <CardDescription>
                     Matches the smart rebook “around your usual cadence” window
                     (config:{" "}
@@ -148,9 +148,9 @@ export default function AdminRetentionReportPage() {
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card size="sm" className="dashboard-surface">
                 <CardHeader>
-                  <CardTitle>Inactivity-eligible</CardTitle>
+                  <CardTitle className="text-base">Inactivity-eligible</CardTitle>
                   <CardDescription>
                     Last visit older than the larger of{" "}
                     <code className="text-xs">RETENTION_INACTIVITY_MIN_DAYS</code>{" "}

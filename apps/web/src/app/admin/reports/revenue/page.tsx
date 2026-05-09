@@ -190,9 +190,9 @@ export default function AdminRevenueReportPage() {
       <SiteHeader profile={profile} onSignOut={signOut} />
       <main
         id="main-content"
-        className="flex flex-1 flex-col px-4 py-8 sm:px-8 sm:py-12"
+        className="page-main"
       >
-        <div className="mx-auto w-full max-w-5xl space-y-6">
+        <div className="mx-auto w-full max-w-5xl page-stack">
           <ScreenTitle
             eyebrow={OZILCUTS_APP_NAME}
             title="Revenue report"
@@ -239,11 +239,11 @@ export default function AdminRevenueReportPage() {
 
           {isAdmin ? (
             <>
-              <Card>
+              <Card size="sm" className="dashboard-surface">
                 <CardHeader>
-                  <CardTitle>Filters</CardTitle>
+                  <CardTitle className="text-base">Date range</CardTitle>
                   <CardDescription>
-                    Pick a date range and granularity.
+                    Window and granularity for all sections below.
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -361,7 +361,7 @@ export default function AdminRevenueReportPage() {
                       <KpiCardSkeleton key={i} />
                     ))}
                   </section>
-                  <Card aria-hidden className="mt-6">
+                  <Card aria-hidden className="dashboard-surface mt-5 md:mt-6" size="sm">
                     <CardContent className="p-4">
                       <TableSkeleton rows={5} columns={4} />
                     </CardContent>
@@ -392,7 +392,7 @@ export default function AdminRevenueReportPage() {
                   </section>
 
                   <section aria-label="By barber">
-                    <Card>
+                    <Card size="sm" className="dashboard-surface">
                       <CardHeader className="pb-2">
                         <CardTitle className="text-base">By barber</CardTitle>
                         <CardDescription>
@@ -444,7 +444,7 @@ export default function AdminRevenueReportPage() {
                   </section>
 
                   <section aria-label="By service">
-                    <Card>
+                    <Card size="sm" className="dashboard-surface">
                       <CardHeader className="pb-2">
                         <CardTitle className="text-base">By service</CardTitle>
                         <CardDescription>
@@ -495,7 +495,7 @@ export default function AdminRevenueReportPage() {
                   </section>
 
                   <section aria-label="Time series">
-                    <Card>
+                    <Card size="sm" className="dashboard-surface">
                       <CardHeader className="pb-2">
                         <CardTitle className="text-base">
                           Series ({state.report.granularity})

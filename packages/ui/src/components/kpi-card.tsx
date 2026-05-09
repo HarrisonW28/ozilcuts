@@ -25,7 +25,13 @@ export type KpiCardProps = {
  */
 function KpiCard({ label, value, hint, className }: KpiCardProps) {
   return (
-    <Card data-slot="kpi-card" className={className}>
+    <Card
+      data-slot="kpi-card"
+      className={cn(
+        "border-border/55 shadow-none dark:border-border",
+        className,
+      )}
+    >
       <CardHeader className="pb-2">
         <CardDescription>{label}</CardDescription>
         <CardTitle className="text-2xl tabular-nums">{value}</CardTitle>
@@ -41,7 +47,13 @@ function KpiCard({ label, value, hint, className }: KpiCardProps) {
 
 function KpiCardSkeleton({ className }: { className?: string }) {
   return (
-    <Card aria-hidden className={cn(className)}>
+    <Card
+      aria-hidden
+      className={cn(
+        "border-border/55 shadow-none dark:border-border",
+        className,
+      )}
+    >
       <CardHeader className="pb-2">
         <Skeleton className="h-3 w-24" />
         <Skeleton className="mt-2 h-7 w-32" />

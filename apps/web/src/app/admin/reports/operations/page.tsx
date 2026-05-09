@@ -145,9 +145,9 @@ export default function AdminOperationalInsightsPage() {
       <SiteHeader profile={profile} onSignOut={signOut} />
       <main
         id="main-content"
-        className="flex flex-1 flex-col px-4 py-8 sm:px-8 sm:py-12"
+        className="page-main"
       >
-        <div className="mx-auto w-full max-w-6xl space-y-6">
+        <div className="mx-auto w-full max-w-6xl page-stack">
           <ScreenTitle
             eyebrow={OZILCUTS_APP_NAME}
             title="Operations"
@@ -194,12 +194,12 @@ export default function AdminOperationalInsightsPage() {
 
           {isAdmin ? (
             <>
-              <Card>
+              <Card size="sm" className="dashboard-surface">
                 <CardHeader>
-                  <CardTitle>Filters</CardTitle>
+                  <CardTitle className="text-base">Date range</CardTitle>
                   <CardDescription>
-                    Range applies to peak times and lead-time distributions.
-                    Today / next 7 days are always live.
+                    Historical slice for peaks and lead times. Live widgets use
+                    today and the next 7 days.
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -288,7 +288,11 @@ export default function AdminOperationalInsightsPage() {
                       <KpiCardSkeleton key={i} />
                     ))}
                   </section>
-                  <Card aria-hidden className="mt-6">
+                  <Card
+                    aria-hidden
+                    className="dashboard-surface mt-5 md:mt-6"
+                    size="sm"
+                  >
                     <CardContent className="p-4">
                       <TableSkeleton rows={6} columns={5} />
                     </CardContent>
@@ -338,14 +342,13 @@ export default function AdminOperationalInsightsPage() {
                   </section>
 
                   <section aria-label="Peak times">
-                    <Card>
+                    <Card size="sm" className="dashboard-surface">
                       <CardHeader className="pb-2">
                         <CardTitle className="text-base">
                           Peak times
                         </CardTitle>
                         <CardDescription>
-                          Confirmed appointments by weekday × hour over the
-                          selected range.
+                          Confirmed bookings by weekday and hour.
                         </CardDescription>
                       </CardHeader>
                       <CardContent className="overflow-x-auto">
@@ -432,7 +435,7 @@ export default function AdminOperationalInsightsPage() {
                     aria-label="Lead times"
                     className="grid grid-cols-1 gap-4 lg:grid-cols-2"
                   >
-                    <Card>
+                    <Card size="sm" className="dashboard-surface">
                       <CardHeader className="pb-2">
                         <CardTitle className="text-base">
                           Booking lead time
@@ -468,7 +471,7 @@ export default function AdminOperationalInsightsPage() {
                       </CardContent>
                     </Card>
 
-                    <Card>
+                    <Card size="sm" className="dashboard-surface">
                       <CardHeader className="pb-2">
                         <CardTitle className="text-base">
                           Cancellation lead time

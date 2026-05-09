@@ -35,7 +35,7 @@ export function OperationalWorkspaceToggle({
         <button
           type="button"
           className={cn(
-            "motion-interactive flex-1 rounded-md px-2 py-2 text-center text-xs font-semibold transition-colors sm:px-3 sm:py-1.5 sm:text-xs",
+            "motion-interactive touch-manipulation flex-1 rounded-md px-2 py-2 text-center text-xs font-semibold transition-colors sm:px-3 sm:py-1.5 sm:text-xs",
             mode === "focused"
               ? "bg-background text-foreground shadow-sm"
               : "text-muted-foreground hover:text-foreground",
@@ -49,7 +49,7 @@ export function OperationalWorkspaceToggle({
         <button
           type="button"
           className={cn(
-            "motion-interactive flex-1 rounded-md px-2 py-2 text-center text-xs font-semibold transition-colors sm:px-3 sm:py-1.5 sm:text-xs",
+            "motion-interactive touch-manipulation flex-1 rounded-md px-2 py-2 text-center text-xs font-semibold transition-colors sm:px-3 sm:py-1.5 sm:text-xs",
             mode === "full"
               ? "bg-background text-foreground shadow-sm"
               : "text-muted-foreground hover:text-foreground",

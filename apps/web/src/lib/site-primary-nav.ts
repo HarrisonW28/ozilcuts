@@ -17,10 +17,11 @@ export function getPrimaryNavSections(
   const sections: PrimaryNavSection[] = [
     {
       id: "browse",
-      label: "Browse",
+      label: "Discover",
       links: [
         { href: "/services", label: "Services" },
-        { href: "/barbers", label: "Barbers" },
+        { href: "/barbers", label: "Team" },
+        { href: "/#visit", label: "Visit" },
         { href: "/book", label: "Book" },
       ],
     },

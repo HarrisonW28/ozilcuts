@@ -13,7 +13,7 @@ import {
 } from "@/lib/motion";
 import { useSessionProfile } from "@/lib/use-session-profile";
 import { ApiError, fetchBarber, fetchBarberAvailability } from "@ozilcuts/api";
-import { Button, Card, CardContent, CardHeader, CardTitle } from "@ozilcuts/ui";
+import { Button, Skeleton } from "@ozilcuts/ui";
 import type {
   BarberAvailabilityPayload,
   BarberProfilePublic,
@@ -32,6 +32,15 @@ type DetailState =
       availability: BarberAvailabilityPayload | null;
     }
   | { kind: "error"; message: string; notFound?: boolean };
+
+function initialsFromName(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "?";
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return `${parts[0][0] ?? ""}${
+    parts[parts.length - 1]?.[0] ?? ""
+  }`.toUpperCase();
+}
 
 export default function BarberDetailPage() {
   const params = useParams();
@@ -119,23 +128,42 @@ export default function BarberDetailPage() {
       <SiteHeader profile={profile} onSignOut={signOut} />
       <main
         id="main-content"
-        className="flex flex-1 flex-col px-6 py-10 sm:px-8 sm:py-14"
+        className="page-main"
       >
         <motion.div
           initial={motionInitial}
           animate={{ opacity: 1, y: 0 }}
           transition={ozilcutsPageEnterTransition}
-          className="mx-auto w-full max-w-4xl"
+          className="mx-auto w-full max-w-5xl page-stack"
         >
           {state.kind === "loading" ? (
-            <p
-              className="text-sm text-muted-foreground"
-              role="status"
-              aria-live="polite"
-              aria-busy="true"
-            >
-              Loading profile…
-            </p>
+            <div className="space-y-12 md:space-y-14" role="status" aria-live="polite">
+              <span className="sr-only">Loading profile…</span>
+              <div
+                className="flex flex-col gap-8 border-b border-border/40 pb-10 dark:border-border/35 sm:flex-row sm:items-end sm:gap-10"
+                aria-hidden
+              >
+                <Skeleton className="size-20 shrink-0 rounded-2xl sm:size-24" />
+                <div className="min-w-0 flex-1 space-y-4">
+                  <Skeleton className="h-3 w-20" />
+                  <Skeleton className="h-11 w-full max-w-sm" />
+                  <Skeleton className="h-4 w-full max-w-md" />
+                  <Skeleton className="h-4 w-32" />
+                </div>
+              </div>
+              <div className="grid gap-10 md:grid-cols-[1fr,min(100%,15rem)]">
+                <div className="space-y-3" aria-hidden>
+                  <Skeleton className="h-3 w-16" />
+                  <Skeleton className="h-24 w-full rounded-lg" />
+                  <Skeleton className="h-24 w-full rounded-lg" />
+                </div>
+                <Skeleton className="h-48 rounded-2xl md:h-auto md:min-h-[12rem]" />
+              </div>
+              <div className="space-y-4 border-t border-border/40 pt-10 dark:border-border/35" aria-hidden>
+                <Skeleton className="h-6 w-40" />
+                <Skeleton className="h-40 w-full rounded-xl" />
+              </div>
+            </div>
           ) : null}
 
           {state.kind === "error" ? (
@@ -164,58 +192,103 @@ export default function BarberDetailPage() {
           ) : null}
 
           {state.kind === "ok" ? (
-            <Card>
-              <CardHeader>
-                <p className="text-sm font-medium uppercase tracking-wide text-muted-foreground">
-                  Barber
-                </p>
-                <CardTitle className="text-2xl sm:text-3xl">
-                  {state.profile.barber.name}
-                </CardTitle>
-                {state.profile.title ? (
-                  <p className="text-base text-muted-foreground">
-                    {state.profile.title}
-                  </p>
-                ) : null}
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {state.profile.years_experience !== null ? (
-                  <p className="text-sm">
-                    <span className="text-muted-foreground">Experience: </span>
-                    <span className="font-medium">
-                      {state.profile.years_experience} years
-                    </span>
-                  </p>
-                ) : null}
-                {state.profile.bio ? (
-                  <p className="whitespace-pre-wrap text-sm leading-relaxed text-muted-foreground">
-                    {state.profile.bio}
-                  </p>
-                ) : (
-                  <p className="text-sm text-muted-foreground">
-                    No bio yet for this barber.
-                  </p>
-                )}
-                <div>
-                  <Button asChild variant="outline" size="sm">
+            <div className="space-y-12 md:space-y-14 lg:space-y-16">
+              <header className="border-b border-border/45 pb-10 dark:border-border/35">
+                <div className="flex flex-col gap-8 sm:flex-row sm:items-end sm:justify-between sm:gap-10">
+                  <div className="flex items-start gap-5 sm:gap-7">
+                    <div
+                      className="flex size-[4.5rem] shrink-0 items-center justify-center rounded-2xl border border-border/50 bg-gradient-to-br from-muted/65 to-muted/25 text-[1.35rem] font-semibold tabular-nums tracking-tight text-foreground/90 shadow-xs dark:from-muted/40 dark:to-muted/15 sm:size-24 sm:text-2xl"
+                      aria-hidden
+                    >
+                      {initialsFromName(state.profile.barber.name)}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+                        Barber
+                      </p>
+                      <h1 className="mt-3 text-balance text-[2rem] font-semibold leading-[1.08] tracking-tight text-foreground sm:mt-4 sm:text-4xl sm:leading-[1.06] md:text-5xl">
+                        {state.profile.barber.name}
+                      </h1>
+                      {state.profile.title ? (
+                        <p className="mt-3 max-w-2xl text-pretty text-base leading-snug text-muted-foreground sm:mt-4 sm:text-lg">
+                          {state.profile.title}
+                        </p>
+                      ) : null}
+                      {state.profile.years_experience !== null ? (
+                        <p className="mt-4">
+                          <span className="inline-flex items-center rounded-full border border-border/60 bg-muted/35 px-3 py-1 text-xs font-semibold text-foreground dark:bg-muted/25">
+                            {state.profile.years_experience} years experience
+                          </span>
+                        </p>
+                      ) : null}
+                    </div>
+                  </div>
+                </div>
+              </header>
+
+              <div className="grid gap-10 md:grid-cols-[minmax(0,1fr)_min(100%,15rem)] md:items-start md:gap-10 lg:grid-cols-[minmax(0,1fr)_min(100%,17.5rem)] lg:gap-16">
+                <div className="space-y-4 md:space-y-5">
+                  <h2 className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                    About
+                  </h2>
+                  {state.profile.bio ? (
+                    <p className="whitespace-pre-wrap text-base leading-[1.75] text-muted-foreground sm:text-[1.0625rem]">
+                      {state.profile.bio}
+                    </p>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">
+                      Bio coming soon.
+                    </p>
+                  )}
+                </div>
+                <aside className="flex flex-col gap-3 rounded-2xl border border-border/50 bg-muted/[0.06] p-5 shadow-sm dark:bg-muted/[0.04] lg:sticky lg:top-[max(5.5rem,env(safe-area-inset-top,0px)+4.5rem)] lg:self-start">
+                  <Button
+                    asChild
+                    size="lg"
+                    className="h-12 w-full text-base shadow-sm sm:h-[3.25rem]"
+                  >
+                    <Link href={`/book?barber_user_id=${userId}`}>Book now</Link>
+                  </Button>
+                  <Button
+                    asChild
+                    variant="outline"
+                    className="h-11 w-full sm:h-12"
+                  >
                     <Link href={`/barbers/${userId}/portfolio`}>
                       View portfolio
                     </Link>
                   </Button>
-                </div>
-                <div className="border-t border-border/60 pt-4">
-                  <h3 className="text-sm font-semibold text-foreground">
+                  <Button asChild variant="ghost" className="h-11 w-full">
+                    <Link href="/barbers">All barbers</Link>
+                  </Button>
+                </aside>
+              </div>
+
+              <section
+                className="space-y-6 border-t border-border/45 pt-10 dark:border-border/35 md:pt-12"
+                aria-labelledby="barber-availability-heading"
+              >
+                <div>
+                  <h2
+                    id="barber-availability-heading"
+                    className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl"
+                  >
                     Availability
-                  </h3>
-                  {state.availability && state.availability.weekdays.length > 0 ? (
-                    <ul className="mt-3 space-y-3 text-sm text-muted-foreground">
+                  </h2>
+                  <p className="mt-1 max-w-xl text-sm leading-snug text-muted-foreground">
+                    Published hours and this week at a glance.
+                  </p>
+                </div>
+                {state.availability && state.availability.weekdays.length > 0 ? (
+                  <>
+                    <ul className="space-y-4 text-sm text-muted-foreground">
                       {state.availability.weekdays.map((day) => (
                         <li key={day.weekday}>
                           <span className="font-medium text-foreground">
                             {BARBER_WEEKDAY_LABELS[day.weekday] ??
                               `Day ${day.weekday}`}
                           </span>
-                          <ul className="mt-1 list-inside list-disc">
+                          <ul className="mt-2 list-inside list-disc space-y-1">
                             {day.windows.map((w) => (
                               <li
                                 key={`${day.weekday}-${w.starts_at}-${w.ends_at}`}
@@ -227,34 +300,36 @@ export default function BarberDetailPage() {
                         </li>
                       ))}
                     </ul>
-                  ) : (
-                    <p className="mt-2 text-sm text-muted-foreground">
-                      Hours are not published yet for this barber.
-                    </p>
-                  )}
-                  {state.availability &&
-                  state.availability.weekdays.length > 0 ? (
-                    <div className="mt-6">
+                    <div>
                       <h3 className="mb-3 text-sm font-semibold text-foreground">
                         This week
                       </h3>
                       <WeekAvailabilityCalendar
                         weekLabel={publicWeekLabel}
                         days={publicCalendarDays}
-                        className="rounded-lg border border-border/40 bg-muted/10 p-3 sm:p-4"
+                        className="dashboard-surface rounded-xl p-3 sm:p-4"
                       />
                     </div>
-                  ) : null}
-                </div>
-              </CardContent>
-            </Card>
+                  </>
+                ) : (
+                  <p className="text-sm leading-relaxed text-muted-foreground">
+                    Published hours are not available for this barber yet.
+                  </p>
+                )}
+              </section>
+            </div>
           ) : null}
 
-          <p className="mt-10 text-center text-sm text-muted-foreground">
-            <Link href="/barbers" className="underline-offset-4 hover:underline">
-              Back to all barbers
-            </Link>
-          </p>
+          {state.kind !== "loading" ? (
+            <p className="text-center text-sm text-muted-foreground">
+              <Link
+                href="/barbers"
+                className="underline-offset-4 hover:underline"
+              >
+                Back to all barbers
+              </Link>
+            </p>
+          ) : null}
         </motion.div>
       </main>
     </div>

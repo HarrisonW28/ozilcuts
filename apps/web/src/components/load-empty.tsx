@@ -101,16 +101,31 @@ export function NotificationListSkeleton({
 export function BookCatalogFormSkeleton({ className }: { className?: string }) {
   return (
     <div
-      className={cn("flex flex-col gap-4", className)}
+      className={cn("flex flex-col gap-6", className)}
       aria-busy="true"
       aria-label="Loading booking options"
     >
-      {[0, 1, 2].map((i) => (
-        <div key={i} className="flex flex-col gap-2">
-          <Skeleton className="h-4 w-24" />
-          <Skeleton className="h-11 w-full rounded-lg" />
+      <div className="flex flex-col gap-3">
+        <Skeleton className="h-3 w-20" />
+        <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+          {Array.from({ length: 4 }, (_, i) => (
+            <Skeleton key={i} className="h-[4.25rem] rounded-xl" />
+          ))}
         </div>
-      ))}
+      </div>
+      <div className="flex flex-col gap-3">
+        <Skeleton className="h-3 w-16" />
+        <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+          {Array.from({ length: 2 }, (_, i) => (
+            <Skeleton key={i} className="h-14 rounded-xl" />
+          ))}
+        </div>
+      </div>
+      <div className="flex flex-col gap-2">
+        <Skeleton className="h-3 w-14" />
+        <Skeleton className="h-12 w-full rounded-xl" />
+        <Skeleton className="h-4 w-40" />
+      </div>
     </div>
   );
 }
@@ -118,12 +133,15 @@ export function BookCatalogFormSkeleton({ className }: { className?: string }) {
 export function TimeSlotChipsSkeleton({ className }: { className?: string }) {
   return (
     <div
-      className={cn("flex flex-wrap gap-2", className)}
+      className={cn(
+        "grid grid-cols-3 gap-2 sm:grid-cols-4",
+        className,
+      )}
       aria-busy="true"
       aria-label="Loading available times"
     >
-      {Array.from({ length: 8 }, (_, i) => (
-        <Skeleton key={i} className="h-11 w-[4.5rem] rounded-md sm:h-9" />
+      {Array.from({ length: 9 }, (_, i) => (
+        <Skeleton key={i} className="h-12 rounded-xl sm:h-11" />
       ))}
     </div>
   );

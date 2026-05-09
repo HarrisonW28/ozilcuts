@@ -80,25 +80,26 @@ export default function ServicesPage() {
       <SiteHeader profile={profile} onSignOut={signOut} />
       <main
         id="main-content"
-        className="flex flex-1 flex-col px-6 py-10 sm:px-8 sm:py-14"
+        className="page-main"
       >
         <motion.div
           initial={motionInitial}
           animate={{ opacity: 1, y: 0 }}
           transition={ozilcutsPageEnterTransition}
-          className="mx-auto w-full max-w-3xl"
+          className="mx-auto w-full max-w-5xl page-stack"
         >
           <ScreenTitle
-            className="mb-8"
             eyebrow={OZILCUTS_APP_NAME}
-            title="Services & pricing"
-            description="Transparent durations and prices—pick what fits, then book your time."
+            title="The menu"
+            description="Duration, price, deposit—then book in one flow."
+            className="gap-5 pb-1 sm:gap-6"
           />
 
           {state.kind === "loading" ? (
             <CatalogCardGridSkeleton
-              count={4}
+              count={6}
               statusLabel="Loading services"
+              className="gap-6 sm:grid-cols-2 md:grid-cols-3 md:gap-7"
             />
           ) : null}
 
@@ -112,7 +113,7 @@ export default function ServicesPage() {
                 type="button"
                 variant="secondary"
                 size="sm"
-                className="shrink-0"
+                className="min-h-11 shrink-0 touch-manipulation sm:min-h-9"
                 onClick={retry}
               >
                 Retry
@@ -134,46 +135,59 @@ export default function ServicesPage() {
 
           {state.kind === "ok" && state.items.length > 0 ? (
             <ul
-              className="grid list-none gap-4 sm:grid-cols-2"
+              className="grid list-none gap-6 sm:grid-cols-2 md:grid-cols-3 md:gap-7 lg:gap-8"
               aria-label="Service list"
             >
               {state.items.map((svc) => (
                 <li key={svc.id}>
-                  <Card className="h-full">
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-lg leading-snug">
+                  <Card className="flex h-full flex-col overflow-hidden border-border/55 shadow-sm transition-[box-shadow,transform] motion-safe:hover:-translate-y-px dark:shadow-md">
+                    <CardHeader className="border-b border-border/35 bg-muted/[0.06] pb-4 dark:bg-muted/[0.04]">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                        Service
+                      </p>
+                      <CardTitle className="mt-2 text-xl font-semibold leading-snug tracking-tight">
                         {svc.name}
                       </CardTitle>
                       {svc.description ? (
-                        <CardDescription>{svc.description}</CardDescription>
+                        <CardDescription className="mt-2 line-clamp-3 text-sm leading-relaxed">
+                          {svc.description}
+                        </CardDescription>
                       ) : null}
                     </CardHeader>
-                    <CardContent className="pb-2">
-                      <dl className="grid grid-cols-2 gap-2 text-sm">
+                    <CardContent className="flex flex-1 flex-col pt-5 pb-2">
+                      <dl className="flex flex-wrap items-end justify-between gap-x-4 gap-y-3 border-b border-border/30 pb-5">
                         <div>
-                          <dt className="text-muted-foreground">Duration</dt>
-                          <dd className="font-medium">
-                            {svc.duration_minutes} min
+                          <dt className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                            Duration
+                          </dt>
+                          <dd className="mt-1 text-2xl font-semibold tabular-nums tracking-tight text-foreground">
+                            {svc.duration_minutes}
+                            <span className="text-base font-medium text-muted-foreground">
+                              {" "}
+                              min
+                            </span>
                           </dd>
                         </div>
-                        <div>
-                          <dt className="text-muted-foreground">Price</dt>
-                          <dd className="font-medium">
+                        <div className="text-end">
+                          <dt className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                            From
+                          </dt>
+                          <dd className="mt-1 text-2xl font-semibold tabular-nums tracking-tight text-foreground">
                             {formatUsd(svc.price_cents)}
                           </dd>
                         </div>
                         {svc.deposit_cents > 0 ? (
-                          <div className="col-span-2">
-                            <dt className="text-muted-foreground">
+                          <div className="w-full border-t border-border/30 pt-4">
+                            <dt className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                               {svc.deposit_policy === "first_time_customer"
-                                ? "Deposit (first-time customers)"
-                                : "Deposit due at booking"}
+                                ? "Deposit (first-time)"
+                                : "Deposit at booking"}
                             </dt>
-                            <dd className="font-medium">
+                            <dd className="mt-1 font-medium text-foreground">
                               {formatUsd(svc.deposit_cents)}
                               {svc.deposit_policy === "first_time_customer" ? (
-                                <span className="ml-2 text-xs text-muted-foreground">
-                                  Returning customers skip this step.
+                                <span className="ml-2 text-xs font-normal text-muted-foreground">
+                                  Returning guests skip this.
                                 </span>
                               ) : null}
                             </dd>
@@ -181,10 +195,14 @@ export default function ServicesPage() {
                         ) : null}
                       </dl>
                     </CardContent>
-                    <CardFooter className="flex justify-end">
-                      <Button asChild size="sm">
+                    <CardFooter className="mt-auto border-t border-border/35 bg-muted/[0.04] py-4 dark:bg-muted/[0.03]">
+                      <Button
+                        asChild
+                        size="sm"
+                        className="h-11 w-full touch-manipulation sm:h-10"
+                      >
                         <Link href={`/book?service_id=${svc.id}`}>
-                          Book this
+                          Reserve this service
                         </Link>
                       </Button>
                     </CardFooter>
@@ -194,11 +212,13 @@ export default function ServicesPage() {
             </ul>
           ) : null}
 
-          <p className="mt-10 text-center text-sm text-muted-foreground">
-            <Link href="/" className="underline-offset-4 hover:underline">
-              Back to home
-            </Link>
-          </p>
+          {state.kind !== "loading" ? (
+            <p className="text-center text-sm text-muted-foreground">
+              <Link href="/" className="underline-offset-4 hover:underline">
+                Back to home
+              </Link>
+            </p>
+          ) : null}
         </motion.div>
       </main>
     </div>

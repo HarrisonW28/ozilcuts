@@ -1,0 +1,101 @@
+"use client";
+
+import { publicShopHoursLines, publicStudioLocationCopy } from "@/lib/public-site-copy";
+import { Button } from "@ozilcuts/ui";
+import { Clock, MapPin } from "lucide-react";
+import Link from "next/link";
+
+export function ContactLocationSection() {
+  return (
+    <section
+      id="visit"
+      className="scroll-mt-28 border-t border-border/35 pt-16 dark:border-border/25 md:pt-20"
+      aria-labelledby="home-visit-heading"
+    >
+      <div className="grid gap-10 rounded-2xl border border-border/55 bg-muted/[0.08] px-6 py-10 dark:bg-muted/[0.06] sm:px-10 sm:py-12 md:grid-cols-2 md:items-stretch md:gap-12 lg:gap-14">
+        <div className="flex flex-col gap-8">
+          <header>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+              Contact &amp; location
+            </p>
+            <h2
+              id="home-visit-heading"
+              className="mt-3 text-2xl font-semibold tracking-tight text-foreground sm:text-3xl"
+            >
+              Plan your visit
+            </h2>
+            <p className="mt-3 max-w-md text-sm leading-relaxed text-muted-foreground sm:text-base">
+              Everything you need lands in your inbox after you book—no guessing
+              at the curb.
+            </p>
+          </header>
+
+          <div className="flex gap-4 rounded-2xl border border-border/50 bg-card/70 p-5 shadow-xs dark:bg-card/45">
+            <div
+              className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary dark:bg-primary/15"
+              aria-hidden
+            >
+              <MapPin className="size-5" strokeWidth={2} />
+            </div>
+            <div className="min-w-0">
+              <h3 className="text-sm font-semibold text-foreground">
+                {publicStudioLocationCopy.title}
+              </h3>
+              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                {publicStudioLocationCopy.body}
+              </p>
+            </div>
+          </div>
+
+          <div>
+            <div className="flex items-center gap-2">
+              <Clock
+                className="size-4 shrink-0 text-primary"
+                strokeWidth={2}
+                aria-hidden
+              />
+              <h3 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                Hours
+              </h3>
+            </div>
+            <ul className="mt-3 list-none space-y-2.5" aria-label="Studio hours">
+              {publicShopHoursLines.map((line) => (
+                <li
+                  key={line}
+                  className="rounded-xl border border-border/45 bg-card/65 px-4 py-3.5 text-sm font-medium text-foreground shadow-xs dark:bg-card/40 sm:text-[0.9375rem]"
+                >
+                  {line}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+
+        <div className="flex flex-col justify-center gap-4 rounded-xl border border-border/50 bg-card/85 p-6 shadow-sm dark:bg-card/50 sm:p-7">
+          <p className="text-sm font-medium leading-snug text-foreground">
+            Ready when you are
+          </p>
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            Hold a time, then fine-tune service and barber in the booking flow.
+            Menu and team are one tap away if you want to browse first.
+          </p>
+          <div className="flex flex-col gap-3 pt-1">
+            <Button
+              asChild
+              size="lg"
+              className="h-12 w-full text-base shadow-sm sm:h-[3.25rem]"
+            >
+              <Link href="/book">Book now</Link>
+            </Button>
+            <Button asChild variant="outline" className="h-11 w-full sm:h-12">
+              <Link href="/services">View menu</Link>
+            </Button>
+            <Button asChild variant="ghost" className="h-11 w-full">
+              <Link href="/barbers">Meet the team</Link>
+            </Button>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}

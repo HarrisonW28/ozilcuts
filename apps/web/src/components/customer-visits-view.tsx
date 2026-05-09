@@ -132,7 +132,7 @@ export function CustomerVisitsView({ data, linkAppointments = false }: Props) {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-5 md:gap-6">
       <section
         aria-label="Visit summary"
         className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5"
@@ -140,7 +140,8 @@ export function CustomerVisitsView({ data, linkAppointments = false }: Props) {
         {tiles.map((tile) => (
           <Card
             key={tile.label}
-            className="border-border/50 shadow-sm transition-shadow hover:shadow-md"
+            size="sm"
+            className="dashboard-surface motion-card"
           >
             <CardHeader className="pb-2">
               <CardDescription>{tile.label}</CardDescription>
@@ -154,12 +155,11 @@ export function CustomerVisitsView({ data, linkAppointments = false }: Props) {
       </section>
 
       <section aria-label="Visit timeline">
-        <Card className="border-border/50 shadow-sm">
+        <Card size="sm" className="dashboard-surface">
           <CardHeader className="pb-3">
             <CardTitle className="text-base sm:text-lg">Visit timeline</CardTitle>
             <CardDescription>
-              Newest first (up to 50 visits). Grouped by month for quick
-              scanning on mobile.
+              Newest first, grouped by month for quick scanning.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -211,8 +211,8 @@ export function CustomerVisitsView({ data, linkAppointments = false }: Props) {
                             >
                               <article
                                 className={cn(
-                                  "motion-interactive rounded-2xl border border-border/55 bg-card/60 p-4 shadow-sm backdrop-blur-[1px] transition-[box-shadow,transform] duration-[var(--motion-duration-base)] ease-[var(--motion-ease-standard)]",
-                                  "hover:border-border hover:shadow-md motion-safe:hover:-translate-y-px",
+                                  "motion-interactive rounded-xl border border-border/50 bg-muted/10 p-4 shadow-none transition-[border-color,background-color] duration-[var(--motion-duration-base)] ease-[var(--motion-ease-standard)]",
+                                  "hover:border-border/80 hover:bg-muted/15",
                                 )}
                               >
                                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">

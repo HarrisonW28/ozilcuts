@@ -26,11 +26,11 @@ function EmptyState({
       data-slot="empty-state"
       role="status"
       className={cn(
-        "flex flex-col items-start gap-1 rounded-lg border border-dashed border-border/70 bg-muted/10 px-4 py-6 text-sm",
+        "flex flex-col items-start gap-2 rounded-xl border border-dashed border-border/60 bg-muted/5 px-4 py-7 text-sm shadow-xs",
         className,
       )}
     >
-      <p className="font-medium text-foreground">{title}</p>
+      <p className="font-semibold tracking-tight text-foreground">{title}</p>
       {description ? (
         <div className="text-sm text-muted-foreground">{description}</div>
       ) : null}

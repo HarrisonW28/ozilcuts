@@ -1,24 +1,16 @@
 "use client";
 
-import { GoogleSignInButton } from "@/components/google-sign-in-button";
+import { PublicHomeView } from "@/components/public-home-view";
 import { SiteHeader } from "@/components/site-header";
 import {
   ozilcutsPageEnterInitial,
   ozilcutsPageEnterTransition,
 } from "@/lib/motion";
 import { useSessionProfile } from "@/lib/use-session-profile";
-import { fetchApiHealth } from "@ozilcuts/api";
-import {
-  Button,
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  ScreenTitle,
-} from "@ozilcuts/ui";
+import { fetchApiHealth, fetchBarbers, fetchServices } from "@ozilcuts/api";
+import type { BarberProfilePublic, ServiceSummary } from "@ozilcuts/types";
 import { OZILCUTS_APP_NAME } from "@ozilcuts/types";
 import { motion, useReducedMotion } from "framer-motion";
-import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 
 type HealthState =
@@ -26,6 +18,10 @@ type HealthState =
   | { kind: "loading" }
   | { kind: "ok" }
   | { kind: "error"; message: string };
+
+type CatalogPreviewState =
+  | { kind: "loading" }
+  | { kind: "ok"; services: ServiceSummary[]; barbers: BarberProfilePublic[] };
 
 function roleTagline(roleSlug: string): string {
   switch (roleSlug) {
@@ -38,10 +34,15 @@ function roleTagline(roleSlug: string): string {
   }
 }
 
+const PREVIEW_COUNT = 3;
+
 export default function Home() {
   const { profile, signOut } = useSessionProfile();
   const reduceMotion = useReducedMotion();
   const [health, setHealth] = useState<HealthState>({ kind: "idle" });
+  const [catalogPreview, setCatalogPreview] = useState<CatalogPreviewState>({
+    kind: "loading",
+  });
 
   const fetchHealthOnce = useCallback((isCancelled: () => boolean) => {
     setHealth({ kind: "loading" });
@@ -69,17 +70,37 @@ export default function Home() {
     fetchHealthOnce(() => false);
   }, [fetchHealthOnce]);
 
+  useEffect(() => {
+    let cancelled = false;
+    setCatalogPreview({ kind: "loading" });
+    Promise.allSettled([fetchServices(), fetchBarbers()]).then((results) => {
+      if (cancelled) return;
+      const services =
+        results[0].status === "fulfilled" ? results[0].value : [];
+      const barbers =
+        results[1].status === "fulfilled" ? results[1].value : [];
+      setCatalogPreview({
+        kind: "ok",
+        services: services.slice(0, PREVIEW_COUNT),
+        barbers: barbers.slice(0, PREVIEW_COUNT),
+      });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const motionInitial = ozilcutsPageEnterInitial(reduceMotion);
 
   const heroTitle =
     profile.kind === "ready"
       ? `Welcome back, ${profile.user.name.split(" ")[0] ?? profile.user.name}`
-      : "Barber booking, built for mobile-first shops.";
+      : "Sharp cuts. Quiet confidence.";
 
   const heroDescription =
     profile.kind === "ready" ? (
       <>
-        <p className="mb-4">{roleTagline(profile.user.role.slug)}</p>
+        <p className="mb-3 text-foreground/90">{roleTagline(profile.user.role.slug)}</p>
         <p className="text-sm text-muted-foreground">
           Signed in as{" "}
           <span className="font-medium text-foreground">
@@ -88,106 +109,49 @@ export default function Home() {
         </p>
       </>
     ) : (
-      <>
-        Book trusted barbers, manage your shop, and keep clients coming
-        back—all from one mobile-first experience. Customer and barber flows
-        arrive in upcoming sprints.
-      </>
+      <>Professional cuts. One calm place to book.</>
     );
+
+  const healthLine =
+    health.kind === "loading" || health.kind === "idle"
+      ? "Checking connection to the studio API…"
+      : health.kind === "ok"
+        ? "API connected — appointments sync in real time."
+        : `API unavailable (${health.message}). Start the Laravel API on port 8000 or set NEXT_PUBLIC_API_URL.`;
 
   return (
     <div className="flex min-h-dvh flex-1 flex-col">
       <SiteHeader profile={profile} onSignOut={signOut} />
-      <main
-        id="main-content"
-        className="flex flex-1 flex-col items-center justify-center px-6 py-10 sm:px-8 sm:py-16"
-      >
+      <main id="main-content" className="page-main">
         <motion.div
           initial={motionInitial}
           animate={{ opacity: 1, y: 0 }}
           transition={ozilcutsPageEnterTransition}
-          className="w-full max-w-lg sm:max-w-xl"
+          className="w-full"
         >
-          <Card>
-            <CardHeader>
-              <ScreenTitle
-                eyebrow={OZILCUTS_APP_NAME}
-                title={heroTitle}
-                description={heroDescription}
-              />
-            </CardHeader>
-            <CardContent className="flex flex-col gap-6">
-              {profile.kind === "none" ? (
+          <PublicHomeView
+            heroTitle={heroTitle}
+            heroDescription={heroDescription}
+            profileGuest={profile.kind === "none"}
+            profileReady={profile.kind === "ready"}
+            servicesPreview={
+              catalogPreview.kind === "ok" ? catalogPreview.services : []
+            }
+            barbersPreview={
+              catalogPreview.kind === "ok" ? catalogPreview.barbers : []
+            }
+            previewsLoading={catalogPreview.kind === "loading"}
+            health={{
+              line: (
                 <>
-                  <ul className="list-inside list-disc space-y-1.5 text-sm text-muted-foreground">
-                    <li>Mobile-first booking and reminders</li>
-                    <li>Built for busy barbershops and solo chairs</li>
-                    <li>Secure email, password, and Google sign-in</li>
-                  </ul>
-                  <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-                    <Button asChild className="w-full sm:w-auto sm:flex-1">
-                      <Link href="/register">Get started</Link>
-                    </Button>
-                    <Button
-                      asChild
-                      variant="outline"
-                      className="w-full sm:w-auto sm:flex-1"
-                    >
-                      <Link href="/login">Sign in</Link>
-                    </Button>
-                    <Button
-                      asChild
-                      variant="secondary"
-                      className="w-full sm:w-auto sm:flex-1"
-                    >
-                      <Link href="/services">Browse services</Link>
-                    </Button>
-                    <Button
-                      asChild
-                      variant="secondary"
-                      className="w-full sm:w-auto sm:flex-1"
-                    >
-                      <Link href="/barbers">Browse barbers</Link>
-                    </Button>
-                  </div>
-                  <GoogleSignInButton />
+                  <span className="font-medium text-foreground">{OZILCUTS_APP_NAME}</span>
+                  <span className="text-muted-foreground"> · {healthLine}</span>
                 </>
-              ) : null}
-              {profile.kind === "ready" ? (
-                <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-                  <Button asChild variant="outline" className="w-full sm:w-auto sm:flex-1">
-                    <Link href="/services">View services & pricing</Link>
-                  </Button>
-                  <Button asChild variant="outline" className="w-full sm:w-auto sm:flex-1">
-                    <Link href="/barbers">Meet our barbers</Link>
-                  </Button>
-                </div>
-              ) : null}
-            </CardContent>
-            <CardFooter className="flex flex-col items-stretch gap-3 border-t border-border/60 bg-muted/25 pt-4 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-              <p role="status" aria-live="polite" className="min-w-0 flex-1">
-                API:{" "}
-                {health.kind === "loading" || health.kind === "idle"
-                  ? "Checking…"
-                  : null}
-                {health.kind === "ok" ? "Connected (/api/v1/health)." : null}
-                {health.kind === "error"
-                  ? `Unavailable (${health.message}). Start the Laravel API on port 8000 or set NEXT_PUBLIC_API_URL.`
-                  : null}
-              </p>
-              {health.kind === "error" ? (
-                <Button
-                  type="button"
-                  variant="secondary"
-                  size="sm"
-                  className="shrink-0 self-start sm:self-auto"
-                  onClick={retryHealth}
-                >
-                  Retry
-                </Button>
-              ) : null}
-            </CardFooter>
-          </Card>
+              ),
+              showRetry: health.kind === "error",
+              onRetry: retryHealth,
+            }}
+          />
         </motion.div>
       </main>
     </div>

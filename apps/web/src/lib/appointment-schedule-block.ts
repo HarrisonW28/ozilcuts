@@ -17,10 +17,10 @@ export function appointmentScheduleBlockClassName(
       : "rounded-lg px-1.5 py-1 text-[0.65rem] font-semibold leading-tight sm:px-2 sm:text-[11px]";
 
   const interactive = cn(
-    "motion-interactive border shadow-sm",
+    "motion-interactive border shadow-xs",
     "transition-[transform,box-shadow,background-color,border-color] duration-[var(--motion-duration-base)] ease-[var(--motion-ease-standard)]",
     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-    "active:scale-[0.99] max-sm:active:scale-[0.985]",
+    "motion-safe:active:scale-[0.99] max-sm:motion-safe:active:scale-[0.985]",
   );
 
   if (status === "cancelled") {
@@ -36,7 +36,7 @@ export function appointmentScheduleBlockClassName(
     interactive,
     size,
     "border-border/40 bg-card text-card-foreground",
-    "hover:z-20 hover:border-primary/40 hover:shadow-md",
+    "hover:z-20 hover:border-primary/40 hover:shadow-sm",
     "dark:border-border/35 dark:bg-card/95",
   );
 }

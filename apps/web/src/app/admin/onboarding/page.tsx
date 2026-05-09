@@ -189,7 +189,7 @@ export default function AdminOnboardingPage() {
         <SiteHeader profile={profile} onSignOut={signOut} />
         <main
           id="main-content"
-          className="flex flex-1 items-center justify-center px-4 py-10"
+          className="page-main-hero"
         >
           <p className="text-sm text-muted-foreground">Loading…</p>
         </main>
@@ -243,9 +243,9 @@ export default function AdminOnboardingPage() {
       <SiteHeader profile={profile} onSignOut={signOut} />
       <main
         id="main-content"
-        className="flex flex-1 flex-col px-4 pb-10 pt-6 sm:px-6 sm:pt-10"
+        className="page-main"
       >
-        <div className="mx-auto w-full max-w-lg">
+        <div className="mx-auto w-full max-w-lg page-stack">
           <ScreenTitle
             eyebrow={OZILCUTS_APP_NAME}
             title="Set up your shop"
@@ -254,7 +254,7 @@ export default function AdminOnboardingPage() {
 
           <nav
             aria-label="Onboarding progress"
-            className="mt-8 flex flex-col gap-3"
+            className="flex flex-col gap-3"
           >
             <p className="text-xs font-medium text-muted-foreground">
               Step {step} of {TOTAL_STEPS}: {STEP_LABELS[step - 1]}
@@ -282,7 +282,7 @@ export default function AdminOnboardingPage() {
 
           {stepError ? (
             <p
-              className="mt-6 text-sm text-destructive"
+              className="text-sm text-destructive"
               role="alert"
               aria-live="polite"
             >
@@ -290,7 +290,7 @@ export default function AdminOnboardingPage() {
             </p>
           ) : null}
 
-          <Card className="mt-6 border-primary/20 shadow-sm">
+          <Card className="border-primary/20 shadow-sm">
             <CardHeader className="space-y-1 pb-2">
               <CardTitle className="text-lg">{STEP_LABELS[step - 1]}</CardTitle>
               <CardDescription className="text-pretty">

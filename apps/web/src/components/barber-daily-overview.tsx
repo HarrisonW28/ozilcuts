@@ -164,7 +164,7 @@ export function BarberDailyOverview({
   return (
     <section
       className={cn(
-        "rounded-2xl border border-primary/25 bg-primary/[0.04] p-4 shadow-sm dark:border-primary/20 dark:bg-primary/[0.06] sm:p-5",
+        "rounded-xl border border-primary/20 bg-primary/[0.035] p-4 shadow-none dark:border-primary/15 dark:bg-primary/[0.05] sm:p-5",
         className,
       )}
       aria-label={ariaLabel}
@@ -185,7 +185,7 @@ export function BarberDailyOverview({
         </div>
 
         <div className="grid w-full grid-cols-3 gap-2 sm:max-w-md sm:gap-3">
-          <div className="rounded-xl border border-border/50 bg-background/80 px-2 py-3 text-center shadow-sm sm:px-3">
+          <div className="rounded-xl border border-border/45 bg-background/55 px-2 py-3 text-center sm:px-3">
             <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
               Cuts
             </p>
@@ -193,7 +193,7 @@ export function BarberDailyOverview({
               {totals.count}
             </p>
           </div>
-          <div className="rounded-xl border border-border/50 bg-background/80 px-2 py-3 text-center shadow-sm sm:px-3">
+          <div className="rounded-xl border border-border/45 bg-background/55 px-2 py-3 text-center sm:px-3">
             <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
               Chair
             </p>
@@ -201,7 +201,7 @@ export function BarberDailyOverview({
               {formatDuration(totals.minutes)}
             </p>
           </div>
-          <div className="rounded-xl border border-border/50 bg-background/80 px-2 py-3 text-center shadow-sm sm:px-3">
+          <div className="rounded-xl border border-border/45 bg-background/55 px-2 py-3 text-center sm:px-3">
             <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
               Booked
             </p>

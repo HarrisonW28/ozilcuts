@@ -179,13 +179,12 @@ export function BarberAnalyticsView({
   }, [state]);
 
   return (
-    <div className="space-y-6">
-      <Card>
+    <div className="flex flex-col gap-5 md:gap-6">
+      <Card size="sm" className="dashboard-surface">
         <CardHeader>
-          <CardTitle>Filters</CardTitle>
+          <CardTitle className="text-base">Date range</CardTitle>
           <CardDescription>
-            Pick a date range. The report covers appointments whose start time
-            falls within the range.
+            Appointments whose start time falls in this window.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -267,7 +266,7 @@ export function BarberAnalyticsView({
               <KpiCardSkeleton key={i} />
             ))}
           </section>
-          <Card aria-hidden className="mt-6">
+          <Card aria-hidden className="dashboard-surface mt-5 md:mt-6" size="sm">
             <CardContent className="p-4">
               <TableSkeleton rows={5} columns={4} />
             </CardContent>
@@ -298,7 +297,7 @@ export function BarberAnalyticsView({
           </section>
 
           <section aria-label="Top services">
-            <Card>
+            <Card size="sm" className="dashboard-surface">
               <CardHeader className="pb-2">
                 <CardTitle className="text-base">Top services</CardTitle>
                 <CardDescription>
@@ -343,7 +342,7 @@ export function BarberAnalyticsView({
           </section>
 
           <section aria-label="Top customers">
-            <Card>
+            <Card size="sm" className="dashboard-surface">
               <CardHeader className="pb-2">
                 <CardTitle className="text-base">Top customers</CardTitle>
                 <CardDescription>
@@ -388,7 +387,7 @@ export function BarberAnalyticsView({
           </section>
 
           <section aria-label="Daily series">
-            <Card>
+            <Card size="sm" className="dashboard-surface">
               <CardHeader className="pb-2">
                 <CardTitle className="text-base">Daily series</CardTitle>
                 <CardDescription>

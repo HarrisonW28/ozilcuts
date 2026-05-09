@@ -127,9 +127,9 @@ export default function AdminBarberComparePage() {
       <SiteHeader profile={profile} onSignOut={signOut} />
       <main
         id="main-content"
-        className="flex flex-1 flex-col px-4 py-8 sm:px-8 sm:py-12"
+        className="page-main"
       >
-        <div className="mx-auto w-full max-w-6xl space-y-6">
+        <div className="mx-auto w-full max-w-6xl page-stack">
           <ScreenTitle
             eyebrow={OZILCUTS_APP_NAME}
             title="Barber compare"
@@ -176,10 +176,12 @@ export default function AdminBarberComparePage() {
 
           {isAdmin ? (
             <>
-              <Card>
+              <Card size="sm" className="dashboard-surface">
                 <CardHeader>
-                  <CardTitle>Filters</CardTitle>
-                  <CardDescription>Pick a date range.</CardDescription>
+                  <CardTitle className="text-base">Date range</CardTitle>
+                  <CardDescription>
+                    Rankings use appointments starting in this window.
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <form
@@ -257,7 +259,7 @@ export default function AdminBarberComparePage() {
               </Card>
 
               {state.kind === "loading" || state.kind === "idle" ? (
-                <Card aria-hidden>
+                <Card aria-hidden className="dashboard-surface" size="sm">
                   <CardHeader className="pb-2">
                     <CardTitle className="text-base">League table</CardTitle>
                     <CardDescription>Loading…</CardDescription>
@@ -275,7 +277,7 @@ export default function AdminBarberComparePage() {
               ) : null}
 
               {state.kind === "ok" ? (
-                <Card>
+                <Card size="sm" className="dashboard-surface">
                   <CardHeader className="pb-2">
                     <CardTitle className="text-base">League table</CardTitle>
                     <CardDescription>
