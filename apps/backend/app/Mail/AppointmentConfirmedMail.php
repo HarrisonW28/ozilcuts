@@ -3,9 +3,11 @@
 namespace App\Mail;
 
 use App\Models\Appointment;
+use App\Services\Calendar\IcsBuilder;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
+use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
@@ -33,6 +35,19 @@ class AppointmentConfirmedMail extends Mailable implements ShouldQueue
                 'confirmationUrl' => $this->confirmationUrl(),
             ],
         );
+    }
+
+    /**
+     * @return list<Attachment>
+     */
+    public function attachments(): array
+    {
+        return [
+            Attachment::fromData(
+                fn () => IcsBuilder::forAppointment($this->appointment),
+                IcsBuilder::FILENAME,
+            )->withMime(IcsBuilder::MIME),
+        ];
     }
 
     private function confirmationUrl(): string
