@@ -210,3 +210,28 @@ export async function fetchAppointmentPaymentIntent(
 
   return res.json() as Promise<AppointmentPendingPayment>;
 }
+
+export type SendAppointmentReminderResponse = {
+  sent: true;
+  /** ISO 8601 */
+  sent_at: string;
+};
+
+export async function sendAppointmentReminder(
+  token: string,
+  appointmentId: number,
+): Promise<SendAppointmentReminderResponse> {
+  const res = await fetch(
+    `${getApiBaseUrl()}/api/v1/appointments/${appointmentId}/reminder`,
+    {
+      method: "POST",
+      headers: authJsonHeaders(token),
+    },
+  );
+  if (!res.ok) {
+    const payload = await res.json().catch(() => ({}));
+    throw new ApiError("Failed to send reminder", res.status, payload);
+  }
+
+  return res.json() as Promise<SendAppointmentReminderResponse>;
+}

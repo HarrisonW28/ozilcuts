@@ -31,6 +31,7 @@ export {
   fetchBarberSlots,
   fetchMyAppointments,
   rescheduleAppointment,
+  sendAppointmentReminder,
 } from "./booking";
 export {
   fetchCustomerAnalytics,

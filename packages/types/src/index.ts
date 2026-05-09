@@ -571,6 +571,7 @@ export const NOTIFICATION_EVENTS = [
   "appointment.confirmed",
   "appointment.cancelled",
   "appointment.rescheduled",
+  "appointment.reminder",
 ] as const;
 export type NotificationEvent = (typeof NOTIFICATION_EVENTS)[number];
 
