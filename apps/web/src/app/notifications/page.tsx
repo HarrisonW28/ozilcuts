@@ -4,7 +4,11 @@ import { SiteHeader } from "@/components/site-header";
 import { getStoredAuthToken } from "@/lib/auth-token";
 import { useInbox } from "@/lib/use-inbox";
 import { useSessionProfile } from "@/lib/use-session-profile";
-import { ApiError, fetchNotifications } from "@ozilcuts/api";
+import {
+  ApiError,
+  fetchNotifications,
+  snoozeRebookNudge,
+} from "@ozilcuts/api";
 import type {
   NotificationData,
   NotificationEvent,
@@ -36,6 +40,7 @@ const EVENT_LABELS: Record<NotificationEvent, string> = {
   "appointment.cancelled": "Appointment cancelled",
   "appointment.rescheduled": "Appointment rescheduled",
   "appointment.reminder": "Appointment reminder",
+  "appointment.rebook_suggested": "Time for your next visit",
   "staff.booking.created": "New booking alert",
   "staff.booking.cancelled": "Cancellation alert",
   "staff.booking.rescheduled": "Reschedule alert",
@@ -116,6 +121,38 @@ function describe(record: NotificationRecord): string {
         : "Reminder";
     return `${headline}${when ? ` · ${when}` : ""}`;
   }
+  if (record.type === "appointment.rebook_suggested") {
+    const interval =
+      typeof data.interval_days === "number" && data.interval_days > 0
+        ? data.interval_days
+        : null;
+    const suggestedRaw =
+      typeof data.suggested_date === "string" ? data.suggested_date : null;
+    const suggestedDate = suggestedRaw
+      ? new Date(`${suggestedRaw}T00:00:00`).toLocaleDateString(undefined, {
+          weekday: "short",
+          month: "short",
+          day: "numeric",
+        })
+      : null;
+    const cadence = interval
+      ? interval === 7
+        ? "about a week"
+        : interval % 7 === 0
+          ? `about ${Math.round(interval / 7)} weeks`
+          : `about ${interval} days`
+      : null;
+    const target = barber
+      ? `${service} with ${barber}`
+      : service;
+    if (cadence && suggestedDate) {
+      return `It's been ${cadence} since your last visit — try ${target} around ${suggestedDate}.`;
+    }
+    if (suggestedDate) {
+      return `Try ${target} around ${suggestedDate}.`;
+    }
+    return `Time to rebook ${target}.`;
+  }
   if (
     record.type === "staff.booking.created" ||
     record.type === "staff.booking.cancelled" ||
@@ -153,6 +190,29 @@ function appointmentHref(record: NotificationRecord): string | null {
   return null;
 }
 
+/**
+ * Deep-link to the booking flow with prefill from a rebook suggestion
+ * payload, so customers can confirm in one tap.
+ */
+function rebookHref(record: NotificationRecord): string | null {
+  if (record.type !== "appointment.rebook_suggested") return null;
+  const data = record.data;
+  const params = new URLSearchParams();
+  if (typeof data.service_id === "number" && data.service_id > 0) {
+    params.set("service_id", String(data.service_id));
+  }
+  if (typeof data.barber_user_id === "number" && data.barber_user_id > 0) {
+    params.set("barber_user_id", String(data.barber_user_id));
+  }
+  if (
+    typeof data.suggested_date === "string"
+    && /^\d{4}-\d{2}-\d{2}$/.test(data.suggested_date)
+  ) {
+    params.set("date", data.suggested_date);
+  }
+  return `/book${params.size > 0 ? `?${params.toString()}` : ""}`;
+}
+
 export default function NotificationsPage() {
   const { profile, signOut } = useSessionProfile();
   const inbox = useInbox();
@@ -162,6 +222,8 @@ export default function NotificationsPage() {
   const [state, setState] = useState<LoadState>({ kind: "idle" });
   const [busyId, setBusyId] = useState<number | null>(null);
   const [allBusy, setAllBusy] = useState<boolean>(false);
+  const [snoozeBusyId, setSnoozeBusyId] = useState<number | null>(null);
+  const [snoozedIds, setSnoozedIds] = useState<Set<number>>(new Set());
 
   const isReady = profile.kind === "ready";
 
@@ -219,6 +281,31 @@ export default function NotificationsPage() {
       // Soft-fail; user can retry.
     } finally {
       setAllBusy(false);
+    }
+  }
+
+  async function onSnoozeRebook(record: NotificationRecord) {
+    const sourceId = record.data?.appointment_id;
+    if (typeof sourceId !== "number" || sourceId <= 0) return;
+    const token = getStoredAuthToken();
+    if (!token) return;
+    setSnoozeBusyId(record.id);
+    try {
+      await snoozeRebookNudge(token, sourceId, 7);
+      setSnoozedIds((prev) => {
+        const next = new Set(prev);
+        next.add(record.id);
+        return next;
+      });
+      // Mark this notification as read once snoozed so the bell badge
+      // and inbox state reflect the user has handled it.
+      if (record.read_at === null) {
+        await inbox.markRead(record.id);
+      }
+    } catch {
+      // Soft-fail; user can retry.
+    } finally {
+      setSnoozeBusyId(null);
     }
   }
 
@@ -354,8 +441,11 @@ export default function NotificationsPage() {
               {state.kind === "ok" && state.page.data.length > 0 ? (
                 <ul className="flex flex-col gap-3">
                   {state.page.data.map((row) => {
-                    const href = appointmentHref(row);
+                    const isRebook = row.type === "appointment.rebook_suggested";
+                    const rebookLink = isRebook ? rebookHref(row) : null;
+                    const apptLink = isRebook ? null : appointmentHref(row);
                     const unread = row.read_at === null;
+                    const snoozed = snoozedIds.has(row.id);
                     return (
                       <li key={row.id}>
                         <Card
@@ -381,18 +471,63 @@ export default function NotificationsPage() {
                           </CardHeader>
                           <CardContent>
                             <p className="text-sm">{describe(row)}</p>
+                            {snoozed ? (
+                              <p
+                                className="mt-2 text-xs text-muted-foreground"
+                                role="status"
+                              >
+                                Snoozed for 7 days. We&rsquo;ll check back in
+                                if you haven&rsquo;t booked by then.
+                              </p>
+                            ) : null}
                           </CardContent>
                           <CardFooter className="flex flex-wrap gap-2">
-                            {href ? (
-                              <Button asChild size="sm" variant="secondary">
-                                <Link href={href}>View appointment</Link>
+                            {rebookLink ? (
+                              <Button asChild size="sm">
+                                <Link
+                                  href={rebookLink}
+                                  onClick={() => {
+                                    if (unread) void onMarkRead(row);
+                                  }}
+                                >
+                                  Book again
+                                </Link>
                               </Button>
                             ) : null}
-                            {unread ? (
+                            {isRebook && !snoozed ? (
                               <Button
                                 type="button"
                                 size="sm"
                                 variant="outline"
+                                disabled={snoozeBusyId === row.id}
+                                onClick={() => void onSnoozeRebook(row)}
+                              >
+                                {snoozeBusyId === row.id
+                                  ? "Snoozing…"
+                                  : "Not now"}
+                              </Button>
+                            ) : null}
+                            {apptLink ? (
+                              <Button asChild size="sm" variant="secondary">
+                                <Link href={apptLink}>View appointment</Link>
+                              </Button>
+                            ) : null}
+                            {unread && !isRebook ? (
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="outline"
+                                disabled={busyId === row.id}
+                                onClick={() => void onMarkRead(row)}
+                              >
+                                {busyId === row.id ? "Marking…" : "Mark read"}
+                              </Button>
+                            ) : null}
+                            {unread && isRebook ? (
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="ghost"
                                 disabled={busyId === row.id}
                                 onClick={() => void onMarkRead(row)}
                               >

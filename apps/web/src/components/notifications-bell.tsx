@@ -22,6 +22,7 @@ const EVENT_LABELS: Record<NotificationEvent, string> = {
   "appointment.cancelled": "Appointment cancelled",
   "appointment.rescheduled": "Appointment rescheduled",
   "appointment.reminder": "Appointment reminder",
+  "appointment.rebook_suggested": "Time for your next visit",
   "staff.booking.created": "New booking",
   "staff.booking.cancelled": "Booking cancelled",
   "staff.booking.rescheduled": "Booking rescheduled",
@@ -69,6 +70,10 @@ function describeShort(record: NotificationRecord): string {
       ? data.headline
       : `Reminder · ${service}`;
   }
+  if (record.type === "appointment.rebook_suggested") {
+    const target = barber ? `${service} with ${barber}` : service;
+    return `Rebook ${target}`;
+  }
   if (record.type === "staff.booking.created") {
     return `${customer ?? "Customer"} booked ${service}`;
   }
@@ -81,12 +86,33 @@ function describeShort(record: NotificationRecord): string {
   return EVENT_LABELS[record.type] ?? record.type;
 }
 
-function appointmentHref(record: NotificationRecord): string | null {
+function primaryHref(record: NotificationRecord): string | null {
+  if (record.type === "appointment.rebook_suggested") {
+    const data = record.data;
+    const params = new URLSearchParams();
+    if (typeof data.service_id === "number" && data.service_id > 0) {
+      params.set("service_id", String(data.service_id));
+    }
+    if (typeof data.barber_user_id === "number" && data.barber_user_id > 0) {
+      params.set("barber_user_id", String(data.barber_user_id));
+    }
+    if (
+      typeof data.suggested_date === "string"
+      && /^\d{4}-\d{2}-\d{2}$/.test(data.suggested_date)
+    ) {
+      params.set("date", data.suggested_date);
+    }
+    return `/book${params.size > 0 ? `?${params.toString()}` : ""}`;
+  }
   const id = record.data?.appointment_id;
   if (typeof id === "number" && id > 0) {
     return `/appointments/${id}/confirmation`;
   }
   return null;
+}
+
+function primaryLabel(record: NotificationRecord): string {
+  return record.type === "appointment.rebook_suggested" ? "Book" : "View";
 }
 
 export function NotificationsBell({ enabled }: Props) {
@@ -227,7 +253,7 @@ export function NotificationsBell({ enabled }: Props) {
             {latest.length > 0 ? (
               <ul className="divide-y divide-border">
                 {latest.map((row) => {
-                  const href = appointmentHref(row);
+                  const href = primaryHref(row);
                   const isUnread = row.read_at === null;
                   return (
                     <li key={row.id} className="px-3 py-3">
@@ -264,7 +290,7 @@ export function NotificationsBell({ enabled }: Props) {
                                     setOpen(false);
                                   }}
                                 >
-                                  View
+                                  {primaryLabel(row)}
                                 </Link>
                               </Button>
                             ) : null}
