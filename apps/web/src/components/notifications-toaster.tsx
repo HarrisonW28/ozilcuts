@@ -124,7 +124,7 @@ export function NotificationsToaster() {
           <div
             key={row.id}
             role="status"
-            className="pointer-events-auto rounded-lg border border-border bg-background/95 p-3 shadow-lg backdrop-blur-sm"
+            className="motion-toast pointer-events-auto rounded-lg border border-border bg-background/95 p-3 shadow-lg backdrop-blur-sm"
           >
             <div className="flex items-start gap-2">
               <span
@@ -163,7 +163,7 @@ export function NotificationsToaster() {
               <button
                 type="button"
                 aria-label="Dismiss"
-                className="ml-1 inline-flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground"
+                className="motion-interactive ml-1 inline-flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground"
                 onClick={() => dismissArrival(row.id)}
               >
                 <span aria-hidden="true">×</span>

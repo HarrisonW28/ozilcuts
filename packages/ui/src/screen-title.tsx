@@ -16,7 +16,7 @@ export function ScreenTitle({
   className,
 }: ScreenTitleProps) {
   return (
-    <header className={cn("flex flex-col gap-3", className)}>
+    <header className={cn("motion-enter flex flex-col gap-3", className)}>
       <p className="text-sm font-medium uppercase tracking-wide text-muted-foreground">
         {eyebrow}
       </p>

@@ -174,7 +174,7 @@ export function NotificationsBell({ enabled }: Props) {
         aria-expanded={open}
         aria-controls={popoverId}
         onClick={handleToggle}
-        className="relative inline-flex h-9 min-h-9 min-w-9 items-center justify-center rounded-md border border-border bg-background text-sm text-foreground transition-colors hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className="motion-interactive relative inline-flex h-9 min-h-9 min-w-9 items-center justify-center rounded-md border border-border bg-background text-sm text-foreground transition-colors hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
         <span aria-hidden="true">
           <svg
@@ -208,7 +208,7 @@ export function NotificationsBell({ enabled }: Props) {
           id={popoverId}
           role="dialog"
           aria-label="Notifications"
-          className="fixed inset-x-2 top-[calc(env(safe-area-inset-top,0px)+3.5rem)] z-50 w-auto rounded-lg border border-border bg-background shadow-lg sm:absolute sm:inset-x-auto sm:right-0 sm:top-full sm:mt-2 sm:w-80"
+          className="motion-popover fixed inset-x-2 top-[calc(env(safe-area-inset-top,0px)+3.5rem)] z-50 w-auto rounded-lg border border-border bg-background shadow-lg sm:absolute sm:inset-x-auto sm:right-0 sm:top-full sm:mt-2 sm:w-80"
         >
           <div className="flex items-center justify-between border-b border-border px-3 py-2">
             <span className="text-sm font-medium text-foreground">
