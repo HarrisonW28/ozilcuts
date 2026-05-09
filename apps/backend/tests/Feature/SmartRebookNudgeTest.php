@@ -232,6 +232,71 @@ class SmartRebookNudgeTest extends TestCase
         ]);
     }
 
+    public function test_snooze_endpoint_requires_owner_or_admin(): void
+    {
+        [$barber, $customer, $service] = $this->trio();
+        $other = User::factory()->create();
+        $appt = $this->makeAppointment(
+            $barber,
+            $customer,
+            $service,
+            CarbonImmutable::now()->subDays(30),
+        );
+
+        $this->postJson("/api/v1/appointments/{$appt->id}/rebook-nudge/snooze")
+            ->assertUnauthorized();
+
+        $this->actingAs($other, 'sanctum')
+            ->postJson("/api/v1/appointments/{$appt->id}/rebook-nudge/snooze")
+            ->assertForbidden();
+    }
+
+    public function test_owner_can_snooze_and_dispatch_skips_until_expiry(): void
+    {
+        [$barber, $customer, $service] = $this->trio();
+        $appt = $this->makeAppointment(
+            $barber,
+            $customer,
+            $service,
+            CarbonImmutable::now()->subDays(30),
+        );
+
+        $this->actingAs($customer, 'sanctum')
+            ->postJson("/api/v1/appointments/{$appt->id}/rebook-nudge/snooze", ['days' => 14])
+            ->assertOk()
+            ->assertJsonPath('state', AppointmentRebookNudge::STATE_SNOOZED);
+
+        $this->assertDatabaseHas('appointment_rebook_nudges', [
+            'source_appointment_id' => $appt->id,
+            'user_id' => $customer->id,
+            'state' => AppointmentRebookNudge::STATE_SNOOZED,
+        ]);
+
+        $this->artisan('appointments:send-rebook-nudges')->assertExitCode(0);
+        Mail::assertNothingQueued();
+    }
+
+    public function test_snooze_validates_days_bounds(): void
+    {
+        [$barber, $customer, $service] = $this->trio();
+        $appt = $this->makeAppointment(
+            $barber,
+            $customer,
+            $service,
+            CarbonImmutable::now()->subDays(30),
+        );
+
+        $this->actingAs($customer, 'sanctum')
+            ->postJson("/api/v1/appointments/{$appt->id}/rebook-nudge/snooze", ['days' => 0])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['days']);
+
+        $this->actingAs($customer, 'sanctum')
+            ->postJson("/api/v1/appointments/{$appt->id}/rebook-nudge/snooze", ['days' => 999])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['days']);
+    }
+
     public function test_inapp_optout_suppresses_inapp_but_keeps_email(): void
     {
         [$barber, $customer, $service] = $this->trio();

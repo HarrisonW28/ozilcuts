@@ -34,6 +34,20 @@ class AppointmentPolicy
      * reminders automatically via the scheduler and have no need to
      * fire one for themselves.
      */
+    /**
+     * The customer who owned the source appointment may snooze its
+     * smart-rebooking nudge. Admins may also snooze on a customer's
+     * behalf for support flows.
+     */
+    public function snoozeRebookNudge(User $user, Appointment $appointment): bool
+    {
+        if ($user->isAdmin()) {
+            return true;
+        }
+
+        return $appointment->customer_user_id === $user->id;
+    }
+
     public function sendReminder(User $user, Appointment $appointment): bool
     {
         if ($appointment->status !== Appointment::STATUS_CONFIRMED) {
