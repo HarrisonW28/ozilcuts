@@ -14,11 +14,14 @@ final class NotificationEvents
 
     public const APPOINTMENT_RESCHEDULED = 'appointment.rescheduled';
 
+    public const APPOINTMENT_REMINDER = 'appointment.reminder';
+
     /** @var list<string> */
     public const ALL = [
         self::APPOINTMENT_CONFIRMED,
         self::APPOINTMENT_CANCELLED,
         self::APPOINTMENT_RESCHEDULED,
+        self::APPOINTMENT_REMINDER,
     ];
 
     /** @var array<string, array{label: string, description: string}> */
@@ -34,6 +37,10 @@ final class NotificationEvents
         self::APPOINTMENT_RESCHEDULED => [
             'label' => 'Appointment rescheduled',
             'description' => 'When an appointment is moved to a new time.',
+        ],
+        self::APPOINTMENT_REMINDER => [
+            'label' => 'Appointment reminder',
+            'description' => 'Reminders before an upcoming appointment (e.g. 24 hours and 2 hours before).',
         ],
     ];
 }

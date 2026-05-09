@@ -92,4 +92,12 @@ class Appointment extends Model
     {
         return $this->hasMany(HaircutPhoto::class)->orderBy('kind')->orderBy('id');
     }
+
+    /**
+     * @return HasMany<AppointmentReminder, $this>
+     */
+    public function reminders(): HasMany
+    {
+        return $this->hasMany(AppointmentReminder::class);
+    }
 }
