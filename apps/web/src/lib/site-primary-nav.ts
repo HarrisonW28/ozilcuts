@@ -72,6 +72,7 @@ export function getPrimaryNavSections(
       id: "admin-shop",
       label: "Your shop",
       links: [
+        { href: "/admin", label: "Dashboard" },
         { href: "/admin/services", label: "Catalog" },
         { href: "/admin/barbers", label: "Team" },
       ],

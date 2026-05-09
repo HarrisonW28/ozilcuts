@@ -123,7 +123,7 @@ export default function AdminOnboardingPage() {
     if (profile.user.role.slug !== "admin") return;
     const sa = profile.user.shop_admin;
     if (sa?.onboarding_completed_at) {
-      router.replace("/admin/services");
+      router.replace("/admin");
       return;
     }
     if (!sa) return;
@@ -221,7 +221,7 @@ export default function AdminOnboardingPage() {
     try {
       const user = await patchShopOnboarding(token, { complete: true });
       replaceProfile(user);
-      router.push("/admin/services");
+      router.push("/admin");
       router.refresh();
     } catch (e: unknown) {
       if (e instanceof ApiError) {

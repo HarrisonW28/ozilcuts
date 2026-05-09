@@ -21,6 +21,7 @@ export function AdminOnboardingGate({ children }: { children: ReactNode }) {
     if (!sa || sa.onboarding_completed_at) return;
 
     const exempt =
+      pathname === "/admin" ||
       pathname === "/admin/onboarding" ||
       pathname.startsWith("/admin/onboarding/") ||
       pathname === "/admin/barbers" ||

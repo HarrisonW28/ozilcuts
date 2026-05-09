@@ -9,6 +9,7 @@ import {
   CalendarDays,
   ClipboardList,
   Clock,
+  LayoutDashboard,
   LayoutGrid,
   TrendingUp,
   Users,
@@ -32,6 +33,7 @@ const BARBER_ITEMS: QuickActionItem[] = [
 ];
 
 const ADMIN_ITEMS: QuickActionItem[] = [
+  { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/services", label: "Catalog", icon: LayoutGrid },
   { href: "/admin/barbers", label: "Team", icon: Users },
   { href: "/admin/reports/revenue", label: "Revenue", icon: TrendingUp },
@@ -41,6 +43,7 @@ const ADMIN_ITEMS: QuickActionItem[] = [
 function routeActive(pathname: string, href: string) {
   if (pathname === href) return true;
   if (href === "/") return false;
+  if (href === "/admin") return pathname === "/admin";
   return pathname.startsWith(`${href}/`);
 }
 
@@ -74,7 +77,9 @@ export function QuickActionsLayer({
         ? BARBER_ITEMS.filter((i) => i.href !== "/barber/analytics")
         : BARBER_ITEMS
       : workspaceMode === "focused"
-        ? ADMIN_ITEMS.filter((i) => i.href !== "/admin/reports/revenue")
+        ? ADMIN_ITEMS.filter(
+            (i) => i.href !== "/admin/reports/revenue",
+          )
         : ADMIN_ITEMS;
   const label =
     variant === "barber" ? "Barber quick actions" : "Admin quick actions";
