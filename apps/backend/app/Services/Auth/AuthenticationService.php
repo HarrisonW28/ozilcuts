@@ -3,9 +3,11 @@
 namespace App\Services\Auth;
 
 use App\Exceptions\Auth\OAuthAccountLinkException;
+use App\Mail\WelcomeMail;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Laravel\Socialite\Contracts\User as SocialiteUser;
 use RuntimeException;
 
@@ -20,12 +22,16 @@ final class AuthenticationService
             throw new RuntimeException('Default customer role is not configured.');
         }
 
-        return User::create([
+        $user = User::create([
             'name' => $name,
             'email' => strtolower($email),
             'password' => $password,
             'role_id' => $roleId,
         ]);
+
+        $this->dispatchWelcomeMail($user);
+
+        return $user;
     }
 
     public function validateCredentials(string $email, string $password): ?User
@@ -101,7 +107,7 @@ final class AuthenticationService
             throw new RuntimeException('Default customer role is not configured.');
         }
 
-        return User::create([
+        $user = User::create([
             'name' => $name,
             'email' => $email,
             'password' => Hash::make(bin2hex(random_bytes(32))),
@@ -110,5 +116,22 @@ final class AuthenticationService
             'role_id' => $roleId,
             'email_verified_at' => now(),
         ]);
+
+        $this->dispatchWelcomeMail($user);
+
+        return $user;
+    }
+
+    /**
+     * Welcome email is sent once per new account creation. Failures are
+     * swallowed so a transient mail driver hiccup never breaks signup.
+     */
+    private function dispatchWelcomeMail(User $user): void
+    {
+        try {
+            Mail::to($user->email)->queue(new WelcomeMail($user));
+        } catch (\Throwable $e) {
+            report($e);
+        }
     }
 }
