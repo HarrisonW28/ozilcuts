@@ -42,7 +42,7 @@ export function getPrimaryNavSections(profile: ProfileState): PrimaryNavSection[
   return sections;
 }
 
-/** Desktop account dropdown + mobile menu blocks below primary sections. */
+/** Account menu: role dashboards, customer-only account pages, shared settings alias. */
 export function getAccountMenuGroups(
   profile: ProfileState,
 ): AccountMenuGroup[] {
@@ -53,30 +53,45 @@ export function getAccountMenuGroups(
   const groups: AccountMenuGroup[] = [];
   const slug = profile.user.role.slug;
 
-  groups.push({
-    id: "account",
-    label: "Account",
-    links: [
-      { href: "/profile", label: "Profile" },
-      ...(slug === "customer"
-        ? [
-            { href: "/profile/hair", label: "Hair" } as PrimaryNavLink,
-            { href: "/profile/visits", label: "Visits" } as PrimaryNavLink,
-          ]
-        : []),
-    ],
-  });
+  if (slug === "customer") {
+    groups.push({
+      id: "dashboard",
+      label: "Dashboard",
+      links: [{ href: "/dashboard", label: "My dashboard" }],
+    });
+    groups.push({
+      id: "account",
+      label: "Account",
+      links: [
+        { href: "/profile", label: "Profile" },
+        { href: "/profile/hair", label: "Hair" },
+        { href: "/profile/visits", label: "Visits" },
+      ],
+    });
+    groups.push({
+      id: "settings",
+      label: "Settings",
+      links: [{ href: "/dashboard/settings", label: "Account settings" }],
+    });
+    return groups;
+  }
 
   if (slug === "barber") {
     groups.push({
-      id: "barber",
-      label: "Barber workspace",
+      id: "dashboard",
+      label: "Dashboard",
       links: [
         { href: "/barber/calendar", label: "Calendar" },
         { href: "/barber/hours", label: "Hours" },
         { href: "/barber/analytics", label: "Analytics" },
       ],
     });
+    groups.push({
+      id: "settings",
+      label: "Settings",
+      links: [{ href: "/dashboard/settings", label: "Notifications" }],
+    });
+    return groups;
   }
 
   if (slug === "admin") {
@@ -84,10 +99,10 @@ export function getAccountMenuGroups(
     const setupIncomplete = Boolean(sa && !sa.onboarding_completed_at);
 
     groups.push({
-      id: "shop",
-      label: "Shop",
+      id: "dashboard",
+      label: "Dashboard",
       links: [
-        { href: "/admin", label: "Dashboard" },
+        { href: "/admin", label: "Shop overview" },
         ...(setupIncomplete
           ? [{ href: "/admin/onboarding", label: "Finish shop setup" }]
           : []),

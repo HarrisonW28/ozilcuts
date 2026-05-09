@@ -69,7 +69,7 @@ export function SiteAccountMenu({
     <nav
       id={panelId}
       role="navigation"
-      aria-label="Account and workspace"
+      aria-label="Account menu"
       className={cn(
         !listOnly &&
           "absolute right-0 z-50 mt-2 w-[min(100vw-2rem,18rem)] rounded-xl border border-border/60 bg-popover p-2 text-popover-foreground shadow-lg motion-popover",

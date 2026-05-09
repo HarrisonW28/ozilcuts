@@ -18,14 +18,23 @@ import {
   cn,
 } from "@ozilcuts/ui";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useState } from "react";
 
 import { GoogleSignInButton } from "@/components/google-sign-in-button";
 import { setStoredAuthToken } from "@/lib/auth-token";
+import { safeNextPath } from "@/lib/safe-next-path";
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const nextAfterAuth =
+    safeNextPath(searchParams.get("next")) ?? "/";
+  const registerHref =
+    nextAfterAuth !== "/"
+      ? `/register?next=${encodeURIComponent(nextAfterAuth)}`
+      : "/register";
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -40,7 +49,7 @@ export default function LoginPage() {
     try {
       const { token } = await loginUser({ email, password });
       setStoredAuthToken(token);
-      router.push("/");
+      router.push(nextAfterAuth);
       router.refresh();
     } catch (err) {
       if (err instanceof ApiValidationError) {
@@ -126,7 +135,7 @@ export default function LoginPage() {
       <CardFooter className="flex flex-col gap-2 text-center text-sm text-muted-foreground sm:flex-row sm:justify-center">
         <span>No account?</span>
         <Link
-          href="/register"
+          href={registerHref}
           className={cn(
             buttonVariants({ variant: "link" }),
             "h-auto min-h-0 px-0",
@@ -136,5 +145,29 @@ export default function LoginPage() {
         </Link>
       </CardFooter>
     </Card>
+  );
+}
+
+function LoginFormFallback() {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Sign in</CardTitle>
+        <CardDescription>Loading…</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <p className="text-sm text-muted-foreground" aria-busy="true">
+          Loading…
+        </p>
+      </CardContent>
+    </Card>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<LoginFormFallback />}>
+      <LoginForm />
+    </Suspense>
   );
 }

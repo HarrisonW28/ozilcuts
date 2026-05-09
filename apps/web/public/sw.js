@@ -60,7 +60,9 @@ function shouldBypass(url) {
   if (pathname.startsWith("/sanctum/")) return true;
   if (pathname.startsWith("/oauth/")) return true;
   if (pathname.startsWith("/login")) return true;
-  if (pathname.startsWith("/register")) return true;
+  if (pathname.startsWith("/dashboard")) return true;
+  if (pathname.startsWith("/user/login")) return true;
+  if (pathname.startsWith("/user/register")) return true;
   if (pathname === "/sw.js") return true;
   if (pathname === "/manifest.webmanifest") return true;
   if (pathname.startsWith("/manifest-icon-")) return true;

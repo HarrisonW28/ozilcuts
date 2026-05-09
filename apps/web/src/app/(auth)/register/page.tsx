@@ -15,14 +15,23 @@ import {
   cn,
 } from "@ozilcuts/ui";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useState } from "react";
 
 import { GoogleSignInButton } from "@/components/google-sign-in-button";
 import { setStoredAuthToken } from "@/lib/auth-token";
+import { safeNextPath } from "@/lib/safe-next-path";
 
-export default function RegisterPage() {
+function RegisterForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const nextAfterAuth =
+    safeNextPath(searchParams.get("next")) ?? "/";
+  const loginHref =
+    nextAfterAuth !== "/"
+      ? `/login?next=${encodeURIComponent(nextAfterAuth)}`
+      : "/login";
+
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -44,7 +53,7 @@ export default function RegisterPage() {
         password_confirmation: passwordConfirmation,
       });
       setStoredAuthToken(token);
-      router.push("/");
+      router.push(nextAfterAuth);
       router.refresh();
     } catch (err) {
       if (err instanceof ApiValidationError) {
@@ -122,7 +131,9 @@ export default function RegisterPage() {
             ) : null}
           </div>
           <div className="flex flex-col gap-2">
-            <Label htmlFor="password_confirmation">Confirm password</Label>
+            <Label htmlFor="password_confirmation">
+              Confirm password
+            </Label>
             <Input
               id="password_confirmation"
               name="password_confirmation"
@@ -130,7 +141,9 @@ export default function RegisterPage() {
               autoComplete="new-password"
               required
               value={passwordConfirmation}
-              onChange={(ev) => setPasswordConfirmation(ev.target.value)}
+              onChange={(ev) =>
+                setPasswordConfirmation(ev.target.value)
+              }
               aria-invalid={
                 fieldErrors.password_confirmation ? true : undefined
               }
@@ -163,7 +176,7 @@ export default function RegisterPage() {
       <CardFooter className="flex flex-col gap-2 text-center text-sm text-muted-foreground sm:flex-row sm:justify-center">
         <span>Already registered?</span>
         <Link
-          href="/login"
+          href={loginHref}
           className={cn(
             buttonVariants({ variant: "link" }),
             "h-auto min-h-0 px-0",
@@ -173,5 +186,29 @@ export default function RegisterPage() {
         </Link>
       </CardFooter>
     </Card>
+  );
+}
+
+function RegisterFormFallback() {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Create account</CardTitle>
+        <CardDescription>Loading…</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <p className="text-sm text-muted-foreground" aria-busy="true">
+          Loading…
+        </p>
+      </CardContent>
+    </Card>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={<RegisterFormFallback />}>
+      <RegisterForm />
+    </Suspense>
   );
 }

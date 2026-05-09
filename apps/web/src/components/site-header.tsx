@@ -136,31 +136,16 @@ export function SiteHeader({ profile, onSignOut }: SiteHeaderProps) {
             </nav>
           </div>
           <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-3">
-            <Button
-              ref={menuButtonRef}
-              type="button"
-              variant="outline"
-              size="icon"
-              className="md:hidden"
-              aria-expanded={mobileNavOpen}
-              aria-controls={menuId}
-              onClick={() => setMobileNavOpen((open) => !open)}
-            >
-              {mobileNavOpen ? (
-                <X className="size-5" aria-hidden />
-              ) : (
-                <Menu className="size-5" aria-hidden />
-              )}
-              <span className="sr-only">
-                {mobileNavOpen ? "Close main menu" : "Open main menu"}
-              </span>
-            </Button>
+            {/* Desktop: theme first; hidden on small screens (theme lives in mobile menu). */}
+            <div className="hidden md:order-1 md:flex md:items-center">
+              <ModeToggle />
+            </div>
             <nav
-              className="flex flex-wrap items-center gap-2 text-sm sm:gap-3"
+              className="order-1 flex flex-wrap items-center gap-2 text-sm sm:gap-3 md:order-2"
               aria-label="Account"
             >
               {profile.kind === "none" ? (
-                <>
+                <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                   <Link
                     href="/login"
                     className={cn(
@@ -176,7 +161,7 @@ export function SiteHeader({ profile, onSignOut }: SiteHeaderProps) {
                   >
                     Register
                   </Link>
-                </>
+                </div>
               ) : null}
               {profile.kind === "loading" ? (
                 <span
@@ -204,14 +189,34 @@ export function SiteHeader({ profile, onSignOut }: SiteHeaderProps) {
               ) : null}
               {profile.kind === "ready" ? (
                 <>
-                  <NotificationsBell enabled />
-                  <div className="hidden md:block">
+                  <div className="order-1 md:order-1">
                     <SiteAccountMenu profile={profile} onSignOut={onSignOut} />
+                  </div>
+                  <div className="order-2 md:order-2">
+                    <NotificationsBell enabled />
                   </div>
                 </>
               ) : null}
             </nav>
-            <ModeToggle />
+            <Button
+              ref={menuButtonRef}
+              type="button"
+              variant="outline"
+              size="icon"
+              className="order-3 md:hidden"
+              aria-expanded={mobileNavOpen}
+              aria-controls={menuId}
+              onClick={() => setMobileNavOpen((open) => !open)}
+            >
+              {mobileNavOpen ? (
+                <X className="size-5" aria-hidden />
+              ) : (
+                <Menu className="size-5" aria-hidden />
+              )}
+              <span className="sr-only">
+                {mobileNavOpen ? "Close main menu" : "Open main menu"}
+              </span>
+            </Button>
           </div>
         </div>
 
@@ -279,6 +284,14 @@ export function SiteHeader({ profile, onSignOut }: SiteHeaderProps) {
                     </li>
                   ))
                 : null}
+              <li className="border-t border-border/45 pt-4">
+                <div className="flex min-h-12 items-center justify-between gap-3 px-1">
+                  <span className="text-sm font-medium text-foreground">
+                    Theme
+                  </span>
+                  <ModeToggle />
+                </div>
+              </li>
               {profile.kind === "ready" ? (
                 <li className="border-t border-border/45 pt-4">
                   <Button
