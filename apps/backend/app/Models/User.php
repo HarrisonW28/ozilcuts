@@ -29,6 +29,12 @@ class User extends Authenticatable
         'role_id',
         'provider',
         'provider_id',
+        'shop_display_name',
+        'onboarding_step',
+        'onboarding_completed_at',
+        'shop_pays_cash_only',
+        'shop_deposits_enabled',
+        'shop_tap_to_pay_later',
     ];
 
     /**
@@ -51,6 +57,10 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'onboarding_completed_at' => 'datetime',
+            'shop_pays_cash_only' => 'boolean',
+            'shop_deposits_enabled' => 'boolean',
+            'shop_tap_to_pay_later' => 'boolean',
         ];
     }
 

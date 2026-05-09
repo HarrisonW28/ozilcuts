@@ -16,7 +16,11 @@ final class NotificationEvents
 
     public const APPOINTMENT_REMINDER = 'appointment.reminder';
 
+    public const APPOINTMENT_RUNNING_LATE = 'appointment.running_late';
+
     public const APPOINTMENT_REBOOK_SUGGESTED = 'appointment.rebook_suggested';
+
+    public const APPOINTMENT_INACTIVITY_NUDGE = 'appointment.inactivity_nudge';
 
     public const STAFF_BOOKING_CREATED = 'staff.booking.created';
 
@@ -31,13 +35,27 @@ final class NotificationEvents
         self::STAFF_BOOKING_RESCHEDULED,
     ];
 
+    /**
+     * Customer-retention events. The retention dispatcher honours a
+     * cross-event cooldown across this list so customers don't receive
+     * stacked retention emails in a short window.
+     *
+     * @var list<string>
+     */
+    public const RETENTION_EVENTS = [
+        self::APPOINTMENT_REBOOK_SUGGESTED,
+        self::APPOINTMENT_INACTIVITY_NUDGE,
+    ];
+
     /** @var list<string> */
     public const ALL = [
         self::APPOINTMENT_CONFIRMED,
         self::APPOINTMENT_CANCELLED,
         self::APPOINTMENT_RESCHEDULED,
         self::APPOINTMENT_REMINDER,
+        self::APPOINTMENT_RUNNING_LATE,
         self::APPOINTMENT_REBOOK_SUGGESTED,
+        self::APPOINTMENT_INACTIVITY_NUDGE,
         self::STAFF_BOOKING_CREATED,
         self::STAFF_BOOKING_CANCELLED,
         self::STAFF_BOOKING_RESCHEDULED,
@@ -61,9 +79,17 @@ final class NotificationEvents
             'label' => 'Appointment reminder',
             'description' => 'Reminders before an upcoming appointment (e.g. 24 hours and 2 hours before).',
         ],
+        self::APPOINTMENT_RUNNING_LATE => [
+            'label' => 'Running late notice',
+            'description' => 'When your barber lets you know they are delayed for a booking.',
+        ],
         self::APPOINTMENT_REBOOK_SUGGESTED => [
             'label' => 'Time for your next visit',
             'description' => 'Smart nudges around your usual cadence so you can rebook in one tap.',
+        ],
+        self::APPOINTMENT_INACTIVITY_NUDGE => [
+            'label' => 'It\'s been a while',
+            'description' => 'A friendly check-in if it\'s been noticeably longer than your usual time between visits.',
         ],
         self::STAFF_BOOKING_CREATED => [
             'label' => 'Staff alert: new booking',

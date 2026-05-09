@@ -16,7 +16,7 @@ class UserResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        return [
+        $base = [
             'id' => $this->id,
             'name' => $this->name,
             'email' => $this->email,
@@ -27,5 +27,18 @@ class UserResource extends JsonResource
                 'name' => $this->role->name,
             ],
         ];
+
+        if ($this->isAdmin()) {
+            $base['shop_admin'] = [
+                'shop_display_name' => $this->shop_display_name,
+                'onboarding_step' => (int) $this->onboarding_step,
+                'onboarding_completed_at' => $this->onboarding_completed_at?->toIso8601String(),
+                'shop_pays_cash_only' => (bool) $this->shop_pays_cash_only,
+                'shop_deposits_enabled' => (bool) $this->shop_deposits_enabled,
+                'shop_tap_to_pay_later' => (bool) $this->shop_tap_to_pay_later,
+            ];
+        }
+
+        return $base;
     }
 }

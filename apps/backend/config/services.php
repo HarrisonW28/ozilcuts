@@ -50,6 +50,12 @@ return [
         'publishable' => env('STRIPE_PUBLISHABLE_KEY'),
         'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
         'currency' => env('STRIPE_CURRENCY', 'usd'),
+        /*
+         * Product flag for in-person tap / POS roadmap (public via /payments/config).
+         * off — hide tap messaging; foundation — customer-device checkout + staff guidance;
+         * live — reserved for Stripe Terminal / tap-on-device when wired.
+         */
+        'tap_to_pay_status' => env('STRIPE_TAP_TO_PAY_STATUS', 'foundation'),
     ],
 
 ];

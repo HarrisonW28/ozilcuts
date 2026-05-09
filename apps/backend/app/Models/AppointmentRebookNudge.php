@@ -17,12 +17,25 @@ class AppointmentRebookNudge extends Model
         self::STATE_SNOOZED,
     ];
 
+    /** Smart "you're around your usual cadence" nudge. */
+    public const KIND_DUE = 'due';
+
+    /** "It's been noticeably longer than your usual gap" nudge. */
+    public const KIND_INACTIVITY = 'inactivity';
+
+    /** @var list<string> */
+    public const KINDS = [
+        self::KIND_DUE,
+        self::KIND_INACTIVITY,
+    ];
+
     /**
      * @var list<string>
      */
     protected $fillable = [
         'source_appointment_id',
         'user_id',
+        'kind',
         'state',
         'sent_at',
         'snooze_until',

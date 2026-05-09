@@ -12,8 +12,10 @@ use App\Http\Controllers\Api\V1\AppointmentRebookHintController;
 use App\Http\Controllers\Api\V1\AppointmentRebookNudgeSnoozeController;
 use App\Http\Controllers\Api\V1\AppointmentReminderController;
 use App\Http\Controllers\Api\V1\AppointmentRescheduleController;
+use App\Http\Controllers\Api\V1\AppointmentRunningLateController;
 use App\Http\Controllers\Api\V1\AppointmentShowController;
 use App\Http\Controllers\Api\V1\AppointmentStoreController;
+use App\Http\Controllers\Api\V1\AppointmentWalkInStoreController;
 use App\Http\Controllers\Api\V1\Auth\GoogleOAuthCallbackController;
 use App\Http\Controllers\Api\V1\Auth\GoogleOAuthRedirectController;
 use App\Http\Controllers\Api\V1\Auth\LoginController;
@@ -63,6 +65,7 @@ use App\Http\Controllers\Api\V1\NotificationPreferenceUpdateController;
 use App\Http\Controllers\Api\V1\NotificationUnreadCountController;
 use App\Http\Controllers\Api\V1\OperationalInsightsController;
 use App\Http\Controllers\Api\V1\PaymentConfigController;
+use App\Http\Controllers\Api\V1\RetentionReportController;
 use App\Http\Controllers\Api\V1\RevenueReportController;
 use App\Http\Controllers\Api\V1\RevenueReportCsvController;
 use App\Http\Controllers\Api\V1\ServiceIndexController;
@@ -70,6 +73,8 @@ use App\Http\Controllers\Api\V1\ServiceManageDestroyController;
 use App\Http\Controllers\Api\V1\ServiceManageIndexController;
 use App\Http\Controllers\Api\V1\ServiceManageStoreController;
 use App\Http\Controllers\Api\V1\ServiceManageUpdateController;
+use App\Http\Controllers\Api\V1\ServiceStarterPackStoreController;
+use App\Http\Controllers\Api\V1\ShopOnboardingUpdateController;
 use App\Http\Controllers\Api\V1\StripeWebhookController;
 use App\Http\Controllers\Api\V1\UserIndexController;
 use App\Http\Controllers\Api\V1\UserShowController;
@@ -143,6 +148,10 @@ Route::middleware('auth:sanctum')->group(function (): void {
     Route::get('/manage/services', ServiceManageIndexController::class);
     Route::post('/manage/services', ServiceManageStoreController::class)
         ->middleware('throttle:30,1');
+    Route::post('/manage/services/starter-pack', ServiceStarterPackStoreController::class)
+        ->middleware('throttle:10,1');
+    Route::patch('/manage/shop-onboarding', ShopOnboardingUpdateController::class)
+        ->middleware('throttle:30,1');
     Route::patch('/manage/services/{service}', ServiceManageUpdateController::class)
         ->middleware('throttle:30,1');
     Route::delete('/manage/services/{service}', ServiceManageDestroyController::class)
@@ -150,6 +159,8 @@ Route::middleware('auth:sanctum')->group(function (): void {
     Route::get('/appointments', AppointmentIndexController::class);
     Route::post('/appointments', AppointmentStoreController::class)
         ->middleware('throttle:20,1');
+    Route::post('/appointments/walk-in', AppointmentWalkInStoreController::class)
+        ->middleware('throttle:30,1');
     Route::get('/appointments/{appointment}', AppointmentShowController::class);
     Route::get('/appointments/{appointment}/calendar-url', AppointmentCalendarLinkController::class)
         ->middleware('throttle:30,1');
@@ -186,6 +197,8 @@ Route::middleware('auth:sanctum')->group(function (): void {
         ->middleware('throttle:30,1');
     Route::post('/appointments/{appointment}/reminder', AppointmentReminderController::class)
         ->middleware('throttle:30,1');
+    Route::post('/appointments/{appointment}/running-late', AppointmentRunningLateController::class)
+        ->middleware('throttle:30,1');
     Route::post('/appointments/{appointment}/rebook-nudge/snooze', AppointmentRebookNudgeSnoozeController::class)
         ->middleware('throttle:30,1');
     Route::get('/admin/reports/revenue', RevenueReportController::class)
@@ -199,6 +212,8 @@ Route::middleware('auth:sanctum')->group(function (): void {
     Route::get('/admin/customers/{user}/analytics', CustomerAnalyticsShowController::class)
         ->middleware('throttle:60,1');
     Route::get('/admin/reports/operations', OperationalInsightsController::class)
+        ->middleware('throttle:60,1');
+    Route::get('/admin/reports/retention', RetentionReportController::class)
         ->middleware('throttle:60,1');
     Route::get('/notifications', NotificationIndexController::class)
         ->middleware('throttle:120,1');

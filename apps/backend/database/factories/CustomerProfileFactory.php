@@ -24,6 +24,7 @@ class CustomerProfileFactory extends Factory
             'preferred_barber_user_id' => null,
             'preferences' => fake()->optional(0.6)->sentence(),
             'marketing_opt_in' => fake()->boolean(25),
+            'retention_paused' => false,
         ];
     }
 }

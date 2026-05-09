@@ -7,6 +7,7 @@ use App\Models\BarberProfile;
 use App\Models\Role;
 use App\Models\Service;
 use App\Models\User;
+use App\Support\WalkInGuest;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 use RuntimeException;
@@ -148,6 +149,66 @@ final class BookingService
                 'payment_status' => $deposit > 0
                     ? Appointment::PAYMENT_REQUIRES_PAYMENT
                     : Appointment::PAYMENT_NOT_REQUIRED,
+            ]);
+        });
+    }
+
+    /**
+     * In-chair walk-in: blocks time on the barber calendar with no online deposit.
+     *
+     * @param  array{service_id: int, barber_user_id: int, starts_at: string, notes?: string|null, walk_in_name?: string|null}  $data
+     */
+    public function bookWalkIn(User $actor, array $data): Appointment
+    {
+        if (! $actor->hasRole(Role::SLUG_BARBER) && ! $actor->isAdmin()) {
+            throw new RuntimeException('Only barbers and shop admins can log walk-ins.');
+        }
+
+        $barberUserId = (int) $data['barber_user_id'];
+        if ($actor->hasRole(Role::SLUG_BARBER) && (int) $actor->id !== $barberUserId) {
+            throw new RuntimeException('You can only log walk-ins on your own calendar.');
+        }
+
+        $service = Service::query()->where('is_active', true)->findOrFail($data['service_id']);
+        $barber = User::query()->findOrFail($barberUserId);
+        if (! $barber->hasRole(Role::SLUG_BARBER)) {
+            throw new RuntimeException('Selected user is not a barber.');
+        }
+
+        $profile = $barber->barberProfile;
+        if (! $profile instanceof BarberProfile || ! $profile->is_published) {
+            throw new RuntimeException('Barber is not bookable.');
+        }
+
+        $start = CarbonImmutable::parse($data['starts_at']);
+        $end = $start->addMinutes((int) $service->duration_minutes);
+
+        $this->assertAvailabilityCovers($profile, $start, $end);
+
+        $customer = WalkInGuest::resolveUser();
+
+        $noteLines = [];
+        if (isset($data['walk_in_name']) && trim((string) $data['walk_in_name']) !== '') {
+            $noteLines[] = 'Walk-in: '.trim((string) $data['walk_in_name']);
+        }
+        if (isset($data['notes']) && trim((string) $data['notes']) !== '') {
+            $noteLines[] = trim((string) $data['notes']);
+        }
+        $notes = $noteLines === [] ? null : implode("\n", $noteLines);
+
+        return DB::transaction(function () use ($service, $barber, $customer, $start, $end, $notes) {
+            $this->assertNoOverlap((int) $barber->id, $start, $end);
+
+            return Appointment::query()->create([
+                'service_id' => $service->id,
+                'barber_user_id' => $barber->id,
+                'customer_user_id' => $customer->id,
+                'starts_at' => $start->toDateTimeString(),
+                'ends_at' => $end->toDateTimeString(),
+                'status' => Appointment::STATUS_CONFIRMED,
+                'notes' => $notes,
+                'deposit_cents' => 0,
+                'payment_status' => Appointment::PAYMENT_NOT_REQUIRED,
             ]);
         });
     }

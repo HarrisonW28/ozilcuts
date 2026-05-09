@@ -21,6 +21,7 @@ class CustomerProfile extends Model
         'preferred_barber_user_id',
         'preferences',
         'marketing_opt_in',
+        'retention_paused',
     ];
 
     /**
@@ -30,6 +31,7 @@ class CustomerProfile extends Model
     {
         return [
             'marketing_opt_in' => 'boolean',
+            'retention_paused' => 'boolean',
         ];
     }
 

@@ -76,6 +76,7 @@ class PaymentsTest extends TestCase
                 'enabled' => true,
                 'publishable_key' => 'pk_test_x',
                 'currency' => 'usd',
+                'tap_to_pay_status' => 'foundation',
             ]);
     }
 
@@ -87,7 +88,26 @@ class PaymentsTest extends TestCase
         $this->getJson('/api/v1/payments/config')
             ->assertOk()
             ->assertJsonPath('enabled', false)
-            ->assertJsonPath('publishable_key', null);
+            ->assertJsonPath('publishable_key', null)
+            ->assertJsonPath('tap_to_pay_status', 'foundation');
+    }
+
+    public function test_payment_config_tap_to_pay_status_from_config(): void
+    {
+        config()->set('services.stripe.tap_to_pay_status', 'live');
+
+        $this->getJson('/api/v1/payments/config')
+            ->assertOk()
+            ->assertJsonPath('tap_to_pay_status', 'live');
+    }
+
+    public function test_payment_config_normalizes_invalid_tap_to_pay_status(): void
+    {
+        config()->set('services.stripe.tap_to_pay_status', 'bogus');
+
+        $this->getJson('/api/v1/payments/config')
+            ->assertOk()
+            ->assertJsonPath('tap_to_pay_status', 'foundation');
     }
 
     public function test_booking_with_deposit_returns_client_secret_and_creates_intent(): void

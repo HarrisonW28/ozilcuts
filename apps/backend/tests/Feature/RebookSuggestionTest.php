@@ -169,8 +169,6 @@ class RebookSuggestionTest extends TestCase
 
         $this->createAppt($barber, $service, $customer, '2026-04-01 09:00:00', '2026-04-01 09:30:00');
         $this->createAppt($barber, $service, $customer, '2026-05-01 09:00:00', '2026-05-01 09:30:00');
-        // Future appointment — should be ignored as "past".
-        $this->createAppt($barber, $service, $customer, '2026-07-01 09:00:00', '2026-07-01 09:30:00');
 
         $this->actingAs($customer, 'sanctum')
             ->getJson('/api/v1/customer/next-visit')
@@ -180,6 +178,20 @@ class RebookSuggestionTest extends TestCase
             ->assertJsonPath('data.interval_days', 30)
             // 2026-05-01 + 30d = 2026-05-31; clamp to tomorrow because that's past.
             ->assertJsonPath('data.suggested_date', '2026-06-02');
+    }
+
+    public function test_next_visit_returns_null_when_customer_already_has_upcoming_booking(): void
+    {
+        [$barber, , $service] = $this->makeBarberAndService();
+        $customer = User::factory()->create();
+
+        $this->createAppt($barber, $service, $customer, '2026-05-01 09:00:00', '2026-05-01 09:30:00');
+        $this->createAppt($barber, $service, $customer, '2026-06-10 09:00:00', '2026-06-10 09:30:00');
+
+        $this->actingAs($customer, 'sanctum')
+            ->getJson('/api/v1/customer/next-visit')
+            ->assertOk()
+            ->assertJsonPath('data', null);
     }
 
     public function test_next_visit_ignores_cancelled_appointments(): void

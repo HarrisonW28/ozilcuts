@@ -2,9 +2,11 @@
 
 namespace Tests\Feature;
 
+use App\Mail\AppointmentInactivityNudgeMail;
 use App\Mail\AppointmentRebookSuggestedMail;
 use App\Models\Appointment;
 use App\Models\AppointmentRebookNudge;
+use App\Models\CustomerProfile;
 use App\Models\Notification;
 use App\Models\NotificationPreference;
 use App\Models\Service;
@@ -92,6 +94,7 @@ class SmartRebookNudgeTest extends TestCase
         $this->assertDatabaseHas('appointment_rebook_nudges', [
             'source_appointment_id' => $last->id,
             'user_id' => $customer->id,
+            'kind' => AppointmentRebookNudge::KIND_DUE,
             'state' => AppointmentRebookNudge::STATE_SENT,
         ]);
     }
@@ -170,6 +173,7 @@ class SmartRebookNudgeTest extends TestCase
         AppointmentRebookNudge::query()->create([
             'source_appointment_id' => $last->id,
             'user_id' => $customer->id,
+            'kind' => AppointmentRebookNudge::KIND_DUE,
             'state' => AppointmentRebookNudge::STATE_SNOOZED,
             'snooze_until' => CarbonImmutable::now()->addDays(7),
         ]);
@@ -195,6 +199,7 @@ class SmartRebookNudgeTest extends TestCase
         AppointmentRebookNudge::query()->create([
             'source_appointment_id' => $last->id,
             'user_id' => $customer->id,
+            'kind' => AppointmentRebookNudge::KIND_DUE,
             'state' => AppointmentRebookNudge::STATE_SNOOZED,
             'snooze_until' => CarbonImmutable::now()->subHour(),
         ]);
@@ -269,6 +274,7 @@ class SmartRebookNudgeTest extends TestCase
         $this->assertDatabaseHas('appointment_rebook_nudges', [
             'source_appointment_id' => $appt->id,
             'user_id' => $customer->id,
+            'kind' => AppointmentRebookNudge::KIND_DUE,
             'state' => AppointmentRebookNudge::STATE_SNOOZED,
         ]);
 
@@ -322,5 +328,83 @@ class SmartRebookNudgeTest extends TestCase
                 ->where('type', NotificationEvents::APPOINTMENT_REBOOK_SUGGESTED)
                 ->count(),
         );
+    }
+
+    public function test_retention_cooldown_suppresses_inactivity_after_due_on_same_run(): void
+    {
+        [$barber, $customer, $service] = $this->trio();
+        $this->makeAppointment(
+            $barber,
+            $customer,
+            $service,
+            CarbonImmutable::now()->subDays(56),
+        );
+
+        $this->artisan('appointments:send-rebook-nudges')->assertExitCode(0);
+
+        Mail::assertQueued(AppointmentRebookSuggestedMail::class);
+        Mail::assertNotQueued(AppointmentInactivityNudgeMail::class);
+        $this->assertSame(1, AppointmentRebookNudge::query()->count());
+        $this->assertDatabaseHas('appointment_rebook_nudges', [
+            'user_id' => $customer->id,
+            'kind' => AppointmentRebookNudge::KIND_DUE,
+        ]);
+        $this->assertDatabaseMissing('appointment_rebook_nudges', [
+            'user_id' => $customer->id,
+            'kind' => AppointmentRebookNudge::KIND_INACTIVITY,
+        ]);
+    }
+
+    public function test_inactivity_nudge_sent_when_cooldown_disabled(): void
+    {
+        config(['notifications.retention.cooldown_days' => 0]);
+        [$barber, $customer, $service] = $this->trio();
+        $last = $this->makeAppointment(
+            $barber,
+            $customer,
+            $service,
+            CarbonImmutable::now()->subDays(56),
+        );
+
+        $this->artisan('appointments:send-rebook-nudges')->assertExitCode(0);
+
+        Mail::assertQueued(AppointmentRebookSuggestedMail::class);
+        Mail::assertQueued(
+            AppointmentInactivityNudgeMail::class,
+            fn (AppointmentInactivityNudgeMail $m) => $m->hasTo($customer->email)
+                && $m->sourceAppointment->id === $last->id,
+        );
+        $this->assertDatabaseHas('appointment_rebook_nudges', [
+            'source_appointment_id' => $last->id,
+            'kind' => AppointmentRebookNudge::KIND_DUE,
+        ]);
+        $this->assertDatabaseHas('appointment_rebook_nudges', [
+            'source_appointment_id' => $last->id,
+            'kind' => AppointmentRebookNudge::KIND_INACTIVITY,
+        ]);
+        $this->assertDatabaseHas('notifications', [
+            'user_id' => $customer->id,
+            'type' => NotificationEvents::APPOINTMENT_INACTIVITY_NUDGE,
+        ]);
+    }
+
+    public function test_retention_paused_skips_all_retention_sends(): void
+    {
+        [$barber, $customer, $service] = $this->trio();
+        CustomerProfile::factory()->create([
+            'user_id' => $customer->id,
+            'retention_paused' => true,
+        ]);
+        $this->makeAppointment(
+            $barber,
+            $customer,
+            $service,
+            CarbonImmutable::now()->subDays(30),
+        );
+
+        $this->artisan('appointments:send-rebook-nudges')->assertExitCode(0);
+
+        Mail::assertNothingQueued();
+        $this->assertDatabaseCount('appointment_rebook_nudges', 0);
     }
 }

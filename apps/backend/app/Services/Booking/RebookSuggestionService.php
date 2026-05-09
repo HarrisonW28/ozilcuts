@@ -62,6 +62,16 @@ final class RebookSuggestionService
      */
     public function nextVisitFor(User $customer): ?array
     {
+        $hasUpcomingBooking = Appointment::query()
+            ->where('customer_user_id', $customer->id)
+            ->where('status', Appointment::STATUS_CONFIRMED)
+            ->where('starts_at', '>=', CarbonImmutable::now())
+            ->exists();
+
+        if ($hasUpcomingBooking) {
+            return null;
+        }
+
         $latest = Appointment::query()
             ->where('customer_user_id', $customer->id)
             ->where('status', Appointment::STATUS_CONFIRMED)

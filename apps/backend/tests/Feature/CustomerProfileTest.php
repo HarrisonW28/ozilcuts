@@ -27,11 +27,13 @@ class CustomerProfileTest extends TestCase
             ->assertOk()
             ->assertJsonPath('user.id', $customer->id)
             ->assertJsonPath('phone', null)
-            ->assertJsonPath('marketing_opt_in', false);
+            ->assertJsonPath('marketing_opt_in', false)
+            ->assertJsonPath('retention_paused', false);
 
         $this->assertDatabaseHas('customer_profiles', [
             'user_id' => $customer->id,
             'marketing_opt_in' => false,
+            'retention_paused' => false,
         ]);
     }
 
@@ -65,18 +67,21 @@ class CustomerProfileTest extends TestCase
                 'preferred_barber_user_id' => $barber->id,
                 'preferences' => 'Skin fade every two weeks.',
                 'marketing_opt_in' => true,
+                'retention_paused' => true,
             ])
             ->assertOk()
             ->assertJsonPath('phone', '+1 555 0100')
             ->assertJsonPath('preferred_barber_user_id', $barber->id)
             ->assertJsonPath('preferred_barber.id', $barber->id)
             ->assertJsonPath('preferences', 'Skin fade every two weeks.')
-            ->assertJsonPath('marketing_opt_in', true);
+            ->assertJsonPath('marketing_opt_in', true)
+            ->assertJsonPath('retention_paused', true);
 
         $this->assertDatabaseHas('customer_profiles', [
             'user_id' => $customer->id,
             'preferred_barber_user_id' => $barber->id,
             'marketing_opt_in' => true,
+            'retention_paused' => true,
         ]);
     }
 

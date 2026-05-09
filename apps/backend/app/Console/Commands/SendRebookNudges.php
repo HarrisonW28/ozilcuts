@@ -19,9 +19,10 @@ final class SendRebookNudges extends Command
 
     public function handle(SmartRebookNudgeService $service): int
     {
-        $sent = $service->dispatchDue(CarbonImmutable::now());
+        $due = $service->dispatchDue(CarbonImmutable::now());
+        $inactive = $service->dispatchDueInactive(CarbonImmutable::now());
 
-        $this->info("Sent {$sent} rebook nudge(s).");
+        $this->info("Sent {$due} rebook nudge(s), {$inactive} inactivity nudge(s).");
 
         return self::SUCCESS;
     }
