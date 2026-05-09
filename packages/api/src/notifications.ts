@@ -28,12 +28,19 @@ function jsonAuthHeaders(token: string): HeadersInit {
 
 export async function fetchNotifications(
   token: string,
-  options: { unread?: boolean; operational?: boolean; page?: number } = {},
+  options: {
+    unread?: boolean;
+    operational?: boolean;
+    page?: number;
+    /** Items per page (clamped server-side to 1..50). */
+    perPage?: number;
+  } = {},
 ): Promise<Paginated<NotificationRecord>> {
   const url = new URL(`${getApiBaseUrl()}/api/v1/notifications`);
   if (options.unread) url.searchParams.set("unread", "1");
   if (options.operational) url.searchParams.set("operational", "1");
   if (options.page) url.searchParams.set("page", String(options.page));
+  if (options.perPage) url.searchParams.set("per_page", String(options.perPage));
 
   const res = await fetch(url.toString(), {
     headers: authHeaders(token),
