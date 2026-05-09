@@ -1,6 +1,7 @@
 "use client";
 
 import { ModeToggle } from "@/components/mode-toggle";
+import { AdminOnboardingResumeBar } from "@/components/admin-onboarding-resume-bar";
 import { NotificationsBell } from "@/components/notifications-bell";
 import { NotificationsToaster } from "@/components/notifications-toaster";
 import { OperationalWorkspaceToggle } from "@/components/operational-workspace-toggle";
@@ -235,6 +236,8 @@ export function SiteHeader({ profile, onSignOut }: SiteHeaderProps) {
           </div>
         </div>
 
+        <AdminOnboardingResumeBar profile={profile} />
+
         {mobileNavOpen ? (
           <nav
             ref={mobilePanelRef}
@@ -243,6 +246,25 @@ export function SiteHeader({ profile, onSignOut }: SiteHeaderProps) {
             aria-label="Primary"
           >
             <ul className="space-y-5">
+              {profile.kind === "ready" &&
+              profile.user.role.slug === "admin" &&
+              profile.user.shop_admin &&
+              !profile.user.shop_admin.onboarding_completed_at &&
+              pathname !== "/admin/onboarding" &&
+              !pathname.startsWith("/admin/onboarding/") ? (
+                <li>
+                  <Link
+                    href="/admin/onboarding"
+                    className={cn(
+                      mobileNavLinkClass,
+                      "border-primary/35 bg-primary/10 font-semibold text-primary dark:border-primary/30 dark:bg-primary/15 dark:text-primary",
+                    )}
+                    onClick={() => setMobileNavOpen(false)}
+                  >
+                    Resume shop setup
+                  </Link>
+                </li>
+              ) : null}
               {navSections.map((section) => (
                 <li key={section.id}>
                   {section.label ? (

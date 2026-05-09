@@ -301,12 +301,24 @@ export default function AdminOnboardingPage() {
             description="A short, guided checklist—one step at a time. You can change everything later."
           />
 
+          <p className="text-xs text-muted-foreground">
+            You can open Team, catalog, or barber hours anytime; use{" "}
+            <span className="font-medium text-foreground">
+              Resume guided setup
+            </span>{" "}
+            in the header to return here.
+          </p>
+
           <nav
             aria-label="Onboarding progress"
             className="flex flex-col gap-3"
           >
-            <p className="text-xs font-medium text-muted-foreground">
-              Step {step} of {TOTAL_STEPS}: {STEP_LABELS[step - 1]}
+            <p className="text-[11px] font-semibold uppercase tracking-widecaps">
+              <span className="text-muted-foreground">
+                Step {step} of {TOTAL_STEPS}
+                {": "}
+              </span>
+              <span className="text-primary">{STEP_LABELS[step - 1]}</span>
             </p>
             <ol className="flex gap-1.5" aria-hidden>
               {STEP_LABELS.map((_, i) => {

@@ -68,26 +68,27 @@ export function getPrimaryNavSections(
   }
 
   if (profile.user.role.slug === "admin") {
-    const adminLinks: PrimaryNavLink[] =
-      workspaceMode === "focused"
-        ? [
-            { href: "/admin/services", label: "Catalog" },
-            { href: "/admin/barbers", label: "Team" },
-          ]
-        : [
-            { href: "/admin/services", label: "Catalog" },
-            { href: "/admin/barbers", label: "Admin" },
-            { href: "/admin/reports/revenue", label: "Revenue" },
-            { href: "/admin/reports/barbers", label: "Compare" },
-            { href: "/admin/reports/customers", label: "Customers" },
-            { href: "/admin/reports/operations", label: "Ops" },
-            { href: "/admin/reports/retention", label: "Retention" },
-          ];
     sections.push({
-      id: "admin",
-      label: "Shop admin",
-      links: adminLinks,
+      id: "admin-shop",
+      label: "Your shop",
+      links: [
+        { href: "/admin/services", label: "Catalog" },
+        { href: "/admin/barbers", label: "Team" },
+      ],
     });
+    if (workspaceMode !== "focused") {
+      sections.push({
+        id: "admin-reports",
+        label: "Reports",
+        links: [
+          { href: "/admin/reports/revenue", label: "Revenue" },
+          { href: "/admin/reports/barbers", label: "Compare" },
+          { href: "/admin/reports/customers", label: "Customers" },
+          { href: "/admin/reports/operations", label: "Ops" },
+          { href: "/admin/reports/retention", label: "Retention" },
+        ],
+      });
+    }
   }
 
   return sections;
