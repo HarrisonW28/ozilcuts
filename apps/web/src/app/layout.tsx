@@ -14,8 +14,21 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Ozilcuts",
-  description: "Barber booking and shop management",
+  title: {
+    default: "Ozil Cuts",
+    template: "%s · Ozil Cuts",
+  },
+  description: "Book sharp cuts and run your barber shop.",
+  applicationName: "Ozil Cuts",
+  manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    title: "Ozil Cuts",
+    statusBarStyle: "black-translucent",
+  },
+  formatDetection: {
+    telephone: false,
+  },
 };
 
 export const viewport: Viewport = {
