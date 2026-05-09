@@ -6,6 +6,7 @@ import type {
   BarberSlotsPayload,
   CreateAppointmentInput,
   CreateAppointmentResponse,
+  CreateWalkInAppointmentInput,
   LaravelValidationPayload,
   Paginated,
   RescheduleAppointmentInput,
@@ -53,6 +54,31 @@ export async function fetchBarberSlots(
   }
 
   return res.json() as Promise<BarberSlotsPayload>;
+}
+
+export async function createWalkInAppointment(
+  token: string,
+  body: CreateWalkInAppointmentInput,
+): Promise<CreateAppointmentResponse> {
+  const res = await fetch(`${getApiBaseUrl()}/api/v1/appointments/walk-in`, {
+    method: "POST",
+    headers: authJsonHeaders(token),
+    body: JSON.stringify(body),
+  });
+  const payload = (await res.json().catch(() => ({}))) as
+    | CreateAppointmentResponse
+    | LaravelValidationPayload;
+  if (!res.ok) {
+    if (res.status === 422) {
+      throw new ApiValidationError(
+        res.status,
+        payload as LaravelValidationPayload,
+      );
+    }
+    throw new ApiError("Failed to log walk-in", res.status, payload);
+  }
+
+  return payload as CreateAppointmentResponse;
 }
 
 export async function createAppointment(
@@ -243,4 +269,31 @@ export async function sendAppointmentReminder(
   }
 
   return res.json() as Promise<SendAppointmentReminderResponse>;
+}
+
+export type SendAppointmentRunningLateResponse = {
+  sent: true;
+  /** ISO 8601 */
+  sent_at: string;
+};
+
+export async function sendAppointmentRunningLate(
+  token: string,
+  appointmentId: number,
+  lateByMinutes: number,
+): Promise<SendAppointmentRunningLateResponse> {
+  const res = await fetch(
+    `${getApiBaseUrl()}/api/v1/appointments/${appointmentId}/running-late`,
+    {
+      method: "POST",
+      headers: authJsonHeaders(token),
+      body: JSON.stringify({ late_by_minutes: lateByMinutes }),
+    },
+  );
+  if (!res.ok) {
+    const payload = await res.json().catch(() => ({}));
+    throw new ApiError("Failed to send running late notice", res.status, payload);
+  }
+
+  return res.json() as Promise<SendAppointmentRunningLateResponse>;
 }

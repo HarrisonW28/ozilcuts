@@ -25,6 +25,7 @@ export { fetchBarber, fetchBarbers } from "./barbers";
 export {
   cancelAppointment,
   createAppointment,
+  createWalkInAppointment,
   fetchAppointment,
   fetchAppointmentCalendarLink,
   fetchAppointmentPaymentIntent,
@@ -32,6 +33,7 @@ export {
   fetchMyAppointments,
   rescheduleAppointment,
   sendAppointmentReminder,
+  sendAppointmentRunningLate,
 } from "./booking";
 export {
   fetchCustomerAnalytics,
@@ -47,6 +49,7 @@ export {
   updateNotificationPreferences,
 } from "./notifications";
 export { fetchOperationalInsights } from "./operationalInsights";
+export { fetchRetentionReport } from "./retentionReport";
 export {
   attachCustomerTag,
   createCustomerNote,
@@ -90,6 +93,10 @@ export {
   fetchManageBarbers,
   updateManagedBarberProfile,
 } from "./manageBarbers";
+export {
+  applyServiceStarterPack,
+  patchShopOnboarding,
+} from "./shopOnboarding";
 export {
   createManagedService,
   deleteManagedService,

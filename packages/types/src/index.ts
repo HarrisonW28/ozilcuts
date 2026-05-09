@@ -154,6 +154,8 @@ export type CustomerProfile = {
   preferred_barber_user_id: number | null;
   preferences: string | null;
   marketing_opt_in: boolean;
+  /** When true, automated retention nudges are suppressed (rebook + inactivity). */
+  retention_paused: boolean;
   updated_at: string | null;
   user?: {
     id: number;
@@ -171,6 +173,7 @@ export type UpdateCustomerProfileInput = {
   preferred_barber_user_id?: number | null;
   preferences?: string | null;
   marketing_opt_in?: boolean;
+  retention_paused?: boolean;
 };
 
 export const HAIR_TYPE_OPTIONS = [
@@ -333,12 +336,37 @@ export type AuthUserRole = {
   name: string;
 };
 
+/** Present on the API only when `role.slug === "admin"`. */
+export type ShopAdminState = {
+  shop_display_name: string | null;
+  onboarding_step: number;
+  onboarding_completed_at: string | null;
+  shop_pays_cash_only: boolean;
+  shop_deposits_enabled: boolean;
+  shop_tap_to_pay_later: boolean;
+};
+
+export type PatchShopOnboardingInput = {
+  shop_display_name?: string | null;
+  onboarding_step?: number;
+  shop_pays_cash_only?: boolean;
+  shop_deposits_enabled?: boolean;
+  shop_tap_to_pay_later?: boolean;
+  complete?: boolean;
+};
+
+export type ServiceStarterPackResponse = {
+  created: Array<{ name: string; slug: string }>;
+  skipped_slugs: string[];
+};
+
 export type AuthUser = {
   id: number;
   name: string;
   email: string;
   email_verified_at: string | null;
   role: AuthUserRole;
+  shop_admin?: ShopAdminState;
 };
 
 export type AuthSuccessResponse = {
@@ -410,10 +438,17 @@ export type CreateAppointmentResponse = AppointmentRecord & {
   payment: AppointmentPaymentMeta;
 };
 
+/**
+ * In-person tap / POS roadmap (see `STRIPE_TAP_TO_PAY_STATUS` on the API).
+ * Public payment config only; does not enable Terminal by itself.
+ */
+export type TapToPayStatus = "off" | "foundation" | "live";
+
 export type PaymentConfig = {
   enabled: boolean;
   publishable_key: string | null;
   currency: string;
+  tap_to_pay_status: TapToPayStatus;
 };
 
 export type AppointmentCalendarLink = {
@@ -435,6 +470,14 @@ export type CreateAppointmentInput = {
   barber_user_id: number;
   /** ISO 8601 (e.g. `2026-05-11T09:00:00`). */
   starts_at: string;
+  notes?: string | null;
+};
+
+export type CreateWalkInAppointmentInput = {
+  barber_user_id: number;
+  service_id: number;
+  starts_at: string;
+  walk_in_name?: string | null;
   notes?: string | null;
 };
 
@@ -573,12 +616,33 @@ export type OperationalInsightsRangeFilters = {
   to: string;
 };
 
+/** Admin preview of customers matching retention rules (no sends). */
+export type RetentionReportRow = {
+  appointment_id: number;
+  customer_user_id: number;
+  customer_name: string;
+  customer_email: string;
+  last_visit_at: string | null;
+  interval_days: number;
+  suggested_date: string;
+  days_since_last_visit: number;
+  inactivity_threshold_days: number;
+  retention_paused: boolean;
+};
+
+export type RetentionReportSnapshot = {
+  due_soon: RetentionReportRow[];
+  inactive_eligible: RetentionReportRow[];
+};
+
 export const NOTIFICATION_EVENTS = [
   "appointment.confirmed",
   "appointment.cancelled",
   "appointment.rescheduled",
   "appointment.reminder",
+  "appointment.running_late",
   "appointment.rebook_suggested",
+  "appointment.inactivity_nudge",
   "staff.booking.created",
   "staff.booking.cancelled",
   "staff.booking.rescheduled",
@@ -599,7 +663,10 @@ export type NotificationData = {
   previous_starts_at?: string | null;
   actor_name?: string | null;
   audience?: "admin" | "barber" | string | null;
-  /** Smart rebook payload — present on appointment.rebook_suggested. */
+  /** @see appointment.running_late */
+  late_by_minutes?: number;
+  headline?: string;
+  /** Retention nudge payload — present on rebook + inactivity events. */
   suggested_date?: string;
   interval_days?: number;
   service_id?: number;
