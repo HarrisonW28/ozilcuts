@@ -89,7 +89,7 @@ export default function AdminCustomerAnalyticsPage() {
                 ? `${state.data.summary.customer_name} · visits`
                 : "Customer analytics"
             }
-            description="Lifetime visits, spend, cadence, and recent appointments."
+            description="Lifetime totals, cadence, and a visual visit timeline (newest first)."
           />
 
           {profile.kind === "loading" || profile.kind === "none" ? (

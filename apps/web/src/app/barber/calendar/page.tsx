@@ -1,19 +1,26 @@
 "use client";
 
 import { SiteHeader } from "@/components/site-header";
+import { BarberDailyOverview } from "@/components/barber-daily-overview";
+import { BarberWalkInPanel } from "@/components/barber-walk-in-panel";
+import { DayTimelineCalendar } from "@/components/day-timeline-calendar";
+import { OperationalLoadingBlock } from "@/components/operational-loading-block";
 import { WeekAvailabilityCalendar } from "@/components/week-availability-calendar";
-import type { CalendarDensity } from "@/components/week-availability-calendar";
+import type { CalendarDensity } from "@/lib/calendar-week";
 import { getStoredAuthToken } from "@/lib/auth-token";
 import {
   addDays,
   applyBookingsToSchedule,
   buildWeekDaysFromAvailability,
+  formatMonthDay,
+  formatShortWeekday,
   formatWeekRangeLabel,
   formatYmd,
   isSameYmd,
   parseYmdToDate,
   startOfWeekSunday,
 } from "@/lib/calendar-week";
+import { useOperationalWorkspaceMode } from "@/lib/operational-workspace-context";
 import { useSessionProfile } from "@/lib/use-session-profile";
 import {
   ApiError,
@@ -33,6 +40,7 @@ import {
   CardHeader,
   CardTitle,
   ScreenTitle,
+  cn,
 } from "@ozilcuts/ui";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -45,26 +53,9 @@ function loadStoredDensity(): CalendarDensity {
   return raw === "compact" ? "compact" : "comfortable";
 }
 
-function formatTimeOfDay(iso: string | null | undefined): string {
-  if (!iso) return "";
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "";
-  return d.toLocaleTimeString(undefined, {
-    hour: "numeric",
-    minute: "2-digit",
-  });
-}
-
-function formatFocusedDayLabel(date: Date): string {
-  return new Intl.DateTimeFormat(undefined, {
-    weekday: "long",
-    month: "short",
-    day: "numeric",
-  }).format(date);
-}
-
 export default function BarberCalendarPage() {
   const { profile, signOut } = useSessionProfile();
+  const { isFocused } = useOperationalWorkspaceMode();
   const [weekStart, setWeekStart] = useState(() =>
     startOfWeekSunday(new Date()),
   );
@@ -106,16 +97,21 @@ export default function BarberCalendarPage() {
     [weekStart, availability, bookings],
   );
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (opts?: { silent?: boolean }) => {
+    const silent = opts?.silent === true;
     const token = getStoredAuthToken();
     if (!token || userId === null) {
-      setLoadState("error");
-      setLoadMessage("Sign in required.");
+      if (!silent) {
+        setLoadState("error");
+        setLoadMessage("Sign in required.");
+      }
 
       return;
     }
-    setLoadState("loading");
-    setLoadMessage(null);
+    if (!silent) {
+      setLoadState("loading");
+      setLoadMessage(null);
+    }
     try {
       const [availabilityPayload, appointmentsPage] = await Promise.all([
         fetchManageBarberAvailability(token, userId),
@@ -131,14 +127,16 @@ export default function BarberCalendarPage() {
       setBookings(appointmentsPage.data);
       setLoadState("ok");
     } catch (e: unknown) {
-      const message =
-        e instanceof ApiError
-          ? e.message
-          : e instanceof Error
+      if (!silent) {
+        const message =
+          e instanceof ApiError
             ? e.message
-            : "Failed to load.";
-      setLoadState("error");
-      setLoadMessage(message);
+            : e instanceof Error
+              ? e.message
+              : "Failed to load.";
+        setLoadState("error");
+        setLoadMessage(message);
+      }
     }
   }, [userId, weekFromYmd, weekToYmd]);
 
@@ -151,6 +149,25 @@ export default function BarberCalendarPage() {
 
   const isBarber =
     profile.kind === "ready" && profile.user.role.slug === "barber";
+
+  /** Soft refresh while today is in view — keeps walk-ins and desk changes near-real-time. */
+  useEffect(() => {
+    if (!isBarber || loadState !== "ok") return;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (!isSameYmd(focusedDate, today)) return;
+
+    const run = () => {
+      if (document.visibilityState !== "visible") return;
+      void load({ silent: true });
+    };
+    const id = window.setInterval(run, 60_000);
+    document.addEventListener("visibilitychange", run);
+    return () => {
+      window.clearInterval(id);
+      document.removeEventListener("visibilitychange", run);
+    };
+  }, [isBarber, loadState, focusedDate, load]);
 
   // When the visible week changes, snap the focused day into that week
   // (preferring today if it lives in the new week, otherwise its
@@ -195,17 +212,25 @@ export default function BarberCalendarPage() {
     return () => window.removeEventListener("keydown", onKey);
   }, [isBarber]);
 
-  const focusedDayBookings = useMemo(() => {
-    return bookings
-      .filter((b) => {
-        if (!b.starts_at) return false;
-        const start = new Date(b.starts_at);
-        return !Number.isNaN(start.getTime()) && isSameYmd(start, focusedDate);
-      })
-      .sort((a, b) =>
-        (a.starts_at ?? "").localeCompare(b.starts_at ?? ""),
-      );
-  }, [bookings, focusedDate]);
+  const focusedDaySchedule = useMemo(() => {
+    return (
+      calendarDays.find((d) => isSameYmd(d.date, focusedDate)) ?? calendarDays[0]
+    );
+  }, [calendarDays, focusedDate]);
+
+  const shiftFocusedDay = useCallback(
+    (deltaDays: number) => {
+      const next = addDays(focusedDate, deltaDays);
+      next.setHours(0, 0, 0, 0);
+      const weekEnd = addDays(weekStart, 6);
+      weekEnd.setHours(0, 0, 0, 0);
+      if (next < weekStart || next > weekEnd) {
+        setWeekStart(startOfWeekSunday(next));
+      }
+      setFocusedDate(next);
+    },
+    [focusedDate, weekStart],
+  );
 
   return (
     <div className="flex min-h-dvh flex-1 flex-col">
@@ -217,8 +242,12 @@ export default function BarberCalendarPage() {
         <div className="mx-auto w-full max-w-6xl space-y-8">
           <ScreenTitle
             eyebrow={OZILCUTS_APP_NAME}
-            title="Calendar"
-            description="Week view of your recurring hours and confirmed bookings."
+            title="Chair"
+            description={
+              isFocused
+                ? "Your runway for the selected day — scroll the timeline, tap a booking to open it."
+                : "Day timeline first, walk-in below — tap a day to switch, pinch-friendly controls."
+            }
           />
 
           {profile.kind === "loading" || profile.kind === "none" ? (
@@ -251,8 +280,8 @@ export default function BarberCalendarPage() {
 
           {isBarber ? (
             <>
-              <div className="flex flex-col gap-4">
-                <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+              <div className="flex flex-col gap-5">
+                <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
                   <div
                     className="flex flex-wrap items-center gap-2"
                     role="group"
@@ -262,6 +291,7 @@ export default function BarberCalendarPage() {
                       type="button"
                       variant="outline"
                       size="sm"
+                      className="min-h-11 touch-manipulation sm:min-h-9"
                       onClick={() => setWeekStart((w) => addDays(w, -7))}
                       aria-keyshortcuts="ArrowLeft"
                       title="Previous week (←)"
@@ -272,6 +302,7 @@ export default function BarberCalendarPage() {
                       type="button"
                       variant="outline"
                       size="sm"
+                      className="min-h-11 touch-manipulation sm:min-h-9"
                       onClick={() =>
                         setWeekStart(startOfWeekSunday(new Date()))
                       }
@@ -284,6 +315,7 @@ export default function BarberCalendarPage() {
                       type="button"
                       variant="outline"
                       size="sm"
+                      className="min-h-11 touch-manipulation sm:min-h-9"
                       onClick={() => setWeekStart((w) => addDays(w, 7))}
                       aria-keyshortcuts="ArrowRight"
                       title="Next week (→)"
@@ -291,75 +323,164 @@ export default function BarberCalendarPage() {
                       Next week
                     </Button>
                   </div>
-                  <p className="text-sm font-medium text-foreground">
+                  <p className="text-sm font-medium tabular-nums text-foreground">
                     {weekLabel}
                   </p>
                   <Button
                     asChild
                     variant="secondary"
                     size="sm"
-                    className="sm:ml-auto"
+                    className="min-h-11 w-full touch-manipulation sm:min-h-9 sm:w-auto sm:ml-auto"
                   >
                     <Link href="/barber/hours">Edit hours</Link>
                   </Button>
                 </div>
 
-                <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
-                  <label className="flex items-center gap-2 text-sm text-muted-foreground">
-                    Jump to:
-                    <input
-                      type="date"
-                      value={formatYmd(focusedDate)}
-                      onChange={(e) => {
-                        const next = parseYmdToDate(e.target.value);
-                        if (!next) return;
-                        setFocusedDate(next);
-                        setWeekStart(startOfWeekSunday(next));
-                      }}
-                      className="motion-interactive rounded-md border border-input bg-background px-2 py-1 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                      aria-label="Jump to date"
-                    />
-                  </label>
-                  <div
-                    className="flex items-center gap-2 text-sm"
-                    role="group"
-                    aria-label="Calendar density"
-                  >
-                    <span className="text-muted-foreground">Density:</span>
+                <div className="flex flex-col gap-3 lg:flex-row lg:flex-wrap lg:items-end lg:justify-between">
+                  <div className="flex w-full items-stretch gap-2 lg:max-w-2xl">
                     <Button
                       type="button"
-                      variant={
-                        density === "comfortable" ? "default" : "outline"
-                      }
-                      size="sm"
-                      aria-pressed={density === "comfortable"}
-                      onClick={() => onDensityChange("comfortable")}
+                      variant="outline"
+                      size="icon"
+                      className="shrink-0"
+                      aria-label="Previous day"
+                      onClick={() => shiftFocusedDay(-1)}
                     >
-                      Comfortable
+                      <span aria-hidden className="text-lg leading-none">
+                        ‹
+                      </span>
                     </Button>
+                    <div className="-mx-1 min-h-0 min-w-0 flex-1 snap-x snap-mandatory overflow-x-auto px-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                      <div className="flex min-w-min gap-2 pb-1 pt-0.5">
+                        {calendarDays.map((d) => {
+                          const selected = isSameYmd(d.date, focusedDate);
+                          const today = isSameYmd(d.date, new Date());
+                          const count = d.bookings.length;
+
+                          return (
+                            <button
+                              key={d.date.toISOString()}
+                              type="button"
+                              onClick={() => setFocusedDate(d.date)}
+                              aria-pressed={selected}
+                              className={cn(
+                                "motion-interactive min-w-[4.5rem] shrink-0 snap-start rounded-2xl border px-3 py-2.5 text-left transition-[background-color,box-shadow,border-color] duration-[var(--motion-duration-base)] ease-[var(--motion-ease-standard)] sm:min-w-[5.25rem]",
+                                "touch-manipulation active:scale-[0.98]",
+                                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                                selected
+                                  ? "border-primary/50 bg-primary/10 shadow-sm ring-1 ring-primary/20"
+                                  : "border-border/60 bg-card/30 hover:border-border hover:bg-muted/30",
+                                today && !selected
+                                  ? "ring-1 ring-primary/25"
+                                  : null,
+                              )}
+                            >
+                              <span
+                                className={cn(
+                                  "block text-[10px] font-semibold uppercase tracking-wide",
+                                  today ? "text-primary" : "text-muted-foreground",
+                                )}
+                              >
+                                {formatShortWeekday(d.date)}
+                              </span>
+                              <span className="mt-0.5 block text-sm font-semibold leading-tight text-foreground">
+                                {formatMonthDay(d.date)}
+                              </span>
+                              <span className="mt-1.5 block text-[10px] text-muted-foreground tabular-nums">
+                                {count === 0
+                                  ? "Open"
+                                  : `${count} appt${count === 1 ? "" : "s"}`}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
                     <Button
                       type="button"
-                      variant={density === "compact" ? "default" : "outline"}
-                      size="sm"
-                      aria-pressed={density === "compact"}
-                      onClick={() => onDensityChange("compact")}
+                      variant="outline"
+                      size="icon"
+                      className="size-11 shrink-0 touch-manipulation sm:size-10"
+                      aria-label="Next day"
+                      onClick={() => shiftFocusedDay(1)}
                     >
-                      Compact
+                      <span aria-hidden className="text-lg leading-none">
+                        ›
+                      </span>
                     </Button>
                   </div>
+
+                  <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+                    <label className="flex min-h-11 items-center gap-2 text-sm text-muted-foreground">
+                      <span className="shrink-0">Jump to</span>
+                      <input
+                        type="date"
+                        value={formatYmd(focusedDate)}
+                        onChange={(e) => {
+                          const next = parseYmdToDate(e.target.value);
+                          if (!next) return;
+                          setFocusedDate(next);
+                          setWeekStart(startOfWeekSunday(next));
+                        }}
+                        className="motion-interactive min-h-11 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:min-h-10 sm:w-auto"
+                        aria-label="Jump to date"
+                      />
+                    </label>
+                    <div
+                      className={cn(
+                        "flex flex-wrap items-center gap-2",
+                        isFocused && "hidden",
+                      )}
+                      role="group"
+                      aria-label="Calendar density"
+                    >
+                      <span className="text-sm text-muted-foreground">
+                        Zoom
+                      </span>
+                      <Button
+                        type="button"
+                        variant={
+                          density === "comfortable" ? "default" : "outline"
+                        }
+                        size="sm"
+                        className="min-h-11 touch-manipulation sm:min-h-9"
+                        aria-pressed={density === "comfortable"}
+                        onClick={() => onDensityChange("comfortable")}
+                      >
+                        Standard
+                      </Button>
+                      <Button
+                        type="button"
+                        variant={density === "compact" ? "default" : "outline"}
+                        size="sm"
+                        className="min-h-11 touch-manipulation sm:min-h-9"
+                        aria-pressed={density === "compact"}
+                        onClick={() => onDensityChange("compact")}
+                      >
+                        Compact
+                      </Button>
+                    </div>
+                  </div>
+
                   <p
-                    className="text-xs text-muted-foreground sm:ml-auto"
+                    className={cn(
+                      "text-xs text-muted-foreground lg:w-full lg:text-right",
+                      isFocused && "hidden",
+                    )}
                     aria-live="polite"
                   >
-                    Tip: ← / → to change week, T for today.
+                    <span className="whitespace-nowrap">
+                      ← / → week · T today · Tap a block to open
+                    </span>
                   </p>
                 </div>
               </div>
 
               {loadState === "loading" || loadState === "idle" ? (
-                <p className="text-sm text-muted-foreground" role="status">
-                  Loading schedule…
-                </p>
+                <OperationalLoadingBlock
+                  label="Loading your chair"
+                  variant="chair"
+                />
               ) : null}
               {loadState === "error" ? (
                 <div className="flex flex-col gap-3 rounded-lg border border-destructive/40 p-4">
@@ -377,57 +498,49 @@ export default function BarberCalendarPage() {
                   </Button>
                 </div>
               ) : null}
-              {loadState === "ok" ? (
+              {loadState === "ok" && focusedDaySchedule ? (
                 <>
-                  <WeekAvailabilityCalendar
-                    weekLabel={weekLabel}
-                    days={calendarDays}
-                    className="rounded-xl border border-border/50 bg-card/30 p-4 sm:p-6"
-                    focusedDate={focusedDate}
-                    onDayFocus={setFocusedDate}
-                    density={density}
+                  <section
+                    className="space-y-5"
+                    aria-label="Chair — day timeline"
+                  >
+                    <BarberDailyOverview
+                      day={focusedDate}
+                      appointments={bookings}
+                    />
+                    <DayTimelineCalendar
+                      day={focusedDaySchedule}
+                      className="shadow-md"
+                      density={density}
+                    />
+                  </section>
+
+                  <BarberWalkInPanel
+                    barberUserId={userId ?? 0}
+                    focusedDateYmd={formatYmd(focusedDate)}
+                    onBooked={() => void load()}
                   />
 
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>{formatFocusedDayLabel(focusedDate)}</CardTitle>
-                      <CardDescription>
-                        {focusedDayBookings.length === 0
-                          ? "No confirmed bookings on this day."
-                          : `${focusedDayBookings.length} confirmed ${
-                              focusedDayBookings.length === 1
-                                ? "booking"
-                                : "bookings"
-                            }, sorted by start time.`}
-                      </CardDescription>
-                    </CardHeader>
-                    {focusedDayBookings.length > 0 ? (
-                      <ul className="divide-y divide-border">
-                        {focusedDayBookings.map((b) => (
-                          <li key={b.id} className="px-6 py-3">
-                            <Link
-                              href={`/appointments/${b.id}/confirmation`}
-                              className="motion-interactive flex flex-col gap-1 rounded-md p-1 hover:bg-muted/40 sm:flex-row sm:items-center sm:justify-between"
-                            >
-                              <span className="text-sm font-medium text-foreground">
-                                {b.service?.name ?? "Appointment"}
-                                {b.customer?.name ? (
-                                  <span className="text-muted-foreground">
-                                    {" "}
-                                    · {b.customer.name}
-                                  </span>
-                                ) : null}
-                              </span>
-                              <span className="text-xs text-muted-foreground">
-                                {formatTimeOfDay(b.starts_at)} –{" "}
-                                {formatTimeOfDay(b.ends_at)}
-                              </span>
-                            </Link>
-                          </li>
-                        ))}
-                      </ul>
-                    ) : null}
-                  </Card>
+                  <div
+                    className={cn(
+                      isFocused ? "hidden" : "hidden lg:block",
+                    )}
+                  >
+                    <h3 className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                      Week overview
+                    </h3>
+                    <WeekAvailabilityCalendar
+                      weekLabel={weekLabel}
+                      days={calendarDays}
+                      className="rounded-2xl border border-border/40 bg-card/20 p-4 sm:p-5"
+                      focusedDate={focusedDate}
+                      onDayFocus={setFocusedDate}
+                      density={density}
+                    />
+                    <p className="mt-3 text-center text-xs text-muted-foreground lg:text-left">
+                      Light areas: hours on · Cards: confirmed — tap to open.
+                    </p>
+                  </div>
                 </>
               ) : null}
 

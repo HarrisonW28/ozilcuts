@@ -157,6 +157,8 @@
   }
 
   .motion-interactive {
+    transition-property: color, background-color, border-color, box-shadow,
+      transform, opacity;
     transition-duration: var(--motion-duration-fast);
     transition-timing-function: var(--motion-ease-standard);
   }

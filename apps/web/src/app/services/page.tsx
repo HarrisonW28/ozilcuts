@@ -1,6 +1,11 @@
 "use client";
 
 import { SiteHeader } from "@/components/site-header";
+import { CatalogCardGridSkeleton } from "@/components/load-empty";
+import {
+  ozilcutsPageEnterInitial,
+  ozilcutsPageEnterTransition,
+} from "@/lib/motion";
 import { useSessionProfile } from "@/lib/use-session-profile";
 import { ApiError, fetchServices } from "@ozilcuts/api";
 import {
@@ -12,6 +17,7 @@ import {
   CardHeader,
   CardTitle,
   ScreenTitle,
+  EmptyState,
 } from "@ozilcuts/ui";
 import type { ServiceSummary } from "@ozilcuts/types";
 import { OZILCUTS_APP_NAME } from "@ozilcuts/types";
@@ -67,9 +73,7 @@ export default function ServicesPage() {
     load(() => false);
   }, [load]);
 
-  const motionInitial = reduceMotion
-    ? { opacity: 1, y: 0 }
-    : { opacity: 0, y: 8 };
+  const motionInitial = ozilcutsPageEnterInitial(reduceMotion);
 
   return (
     <div className="flex min-h-dvh flex-1 flex-col">
@@ -81,7 +85,7 @@ export default function ServicesPage() {
         <motion.div
           initial={motionInitial}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.35, ease: "easeOut" }}
+          transition={ozilcutsPageEnterTransition}
           className="mx-auto w-full max-w-3xl"
         >
           <ScreenTitle
@@ -92,14 +96,10 @@ export default function ServicesPage() {
           />
 
           {state.kind === "loading" ? (
-            <p
-              className="text-sm text-muted-foreground"
-              role="status"
-              aria-live="polite"
-              aria-busy="true"
-            >
-              Loading services…
-            </p>
+            <CatalogCardGridSkeleton
+              count={4}
+              statusLabel="Loading services"
+            />
           ) : null}
 
           {state.kind === "error" ? (
@@ -121,9 +121,15 @@ export default function ServicesPage() {
           ) : null}
 
           {state.kind === "ok" && state.items.length === 0 ? (
-            <p className="text-sm text-muted-foreground" role="status">
-              No services are available yet. Check back soon.
-            </p>
+            <EmptyState
+              title="No services listed"
+              description="Pricing and services will appear here when your shop adds them."
+              action={
+                <Button asChild variant="outline" size="sm">
+                  <Link href="/">Home</Link>
+                </Button>
+              }
+            />
           ) : null}
 
           {state.kind === "ok" && state.items.length > 0 ? (

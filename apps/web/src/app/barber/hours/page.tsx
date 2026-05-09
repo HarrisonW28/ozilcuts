@@ -1,7 +1,9 @@
 "use client";
 
 import { SiteHeader } from "@/components/site-header";
+import { OperationalLoadingBlock } from "@/components/operational-loading-block";
 import { getStoredAuthToken } from "@/lib/auth-token";
+import { useOperationalWorkspaceMode } from "@/lib/operational-workspace-context";
 import { useSessionProfile } from "@/lib/use-session-profile";
 import {
   ApiError,
@@ -49,6 +51,7 @@ function toApiTime(htmlTime: string): string {
 
 export default function BarberHoursPage() {
   const { profile, signOut } = useSessionProfile();
+  const { isFocused } = useOperationalWorkspaceMode();
   const [rows, setRows] = useState<EditableRow[]>([]);
   const [loadState, setLoadState] = useState<
     "idle" | "loading" | "ok" | "error"
@@ -162,7 +165,11 @@ export default function BarberHoursPage() {
           <ScreenTitle
             eyebrow={OZILCUTS_APP_NAME}
             title="Weekly hours"
-            description="Set when you accept bookings. Times use your shop’s local schedule (stored as simple start/end times)."
+            description={
+              isFocused
+                ? "Set when you take bookings—one row per open interval. Use Full workspace in the header for every tool."
+                : "Set when you accept bookings. Times use your shop’s local schedule (stored as simple start/end times)."
+            }
           />
 
           {profile.kind === "loading" || profile.kind === "none" ? (
@@ -204,9 +211,7 @@ export default function BarberHoursPage() {
               </CardHeader>
               <CardContent>
                 {loadState === "loading" || loadState === "idle" ? (
-                  <p className="text-sm text-muted-foreground" role="status">
-                    Loading schedule…
-                  </p>
+                  <OperationalLoadingBlock label="Loading schedule" />
                 ) : null}
                 {loadState === "error" ? (
                   <div className="flex flex-col gap-3 rounded-lg border border-destructive/40 p-4">
@@ -260,7 +265,7 @@ export default function BarberHoursPage() {
                                 type="button"
                                 variant="outline"
                                 size="sm"
-                                className="w-full sm:ml-auto sm:w-auto"
+                                className="min-h-11 w-full touch-manipulation sm:ml-auto sm:min-h-9 sm:w-auto"
                                 onClick={() => removeRow(row.key)}
                               >
                                 Remove
@@ -302,21 +307,46 @@ export default function BarberHoursPage() {
                         </li>
                       ))}
                     </ul>
-                    <div className="flex flex-wrap gap-2">
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        onClick={addRow}
-                      >
-                        Add window
-                      </Button>
-                    </div>
+                    {isFocused ? (
+                      <details className="rounded-xl border border-border/55 bg-muted/10 p-3 sm:p-4">
+                        <summary className="min-h-11 cursor-pointer list-none py-2 text-sm font-semibold text-foreground [-webkit-details-marker]:hidden [&::marker]:hidden">
+                          <span className="underline-offset-4 hover:underline">
+                            Add or remove time blocks
+                          </span>
+                        </summary>
+                        <div className="mt-2 flex flex-wrap gap-2 border-t border-border/40 pt-3">
+                          <Button
+                            type="button"
+                            variant="secondary"
+                            className="min-h-11 touch-manipulation sm:min-h-9"
+                            onClick={addRow}
+                          >
+                            Add window
+                          </Button>
+                        </div>
+                      </details>
+                    ) : (
+                      <div className="flex flex-wrap gap-2">
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          className="min-h-11 touch-manipulation sm:min-h-9"
+                          onClick={addRow}
+                        >
+                          Add window
+                        </Button>
+                      </div>
+                    )}
                     {saveError ? (
                       <p className="text-sm text-destructive" role="alert">
                         {saveError}
                       </p>
                     ) : null}
-                    <Button type="submit" disabled={saveBusy}>
+                    <Button
+                      type="submit"
+                      disabled={saveBusy}
+                      className="min-h-11 w-full touch-manipulation sm:w-auto sm:min-h-10"
+                    >
                       {saveBusy ? "Saving…" : "Save schedule"}
                     </Button>
                   </form>

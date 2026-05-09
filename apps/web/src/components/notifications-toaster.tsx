@@ -14,7 +14,9 @@ const EVENT_LABELS: Record<NotificationEvent, string> = {
   "appointment.cancelled": "Appointment cancelled",
   "appointment.rescheduled": "Appointment rescheduled",
   "appointment.reminder": "Appointment reminder",
+  "appointment.running_late": "Running late",
   "appointment.rebook_suggested": "Time for your next visit",
+  "appointment.inactivity_nudge": "It's been a while",
   "staff.booking.created": "New booking",
   "staff.booking.cancelled": "Booking cancelled",
   "staff.booking.rescheduled": "Booking rescheduled",
@@ -49,6 +51,15 @@ function describeShort(record: NotificationRecord): string {
       ? data.headline
       : `Reminder · ${service}`;
   }
+  if (record.type === "appointment.running_late") {
+    const mins =
+      typeof data.late_by_minutes === "number" && data.late_by_minutes > 0
+        ? data.late_by_minutes
+        : null;
+    const late =
+      mins === 1 ? "~1 min late" : mins ? `~${mins} min late` : "Running late";
+    return barber ? `${late} · ${barber}` : late;
+  }
   if (record.type === "appointment.rebook_suggested") {
     const target = barber ? `${service} with ${barber}` : service;
     return `It's been a while — rebook ${target}`;
@@ -66,7 +77,10 @@ function describeShort(record: NotificationRecord): string {
 }
 
 function primaryHref(record: NotificationRecord): string | null {
-  if (record.type === "appointment.rebook_suggested") {
+  if (
+    record.type === "appointment.rebook_suggested"
+    || record.type === "appointment.inactivity_nudge"
+  ) {
     const data = record.data;
     const params = new URLSearchParams();
     if (typeof data.service_id === "number" && data.service_id > 0) {
@@ -91,7 +105,10 @@ function primaryHref(record: NotificationRecord): string | null {
 }
 
 function primaryLabel(record: NotificationRecord): string {
-  return record.type === "appointment.rebook_suggested" ? "Book again" : "View";
+  return record.type === "appointment.rebook_suggested"
+    || record.type === "appointment.inactivity_nudge"
+    ? "Book again"
+    : "View";
 }
 
 export function NotificationsToaster() {

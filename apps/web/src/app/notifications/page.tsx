@@ -1,6 +1,7 @@
 "use client";
 
 import { SiteHeader } from "@/components/site-header";
+import { NotificationListSkeleton } from "@/components/load-empty";
 import { getStoredAuthToken } from "@/lib/auth-token";
 import { useInbox } from "@/lib/use-inbox";
 import { useSessionProfile } from "@/lib/use-session-profile";
@@ -25,6 +26,7 @@ import {
   CardHeader,
   CardTitle,
   ScreenTitle,
+  EmptyState,
 } from "@ozilcuts/ui";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
@@ -40,7 +42,9 @@ const EVENT_LABELS: Record<NotificationEvent, string> = {
   "appointment.cancelled": "Appointment cancelled",
   "appointment.rescheduled": "Appointment rescheduled",
   "appointment.reminder": "Appointment reminder",
+  "appointment.running_late": "Running late",
   "appointment.rebook_suggested": "Time for your next visit",
+  "appointment.inactivity_nudge": "It's been a while",
   "staff.booking.created": "New booking alert",
   "staff.booking.cancelled": "Cancellation alert",
   "staff.booking.rescheduled": "Reschedule alert",
@@ -79,6 +83,13 @@ function formatRelative(iso: string | null): string {
     month: "short",
     day: "numeric",
   });
+}
+
+function isRetentionBookNotification(type: NotificationEvent): boolean {
+  return (
+    type === "appointment.rebook_suggested" ||
+    type === "appointment.inactivity_nudge"
+  );
 }
 
 function describe(record: NotificationRecord): string {
@@ -121,7 +132,20 @@ function describe(record: NotificationRecord): string {
         : "Reminder";
     return `${headline}${when ? ` · ${when}` : ""}`;
   }
-  if (record.type === "appointment.rebook_suggested") {
+  if (record.type === "appointment.running_late") {
+    const mins =
+      typeof data.late_by_minutes === "number" && data.late_by_minutes > 0
+        ? data.late_by_minutes
+        : null;
+    const barberLine = barber ? `${service} with ${barber}` : service;
+    const late =
+      mins === 1 ? "about 1 minute late" : mins ? `about ${mins} minutes late` : "running late";
+    return `${barberLine} — your barber is ${late}${when ? ` (${when})` : ""}.`;
+  }
+  if (
+    record.type === "appointment.rebook_suggested"
+    || record.type === "appointment.inactivity_nudge"
+  ) {
     const interval =
       typeof data.interval_days === "number" && data.interval_days > 0
         ? data.interval_days
@@ -145,6 +169,15 @@ function describe(record: NotificationRecord): string {
     const target = barber
       ? `${service} with ${barber}`
       : service;
+    if (record.type === "appointment.inactivity_nudge") {
+      if (cadence && suggestedDate) {
+        return `It's been ${cadence} since your last visit — still thinking about ${target}? Try ${suggestedDate}.`;
+      }
+      if (suggestedDate) {
+        return `It's been a while — still thinking about ${target}? Try ${suggestedDate}.`;
+      }
+      return `It's been a while since your last visit — book ${target} when you're ready.`;
+    }
     if (cadence && suggestedDate) {
       return `It's been ${cadence} since your last visit — try ${target} around ${suggestedDate}.`;
     }
@@ -195,7 +228,7 @@ function appointmentHref(record: NotificationRecord): string | null {
  * payload, so customers can confirm in one tap.
  */
 function rebookHref(record: NotificationRecord): string | null {
-  if (record.type !== "appointment.rebook_suggested") return null;
+  if (!isRetentionBookNotification(record)) return null;
   const data = record.data;
   const params = new URLSearchParams();
   if (typeof data.service_id === "number" && data.service_id > 0) {
@@ -285,6 +318,7 @@ export default function NotificationsPage() {
   }
 
   async function onSnoozeRebook(record: NotificationRecord) {
+    if (record.type !== "appointment.rebook_suggested") return;
     const sourceId = record.data?.appointment_id;
     if (typeof sourceId !== "number" || sourceId <= 0) return;
     const token = getStoredAuthToken();
@@ -410,12 +444,7 @@ export default function NotificationsPage() {
               </div>
 
               {state.kind === "loading" ? (
-                <p
-                  className="text-sm text-muted-foreground"
-                  role="status"
-                >
-                  Loading notifications…
-                </p>
+                <NotificationListSkeleton rows={5} />
               ) : null}
               {state.kind === "error" ? (
                 <p className="text-sm text-destructive" role="alert">
@@ -424,26 +453,32 @@ export default function NotificationsPage() {
               ) : null}
 
               {state.kind === "ok" && state.page.data.length === 0 ? (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>You&rsquo;re all caught up</CardTitle>
-                    <CardDescription>
-                      {unreadOnly
-                        ? "No unread notifications."
-                        : operationalOnly
-                          ? "No operational alerts."
-                          : "Notifications about your appointments will appear here."}
-                    </CardDescription>
-                  </CardHeader>
-                </Card>
+                <EmptyState
+                  title="You&rsquo;re all caught up"
+                  description={
+                    unreadOnly
+                      ? "No unread notifications."
+                      : operationalOnly
+                        ? "No operational alerts."
+                        : "Notifications about your appointments will appear here."
+                  }
+                />
               ) : null}
 
               {state.kind === "ok" && state.page.data.length > 0 ? (
                 <ul className="flex flex-col gap-3">
                   {state.page.data.map((row) => {
-                    const isRebook = row.type === "appointment.rebook_suggested";
-                    const rebookLink = isRebook ? rebookHref(row) : null;
-                    const apptLink = isRebook ? null : appointmentHref(row);
+                    const bookFromRetention = isRetentionBookNotification(
+                      row,
+                    );
+                    const canSnoozeRebook =
+                      row.type === "appointment.rebook_suggested";
+                    const rebookLink = bookFromRetention
+                      ? rebookHref(row)
+                      : null;
+                    const apptLink = bookFromRetention
+                      ? null
+                      : appointmentHref(row);
                     const unread = row.read_at === null;
                     const snoozed = snoozedIds.has(row.id);
                     return (
@@ -494,7 +529,7 @@ export default function NotificationsPage() {
                                 </Link>
                               </Button>
                             ) : null}
-                            {isRebook && !snoozed ? (
+                            {canSnoozeRebook && !snoozed ? (
                               <Button
                                 type="button"
                                 size="sm"
@@ -512,7 +547,7 @@ export default function NotificationsPage() {
                                 <Link href={apptLink}>View appointment</Link>
                               </Button>
                             ) : null}
-                            {unread && !isRebook ? (
+                            {unread && !bookFromRetention ? (
                               <Button
                                 type="button"
                                 size="sm"
@@ -523,7 +558,7 @@ export default function NotificationsPage() {
                                 {busyId === row.id ? "Marking…" : "Mark read"}
                               </Button>
                             ) : null}
-                            {unread && isRebook ? (
+                            {unread && bookFromRetention ? (
                               <Button
                                 type="button"
                                 size="sm"

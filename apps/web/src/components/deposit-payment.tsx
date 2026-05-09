@@ -8,6 +8,7 @@ import {
   useStripe,
 } from "@stripe/react-stripe-js";
 import { loadStripe, type Stripe } from "@stripe/stripe-js";
+import { useTheme } from "next-themes";
 import { useEffect, useMemo, useState } from "react";
 
 type DepositPaymentProps = {
@@ -91,8 +92,12 @@ function PaymentForm({
           {error}
         </p>
       ) : null}
-      <div className="flex flex-wrap gap-2">
-        <Button type="submit" disabled={busy || !stripe || !elements}>
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+        <Button
+          type="submit"
+          disabled={busy || !stripe || !elements}
+          className="min-h-11 w-full touch-manipulation sm:w-auto sm:min-h-10"
+        >
           {busy ? "Processing…" : `Pay ${amountLabel}`}
         </Button>
         {onCancel ? (
@@ -100,6 +105,7 @@ function PaymentForm({
             type="button"
             variant="outline"
             disabled={busy}
+            className="min-h-11 w-full touch-manipulation sm:w-auto sm:min-h-10"
             onClick={onCancel}
           >
             Cancel
@@ -117,9 +123,16 @@ export function DepositPayment({
   onSucceeded,
   onCancel,
 }: DepositPaymentProps) {
+  const { resolvedTheme } = useTheme();
   const stripePromise = useMemo(
     () => getStripeFor(publishableKey),
     [publishableKey],
+  );
+  const elementsAppearance = useMemo(
+    () => ({
+      theme: resolvedTheme === "dark" ? ("night" as const) : ("stripe" as const),
+    }),
+    [resolvedTheme],
   );
   const [stripeReady, setStripeReady] = useState<boolean | null>(null);
 
@@ -144,8 +157,12 @@ export function DepositPayment({
 
   return (
     <Elements
+      key={resolvedTheme ?? "light"}
       stripe={stripePromise}
-      options={{ clientSecret, appearance: { theme: "stripe" } }}
+      options={{
+        clientSecret,
+        appearance: elementsAppearance,
+      }}
     >
       <PaymentForm
         amountLabel={amountLabel}

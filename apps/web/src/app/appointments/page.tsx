@@ -1,14 +1,19 @@
 "use client";
 
 import { SiteHeader } from "@/components/site-header";
+import { AppointmentListSkeleton } from "@/components/load-empty";
+import { SwipeRevealActions } from "@/components/swipe-reveal-actions";
 import { getStoredAuthToken } from "@/lib/auth-token";
+import { useMediaQuery } from "@/lib/use-media-query";
 import { useSessionProfile } from "@/lib/use-session-profile";
+import type { ProfileState } from "@/lib/use-session-profile";
 import {
   ApiError,
   cancelAppointment,
   fetchMyAppointments,
   fetchNextVisitSuggestion,
   sendAppointmentReminder,
+  sendAppointmentRunningLate,
 } from "@ozilcuts/api";
 import type {
   AppointmentPaymentStatus,
@@ -29,6 +34,7 @@ import {
   CardTitle,
   ScreenTitle,
   cn,
+  EmptyState,
 } from "@ozilcuts/ui";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
@@ -102,6 +108,24 @@ function isPast(iso: string | null): boolean {
   return !Number.isNaN(d.getTime()) && d.getTime() < Date.now();
 }
 
+function canSendRunningLateNotice(
+  row: AppointmentRecord,
+  profile: ProfileState,
+): boolean {
+  if (row.status !== "confirmed" || !row.ends_at) return false;
+  const endMs = new Date(row.ends_at).getTime();
+  if (Number.isNaN(endMs) || endMs <= Date.now()) return false;
+  if (profile.kind !== "ready") return false;
+  if (profile.user.role.slug === "admin") return true;
+  if (
+    profile.user.role.slug === "barber" &&
+    row.barber?.id === profile.user.id
+  ) {
+    return true;
+  }
+  return false;
+}
+
 function StatusBadge({ status }: { status: AppointmentRecord["status"] }) {
   const styles =
     status === "confirmed"
@@ -168,6 +192,7 @@ function PaymentBadge({
 
 export default function AppointmentsPage() {
   const { profile, signOut } = useSessionProfile();
+  const isMaxMd = useMediaQuery("(max-width: 767px)");
   const [state, setState] = useState<ListState>({ kind: "idle" });
   const [page, setPage] = useState(1);
   const [range, setRange] = useState<AppointmentRangeFilter>("upcoming");
@@ -178,6 +203,8 @@ export default function AppointmentsPage() {
   const [reminderSentForId, setReminderSentForId] = useState<number | null>(
     null,
   );
+  const [lateBusyId, setLateBusyId] = useState<number | null>(null);
+  const [lateSentForId, setLateSentForId] = useState<number | null>(null);
   const [nextVisit, setNextVisit] = useState<RebookSuggestion | null>(null);
   const [nextVisitDismissed, setNextVisitDismissed] = useState(false);
 
@@ -301,6 +328,26 @@ export default function AppointmentsPage() {
     }
   }
 
+  async function onRunningLate(row: AppointmentRecord, lateByMinutes: number) {
+    const token = getStoredAuthToken();
+    if (!token) return;
+    setLateBusyId(row.id);
+    setActionError(null);
+    setLateSentForId(null);
+    try {
+      await sendAppointmentRunningLate(token, row.id, lateByMinutes);
+      setLateSentForId(row.id);
+    } catch (err) {
+      setActionError(
+        err instanceof ApiError
+          ? err.message
+          : "Could not send notice. Please try again.",
+      );
+    } finally {
+      setLateBusyId(null);
+    }
+  }
+
   return (
     <div className="flex min-h-dvh flex-1 flex-col">
       <SiteHeader profile={profile} onSignOut={signOut} />
@@ -344,19 +391,23 @@ export default function AppointmentsPage() {
           profile.user.role.slug === "customer" &&
           nextVisit &&
           !nextVisitDismissed ? (
-            <Card className="border-primary/40 bg-primary/5">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base">
+            <Card className="border-primary/35 bg-primary/5 shadow-sm dark:border-primary/30">
+              <CardHeader className="space-y-2 pb-2 sm:pb-3">
+                <CardTitle className="text-lg tracking-tight sm:text-xl">
                   Time for your next visit?
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="text-sm leading-relaxed">
                   {nextVisit.barber && nextVisit.service
                     ? `Based on your visits with ${nextVisit.barber.name}, you usually book ${nextVisit.service.name} every ${nextVisit.interval_days} days. Suggested for ${formatIsoDate(nextVisit.suggested_date)}.`
                     : `Suggested for ${formatIsoDate(nextVisit.suggested_date)}.`}
                 </CardDescription>
               </CardHeader>
-              <CardFooter className="flex flex-wrap gap-2">
-                <Button asChild size="sm">
+              <CardFooter className="flex flex-wrap gap-2 border-t border-border/30 pt-4">
+                <Button
+                  asChild
+                  size="sm"
+                  className="min-h-11 touch-manipulation sm:min-h-9"
+                >
                   <Link href={buildBookAgainFromHintHref(nextVisit)}>
                     Book it
                   </Link>
@@ -365,6 +416,7 @@ export default function AppointmentsPage() {
                   type="button"
                   size="sm"
                   variant="ghost"
+                  className="min-h-11 touch-manipulation sm:min-h-9"
                   onClick={() => setNextVisitDismissed(true)}
                 >
                   Not now
@@ -442,9 +494,7 @@ export default function AppointmentsPage() {
               ) : null}
 
               {state.kind === "loading" || state.kind === "idle" ? (
-                <p className="text-sm text-muted-foreground" role="status">
-                  Loading list…
-                </p>
+                <AppointmentListSkeleton rows={3} />
               ) : null}
               {state.kind === "error" ? (
                 <div className="flex flex-col gap-3 rounded-lg border border-destructive/40 p-4">
@@ -461,19 +511,15 @@ export default function AppointmentsPage() {
                 </div>
               ) : null}
               {state.kind === "ok" && state.page.data.length === 0 ? (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Nothing here</CardTitle>
-                    <CardDescription>
-                      No appointments match these filters.
-                    </CardDescription>
-                  </CardHeader>
-                  <CardFooter>
+                <EmptyState
+                  title="Nothing here"
+                  description="No appointments match these filters."
+                  action={
                     <Button asChild>
                       <Link href="/services">Browse services</Link>
                     </Button>
-                  </CardFooter>
-                </Card>
+                  }
+                />
               ) : null}
               {state.kind === "ok" && state.page.data.length > 0 ? (
                 <ul className="flex flex-col gap-4">
@@ -495,8 +541,14 @@ export default function AppointmentsPage() {
                       (profile.user.role.slug === "admin" ||
                         (profile.user.role.slug === "barber" &&
                           row.barber?.id === profile.user.id));
+                    const canNotifyRunningLate = canSendRunningLateNotice(
+                      row,
+                      profile,
+                    );
                     const reminderBusy = reminderBusyId === row.id;
                     const reminderSent = reminderSentForId === row.id;
+                    const lateBusy = lateBusyId === row.id;
+                    const lateSent = lateSentForId === row.id;
                     const bookAgainHref =
                       isCustomer &&
                       row.status === "confirmed" &&
@@ -504,16 +556,26 @@ export default function AppointmentsPage() {
                         ? buildBookAgainFromRowHref(row)
                         : null;
 
-                    return (
-                      <li key={row.id}>
-                        <Card>
-                          <CardHeader className="pb-2">
-                            <div className="flex flex-wrap items-start justify-between gap-2">
-                              <div>
-                                <CardTitle className="text-base">
+                    const swipeEnabled =
+                      isMaxMd
+                      && (canMutate || canSendReminder || !!bookAgainHref);
+
+                    const appointmentCard = (
+                      <Card
+                        className={cn(
+                          "border-border/55 shadow-sm transition-[box-shadow,transform] duration-[var(--motion-duration-base)] ease-[var(--motion-ease-standard)] hover:shadow-md motion-safe:hover:-translate-y-px",
+                          swipeEnabled
+                            ? "border-0 shadow-none ring-0"
+                            : null,
+                        )}
+                      >
+                          <CardHeader className="space-y-1 pb-3">
+                            <div className="flex flex-wrap items-start justify-between gap-3">
+                              <div className="min-w-0 flex-1 space-y-1">
+                                <CardTitle className="text-lg font-semibold tracking-tight">
                                   {row.service?.name ?? "Service"}
                                 </CardTitle>
-                                <CardDescription>
+                                <CardDescription className="text-sm tabular-nums text-muted-foreground">
                                   {formatStart(row.starts_at)}
                                 </CardDescription>
                               </div>
@@ -526,7 +588,7 @@ export default function AppointmentsPage() {
                               </div>
                             </div>
                           </CardHeader>
-                          <CardContent className="space-y-2 text-sm text-muted-foreground">
+                          <CardContent className="space-y-2 border-t border-border/40 pt-3 text-sm text-muted-foreground">
                             {row.barber ? (
                               <p>
                                 <span className="font-medium text-foreground">
@@ -552,8 +614,13 @@ export default function AppointmentsPage() {
                               </p>
                             ) : null}
                           </CardContent>
-                          <CardFooter className="flex flex-wrap gap-2">
-                            <Button asChild size="sm" variant="outline">
+                          <CardFooter className="flex flex-wrap gap-2 border-t border-border/35 pt-4">
+                            <Button
+                              asChild
+                              size="sm"
+                              variant="outline"
+                              className="min-h-11 touch-manipulation sm:min-h-9"
+                            >
                               <Link
                                 href={`/appointments/${row.id}/confirmation`}
                               >
@@ -562,7 +629,12 @@ export default function AppointmentsPage() {
                             </Button>
                             {canMutate ? (
                               <>
-                                <Button asChild size="sm" variant="secondary">
+                                <Button
+                                  asChild
+                                  size="sm"
+                                  variant="secondary"
+                                  className="min-h-11 touch-manipulation sm:min-h-9"
+                                >
                                   <Link
                                     href={`/appointments/${row.id}/reschedule`}
                                   >
@@ -573,6 +645,7 @@ export default function AppointmentsPage() {
                                   type="button"
                                   size="sm"
                                   variant="destructive"
+                                  className="min-h-11 touch-manipulation sm:min-h-9"
                                   disabled={isBusy}
                                   onClick={() => void onCancel(row)}
                                 >
@@ -585,6 +658,7 @@ export default function AppointmentsPage() {
                                 type="button"
                                 size="sm"
                                 variant="outline"
+                                className="min-h-11 touch-manipulation sm:min-h-9"
                                 disabled={reminderBusy}
                                 onClick={() => void onSendReminder(row)}
                                 aria-live="polite"
@@ -596,12 +670,53 @@ export default function AppointmentsPage() {
                                     : "Send reminder"}
                               </Button>
                             ) : null}
+                            {canNotifyRunningLate ? (
+                              <div className="w-full basis-full border-t border-border/30 pt-3">
+                                <p className="mb-2 text-xs font-medium text-muted-foreground">
+                                  Running behind? Notify the customer (email
+                                  + inbox).
+                                </p>
+                                <div className="flex flex-wrap gap-2">
+                                  {[10, 15, 20].map((m) => (
+                                    <Button
+                                      key={m}
+                                      type="button"
+                                      size="sm"
+                                      variant="secondary"
+                                      className="min-h-11 touch-manipulation sm:min-h-9"
+                                      disabled={lateBusy}
+                                      onClick={() => void onRunningLate(row, m)}
+                                    >
+                                      {lateBusy
+                                        ? "Sending…"
+                                        : `+${m} min late`}
+                                    </Button>
+                                  ))}
+                                </div>
+                                {lateSent ? (
+                                  <p
+                                    className="mt-2 text-xs font-medium text-primary"
+                                    role="status"
+                                  >
+                                    Customer notified.
+                                  </p>
+                                ) : null}
+                              </div>
+                            ) : null}
                             {bookAgainHref ? (
-                              <Button asChild size="sm" variant="secondary">
+                              <Button
+                                asChild
+                                size="sm"
+                                variant="secondary"
+                                className="min-h-11 touch-manipulation sm:min-h-9"
+                              >
                                 <Link href={bookAgainHref}>Book again</Link>
                               </Button>
                             ) : null}
-                            {!canMutate && !bookAgainHref ? (
+                            {!canMutate &&
+                            !bookAgainHref &&
+                            !canSendReminder &&
+                            !canNotifyRunningLate ? (
                               <p className="text-xs text-muted-foreground">
                                 {row.status === "cancelled"
                                   ? "Cancelled — contact us if you'd like to rebook."
@@ -612,6 +727,85 @@ export default function AppointmentsPage() {
                             ) : null}
                           </CardFooter>
                         </Card>
+                    );
+
+                    return (
+                      <li key={row.id}>
+                        <SwipeRevealActions
+                          enabled={swipeEnabled}
+                          actionsWidth={96}
+                          className="md:shadow-none md:ring-0"
+                          actions={
+                            <div className="flex h-full min-h-0 flex-col">
+                              <Button
+                                asChild
+                                variant="outline"
+                                size="sm"
+                                className="min-h-12 flex-1 rounded-none border-0 border-b border-border/50 px-1 text-xs font-medium leading-tight"
+                              >
+                                <Link
+                                  href={`/appointments/${row.id}/confirmation`}
+                                >
+                                  View
+                                </Link>
+                              </Button>
+                              {canMutate ? (
+                                <Button
+                                  asChild
+                                  variant="secondary"
+                                  size="sm"
+                                  className="min-h-12 flex-1 rounded-none border-0 border-b border-border/50 px-1 text-xs font-medium leading-tight"
+                                >
+                                  <Link
+                                    href={`/appointments/${row.id}/reschedule`}
+                                  >
+                                    Reschedule
+                                  </Link>
+                                </Button>
+                              ) : null}
+                              {canSendReminder ? (
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  className="min-h-12 flex-1 rounded-none border-0 border-b border-border/50 px-1 text-xs font-medium leading-tight"
+                                  disabled={reminderBusy}
+                                  onClick={() => void onSendReminder(row)}
+                                >
+                                  {reminderBusy
+                                    ? "…"
+                                    : reminderSent
+                                      ? "Sent"
+                                      : "Remind"}
+                                </Button>
+                              ) : null}
+                              {bookAgainHref ? (
+                                <Button
+                                  asChild
+                                  variant="secondary"
+                                  size="sm"
+                                  className="min-h-12 flex-1 rounded-none border-0 border-b border-border/50 px-1 text-xs font-medium leading-tight"
+                                >
+                                  <Link href={bookAgainHref}>Again</Link>
+                                </Button>
+                              ) : null}
+                              {canMutate ? (
+                                <Button
+                                  type="button"
+                                  variant="destructive"
+                                  size="sm"
+                                  className="min-h-12 flex-1 rounded-none border-0 bg-destructive/15 px-1 text-xs font-semibold leading-tight text-destructive hover:bg-destructive/25"
+                                  disabled={isBusy}
+                                  onClick={() => void onCancel(row)}
+                                >
+                                  {isBusy ? "…" : "Cancel"}
+                                </Button>
+                              ) : null}
+                            </div>
+                          }
+                        >
+                          {appointmentCard}
+                        </SwipeRevealActions>
                       </li>
                     );
                   })}

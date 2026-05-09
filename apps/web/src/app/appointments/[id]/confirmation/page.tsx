@@ -2,8 +2,10 @@
 
 import { CustomerNotesTagsSection } from "@/components/customer-notes-tags-section";
 import { DepositPayment } from "@/components/deposit-payment";
+import { HaircutMemoryStaffNav } from "@/components/haircut-memory-staff-nav";
 import { HaircutPhotosSection } from "@/components/haircut-photos-section";
 import { SiteHeader } from "@/components/site-header";
+import { StaffPosCheckoutCard } from "@/components/staff-pos-checkout-card";
 import { getStoredAuthToken } from "@/lib/auth-token";
 import { useSessionProfile } from "@/lib/use-session-profile";
 import {
@@ -179,6 +181,7 @@ export default function ConfirmationPage() {
     useState<HairProfile | null>(null);
   const [hairProfileError, setHairProfileError] = useState<string | null>(null);
   const [rebookHint, setRebookHint] = useState<RebookSuggestion | null>(null);
+  const [rebookHintLoading, setRebookHintLoading] = useState(false);
 
   const load = useCallback(async () => {
     const token = getStoredAuthToken();
@@ -268,12 +271,15 @@ export default function ConfirmationPage() {
   useEffect(() => {
     if (!canSuggestRebook || !appointment) {
       setRebookHint(null);
+      setRebookHintLoading(false);
       return;
     }
     const token = getStoredAuthToken();
     if (!token) return;
 
     let cancelled = false;
+    setRebookHint(null);
+    setRebookHintLoading(true);
     fetchAppointmentRebookHint(token, appointment.id)
       .then((res) => {
         if (cancelled) return;
@@ -282,6 +288,10 @@ export default function ConfirmationPage() {
       .catch(() => {
         if (cancelled) return;
         setRebookHint(null);
+      })
+      .finally(() => {
+        if (cancelled) return;
+        setRebookHintLoading(false);
       });
 
     return () => {
@@ -382,9 +392,32 @@ export default function ConfirmationPage() {
           ) : null}
 
           {isReady && state.kind === "loading" ? (
-            <p className="text-sm text-muted-foreground" role="status">
-              Loading booking…
-            </p>
+            <div
+              className="animate-pulse space-y-4 rounded-2xl border border-border/50 bg-card/45 p-6 ring-1 ring-border/45"
+              aria-busy="true"
+              aria-label="Loading booking"
+            >
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                <div className="space-y-3">
+                  <div className="h-7 w-48 max-w-full rounded-lg bg-muted/55" />
+                  <div className="h-4 w-72 max-w-full rounded-md bg-muted/45" />
+                </div>
+                <div className="flex gap-2">
+                  <div className="h-7 w-24 rounded-full bg-muted/50" />
+                  <div className="h-7 w-28 rounded-full bg-muted/40" />
+                </div>
+              </div>
+              <div className="grid gap-3 pt-2 sm:grid-cols-2">
+                <div className="h-12 rounded-xl bg-muted/40" />
+                <div className="h-12 rounded-xl bg-muted/35" />
+                <div className="h-12 rounded-xl bg-muted/35" />
+                <div className="h-12 rounded-xl bg-muted/30" />
+              </div>
+              <div className="flex flex-wrap gap-2 pt-2">
+                <div className="h-10 w-28 rounded-lg bg-muted/45" />
+                <div className="h-10 w-32 rounded-lg bg-muted/40" />
+              </div>
+            </div>
           ) : null}
 
           {isReady && state.kind === "error" ? (
@@ -402,14 +435,14 @@ export default function ConfirmationPage() {
           ) : null}
 
           {isReady && appointment ? (
-            <Card>
-              <CardHeader>
-                <div className="flex flex-wrap items-start justify-between gap-2">
-                  <div>
-                    <CardTitle className="text-lg">
+            <Card className="border-border/55 shadow-md transition-shadow duration-[var(--motion-duration-base)] ease-[var(--motion-ease-standard)] hover:shadow-md">
+              <CardHeader className="space-y-1 border-b border-border/35 pb-4">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="min-w-0 space-y-1">
+                    <CardTitle className="text-xl font-semibold tracking-tight sm:text-2xl">
                       {appointment.service?.name ?? "Service"}
                     </CardTitle>
-                    <CardDescription>
+                    <CardDescription className="text-base tabular-nums sm:text-lg">
                       {formatLong(appointment.starts_at)}
                     </CardDescription>
                   </div>
@@ -422,7 +455,7 @@ export default function ConfirmationPage() {
                   </div>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-3 text-sm">
+              <CardContent className="space-y-4 pt-5 text-sm">
                 <dl className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   {appointment.barber ? (
                     <div>
@@ -458,47 +491,86 @@ export default function ConfirmationPage() {
                     </div>
                   ) : null}
                 </dl>
-                {appointment.notes ? (
-                  <p className="whitespace-pre-wrap rounded-md bg-muted/40 p-3 text-sm">
-                    <span className="font-medium">Notes: </span>
+                {appointment.notes && !isStaff ? (
+                  <p className="whitespace-pre-wrap rounded-xl border border-border/40 bg-muted/35 p-4 text-sm leading-relaxed">
+                    <span className="font-semibold text-foreground">Notes </span>
+                    <span className="text-muted-foreground">· </span>
                     {appointment.notes}
                   </p>
                 ) : null}
               </CardContent>
-              <CardFooter className="flex flex-wrap gap-2">
+              <CardFooter className="flex flex-wrap gap-2 border-t border-border/35 pt-4">
                 {calendarUrl ? (
-                  <a
-                    href={calendarUrl}
-                    download
-                    className="inline-flex h-9 items-center justify-center rounded-md border border-border bg-background px-3 text-sm font-medium text-foreground transition-colors hover:bg-muted/60"
+                  <Button
+                    asChild
+                    variant="outline"
+                    size="sm"
+                    className="min-h-11 touch-manipulation sm:min-h-9"
                   >
-                    Add to calendar
-                  </a>
+                    <a href={calendarUrl} download>
+                      Add to calendar
+                    </a>
+                  </Button>
                 ) : null}
-                <Button asChild variant="secondary" size="sm">
+                <Button
+                  asChild
+                  variant="secondary"
+                  size="sm"
+                  className="min-h-11 touch-manipulation sm:min-h-9"
+                >
                   <Link href="/appointments">My appointments</Link>
                 </Button>
                 {appointment.status === "confirmed" &&
                 isCustomer &&
                 !isPastAppointment ? (
-                  <Button asChild variant="outline" size="sm">
+                  <Button
+                    asChild
+                    variant="outline"
+                    size="sm"
+                    className="min-h-11 touch-manipulation sm:min-h-9"
+                  >
                     <Link href={`/appointments/${appointment.id}/reschedule`}>
                       Reschedule
                     </Link>
                   </Button>
                 ) : null}
-                {canSuggestRebook && rebookHint ? (
-                  <Button asChild size="sm">
+                {canSuggestRebook && rebookHintLoading ? (
+                  <Button
+                    type="button"
+                    size="sm"
+                    disabled
+                    className="min-h-11 touch-manipulation sm:min-h-9"
+                    aria-busy="true"
+                    aria-live="polite"
+                  >
+                    Finding your usual slot…
+                  </Button>
+                ) : null}
+                {canSuggestRebook && !rebookHintLoading && rebookHint ? (
+                  <Button
+                    asChild
+                    size="sm"
+                    className="min-h-11 touch-manipulation sm:min-h-9"
+                  >
                     <Link href={buildBookAgainHref(rebookHint)}>
                       Book this again
-                      <span className="ml-1 text-xs opacity-80">
+                      <span className="ml-1 text-xs font-normal opacity-80">
                         · suggested {formatIsoDate(rebookHint.suggested_date)}
                       </span>
                     </Link>
                   </Button>
                 ) : null}
-                {canSuggestRebook && !rebookHint && appointment.service && appointment.barber ? (
-                  <Button asChild size="sm">
+                {canSuggestRebook &&
+                !rebookHintLoading &&
+                !rebookHint &&
+                appointment.service &&
+                appointment.barber ? (
+                  <Button
+                    asChild
+                    variant="outline"
+                    size="sm"
+                    className="min-h-11 touch-manipulation sm:min-h-9"
+                  >
                     <Link
                       href={`/book?service=${appointment.service.id}&barber=${appointment.barber.id}`}
                     >
@@ -511,7 +583,52 @@ export default function ConfirmationPage() {
           ) : null}
 
           {isReady && appointment && isStaff ? (
-            <Card>
+            <StaffPosCheckoutCard
+              appointment={appointment}
+              confirmationPath={`/appointments/${appointment.id}/confirmation`}
+            />
+          ) : null}
+
+          {isReady && appointment && isStaff ? (
+            <Card className="border-primary/30 bg-primary/[0.04] shadow-sm dark:border-primary/25 dark:bg-primary/[0.06]">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg">Haircut memory</CardTitle>
+                <CardDescription>
+                  Barber-facing context for this visit: jump to booking notes,
+                  saved hair profile, photos, and your internal notes.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <HaircutMemoryStaffNav
+                  showBookingNotes={Boolean(
+                    appointment.notes && appointment.notes.trim().length > 0,
+                  )}
+                />
+              </CardContent>
+            </Card>
+          ) : null}
+
+          {isReady && appointment && isStaff && appointment.notes ? (
+            <div id="memory-booking-notes" className="scroll-mt-28">
+              <Card className="border-border/55 shadow-sm">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base">Customer booking note</CardTitle>
+                  <CardDescription>
+                    From the booking flow — what they asked for this visit.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <p className="whitespace-pre-wrap rounded-xl border border-border/35 bg-muted/30 p-4 text-sm leading-relaxed text-foreground">
+                    {appointment.notes}
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+          ) : null}
+
+          {isReady && appointment && isStaff ? (
+            <div id="memory-hair-profile" className="scroll-mt-28">
+              <Card>
               <CardHeader>
                 <CardTitle>Customer hair profile</CardTitle>
                 <CardDescription>
@@ -605,21 +722,29 @@ export default function ConfirmationPage() {
                 ) : null}
               </CardContent>
             </Card>
+            </div>
           ) : null}
 
           {isReady && appointment ? (
-            <HaircutPhotosSection
-              appointmentId={appointment.id}
-              viewerRole={isStaff ? "staff" : "customer"}
-            />
+            <div
+              id={isStaff ? "memory-visit-photos" : undefined}
+              className={isStaff ? "scroll-mt-28" : undefined}
+            >
+              <HaircutPhotosSection
+                appointmentId={appointment.id}
+                viewerRole={isStaff ? "staff" : "customer"}
+              />
+            </div>
           ) : null}
 
           {isReady && appointment && isStaff && appointment.customer ? (
-            <CustomerNotesTagsSection
-              customerUserId={appointment.customer.id}
-              currentUserId={profile.user.id}
-              isAdmin={profile.user.role.slug === "admin"}
-            />
+            <div id="memory-staff-notes" className="scroll-mt-28">
+              <CustomerNotesTagsSection
+                customerUserId={appointment.customer.id}
+                currentUserId={profile.user.id}
+                isAdmin={profile.user.role.slug === "admin"}
+              />
+            </div>
           ) : null}
 
           {isReady &&
@@ -631,7 +756,7 @@ export default function ConfirmationPage() {
           pending.enabled &&
           pending.client_secret &&
           pending.publishable_key ? (
-            <Card>
+            <Card className="border-primary/25 shadow-md ring-1 ring-primary/10 dark:border-primary/30 dark:ring-primary/15">
               <CardHeader>
                 <CardTitle>Pay deposit</CardTitle>
                 <CardDescription>

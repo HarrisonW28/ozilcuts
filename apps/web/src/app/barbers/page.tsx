@@ -1,6 +1,11 @@
 "use client";
 
 import { SiteHeader } from "@/components/site-header";
+import { CatalogCardGridSkeleton } from "@/components/load-empty";
+import {
+  ozilcutsPageEnterInitial,
+  ozilcutsPageEnterTransition,
+} from "@/lib/motion";
 import { useSessionProfile } from "@/lib/use-session-profile";
 import { ApiError, fetchBarbers } from "@ozilcuts/api";
 import {
@@ -12,6 +17,7 @@ import {
   CardHeader,
   CardTitle,
   ScreenTitle,
+  EmptyState,
 } from "@ozilcuts/ui";
 import type { BarberProfilePublic } from "@ozilcuts/types";
 import { OZILCUTS_APP_NAME } from "@ozilcuts/types";
@@ -60,9 +66,7 @@ export default function BarbersPage() {
     load(() => false);
   }, [load]);
 
-  const motionInitial = reduceMotion
-    ? { opacity: 1, y: 0 }
-    : { opacity: 0, y: 8 };
+  const motionInitial = ozilcutsPageEnterInitial(reduceMotion);
 
   return (
     <div className="flex min-h-dvh flex-1 flex-col">
@@ -74,7 +78,7 @@ export default function BarbersPage() {
         <motion.div
           initial={motionInitial}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.35, ease: "easeOut" }}
+          transition={ozilcutsPageEnterTransition}
           className="mx-auto w-full max-w-3xl"
         >
           <ScreenTitle
@@ -85,14 +89,10 @@ export default function BarbersPage() {
           />
 
           {state.kind === "loading" ? (
-            <p
-              className="text-sm text-muted-foreground"
-              role="status"
-              aria-live="polite"
-              aria-busy="true"
-            >
-              Loading profiles…
-            </p>
+            <CatalogCardGridSkeleton
+              count={4}
+              statusLabel="Loading barber profiles"
+            />
           ) : null}
 
           {state.kind === "error" ? (
@@ -114,9 +114,15 @@ export default function BarbersPage() {
           ) : null}
 
           {state.kind === "ok" && state.items.length === 0 ? (
-            <p className="text-sm text-muted-foreground" role="status">
-              No barber profiles are published yet. Check back soon.
-            </p>
+            <EmptyState
+              title="No barbers yet"
+              description="Profiles will show here once your shop publishes them. Check back soon."
+              action={
+                <Button asChild variant="outline" size="sm">
+                  <Link href="/">Home</Link>
+                </Button>
+              }
+            />
           ) : null}
 
           {state.kind === "ok" && state.items.length > 0 ? (

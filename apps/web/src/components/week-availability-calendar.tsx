@@ -4,20 +4,24 @@ import type { CSSProperties } from "react";
 
 import { cn } from "@ozilcuts/ui";
 import { BARBER_WEEKDAY_LABELS } from "@ozilcuts/types";
-import type { BookingBlock, WeekDaySchedule } from "@/lib/calendar-week";
+import type { CalendarDensity, WeekDaySchedule } from "@/lib/calendar-week";
 import {
+  CALENDAR_GRID_END_MIN,
+  CALENDAR_GRID_SPAN_MIN,
+  CALENDAR_GRID_START_MIN,
   formatMonthDay,
   formatShortWeekday,
   isSameYmd,
   timeToMinutes,
 } from "@/lib/calendar-week";
+import { appointmentScheduleBlockClassName } from "@/lib/appointment-schedule-block";
 import Link from "next/link";
 
-const GRID_START_MIN = 6 * 60;
-const GRID_END_MIN = 22 * 60;
-const GRID_SPAN = GRID_END_MIN - GRID_START_MIN;
+const GRID_START_MIN = CALENDAR_GRID_START_MIN;
+const GRID_END_MIN = CALENDAR_GRID_END_MIN;
+const GRID_SPAN = CALENDAR_GRID_SPAN_MIN;
 
-export type CalendarDensity = "comfortable" | "compact";
+export type { CalendarDensity } from "@/lib/calendar-week";
 
 function clipWindow(
   startMin: number,
@@ -32,9 +36,16 @@ function clipWindow(
   return { start: s, end: e };
 }
 
-function blockStyle(startMin: number, endMin: number): CSSProperties {
+function blockStyle(
+  startMin: number,
+  endMin: number,
+  options?: { minHeightPct?: number },
+): CSSProperties {
   const topPct = ((startMin - GRID_START_MIN) / GRID_SPAN) * 100;
-  const heightPct = ((endMin - startMin) / GRID_SPAN) * 100;
+  let heightPct = ((endMin - startMin) / GRID_SPAN) * 100;
+  if (options?.minHeightPct !== undefined) {
+    heightPct = Math.max(heightPct, options.minHeightPct);
+  }
 
   return {
     top: `${topPct}%`,
@@ -57,14 +68,6 @@ export type WeekAvailabilityCalendarProps = {
 
 function nowMinutes(now: Date): number {
   return now.getHours() * 60 + now.getMinutes();
-}
-
-function bookingBlockClasses(status: BookingBlock["status"]): string {
-  if (status === "cancelled") {
-    return "border-muted-foreground/30 bg-muted/40 text-muted-foreground line-through";
-  }
-
-  return "border-foreground/40 bg-foreground/85 text-background hover:bg-foreground/90";
 }
 
 function DayColumn({
@@ -101,7 +104,7 @@ function DayColumn({
       aria-pressed={isFocused}
       aria-label={`${label}, ${headerCountLabel}`}
       className={cn(
-        "motion-interactive flex flex-col gap-2 rounded-lg p-2 text-left outline-none transition-colors sm:min-w-0",
+        "motion-interactive flex min-h-[44px] flex-col gap-2 rounded-lg p-3 text-left outline-none transition-colors sm:min-h-0 sm:min-w-0 sm:p-2",
         "focus-visible:ring-2 focus-visible:ring-ring",
         isFocused
           ? "bg-muted/40 ring-1 ring-foreground/30"
@@ -173,11 +176,12 @@ function DayColumn({
               onClick={(e) => e.stopPropagation()}
               aria-label={`${b.label}, ${formatShortWeekday(day.date)} ${formatMonthDay(day.date)}`}
               className={cn(
-                "motion-interactive absolute inset-x-1 z-10 block overflow-hidden rounded-md border px-1 py-0.5 text-[0.6rem] font-medium leading-tight shadow-sm transition-colors sm:inset-x-2 sm:text-[11px]",
-                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                bookingBlockClasses(b.status),
+                "absolute inset-x-1 z-10 flex items-start overflow-hidden sm:inset-x-2",
+                appointmentScheduleBlockClassName(b.status, "week"),
               )}
-              style={blockStyle(clipped.start, clipped.end)}
+              style={blockStyle(clipped.start, clipped.end, {
+                minHeightPct: 18,
+              })}
             >
               <span className="line-clamp-2">{b.label}</span>
             </Link>
@@ -228,8 +232,8 @@ export function WeekAvailabilityCalendar({
         ))}
       </div>
       <p className="mt-4 text-center text-xs text-muted-foreground lg:text-left">
-        Timeline shows 6:00a–10:00p. Lighter blocks are your saved hours;
-        darker blocks are confirmed bookings — click any to open it.
+        Timeline shows 6:00a–10:00p. Lighter areas: saved hours;
+        cards: confirmed appointments — tap to open.
       </p>
     </section>
   );

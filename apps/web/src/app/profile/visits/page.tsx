@@ -73,7 +73,7 @@ export default function MyVisitsPage() {
           <ScreenTitle
             eyebrow={OZILCUTS_APP_NAME}
             title="My visits"
-            description="Your visit history with totals, average cadence, and your usual barber."
+            description="Summary tiles and a month-grouped timeline of your appointments."
           />
 
           {profile.kind === "loading" || profile.kind === "none" ? (

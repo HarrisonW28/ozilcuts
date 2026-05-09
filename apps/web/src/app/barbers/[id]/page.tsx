@@ -7,6 +7,10 @@ import {
   formatWeekRangeLabel,
   startOfWeekSunday,
 } from "@/lib/calendar-week";
+import {
+  ozilcutsPageEnterInitial,
+  ozilcutsPageEnterTransition,
+} from "@/lib/motion";
 import { useSessionProfile } from "@/lib/use-session-profile";
 import { ApiError, fetchBarber, fetchBarberAvailability } from "@ozilcuts/api";
 import { Button, Card, CardContent, CardHeader, CardTitle } from "@ozilcuts/ui";
@@ -108,9 +112,7 @@ export default function BarberDetailPage() {
     [publicWeekStart, state],
   );
 
-  const motionInitial = reduceMotion
-    ? { opacity: 1, y: 0 }
-    : { opacity: 0, y: 8 };
+  const motionInitial = ozilcutsPageEnterInitial(reduceMotion);
 
   return (
     <div className="flex min-h-dvh flex-1 flex-col">
@@ -122,7 +124,7 @@ export default function BarberDetailPage() {
         <motion.div
           initial={motionInitial}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.35, ease: "easeOut" }}
+          transition={ozilcutsPageEnterTransition}
           className="mx-auto w-full max-w-4xl"
         >
           {state.kind === "loading" ? (

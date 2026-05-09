@@ -1,3 +1,4 @@
+import { AppProviders } from "@/components/app-providers";
 import { InstallPrompt } from "@/components/install-prompt";
 import { ServiceWorkerRegister } from "@/components/service-worker-register";
 import { ThemeProvider } from "@/components/theme-provider";
@@ -62,9 +63,11 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          {children}
-          <InstallPrompt />
-          <ServiceWorkerRegister />
+          <AppProviders>
+            {children}
+            <InstallPrompt />
+            <ServiceWorkerRegister />
+          </AppProviders>
         </ThemeProvider>
       </body>
     </html>

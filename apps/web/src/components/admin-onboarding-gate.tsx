@@ -1,0 +1,30 @@
+"use client";
+
+import { useSessionProfile } from "@/lib/use-session-profile";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, type ReactNode } from "react";
+
+/**
+ * Sends shop admins through guided setup until they mark onboarding complete.
+ */
+export function AdminOnboardingGate({ children }: { children: ReactNode }) {
+  const { profile } = useSessionProfile();
+  const pathname = usePathname();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (profile.kind !== "ready") return;
+    if (profile.user.role.slug !== "admin") return;
+    const sa = profile.user.shop_admin;
+    if (!sa || sa.onboarding_completed_at) return;
+    if (
+      pathname === "/admin/onboarding" ||
+      pathname.startsWith("/admin/onboarding/")
+    ) {
+      return;
+    }
+    router.replace("/admin/onboarding");
+  }, [profile, pathname, router]);
+
+  return <>{children}</>;
+}

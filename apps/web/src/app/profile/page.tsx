@@ -51,6 +51,7 @@ export default function ProfilePage() {
   const [preferredBarberId, setPreferredBarberId] = useState("");
   const [preferences, setPreferences] = useState("");
   const [marketingOptIn, setMarketingOptIn] = useState(false);
+  const [retentionPaused, setRetentionPaused] = useState(false);
   const [busy, setBusy] = useState(false);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -67,6 +68,7 @@ export default function ProfilePage() {
     );
     setPreferences(loaded.preferences ?? "");
     setMarketingOptIn(loaded.marketing_opt_in);
+    setRetentionPaused(loaded.retention_paused);
   }, []);
 
   const load = useCallback(async () => {
@@ -125,6 +127,7 @@ export default function ProfilePage() {
           : null,
         preferences: preferences.trim() === "" ? null : preferences.trim(),
         marketing_opt_in: marketingOptIn,
+        retention_paused: retentionPaused,
       });
       hydrateForm(updated);
       setState((prev) =>
@@ -328,6 +331,35 @@ export default function ProfilePage() {
                       <p className="text-xs text-muted-foreground">
                         Occasional service updates and appointment reminders.
                       </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-2 rounded-lg border border-border/60 p-3">
+                    <input
+                      id="profile-retention-pause"
+                      type="checkbox"
+                      className="mt-1 size-4 rounded border-input"
+                      checked={retentionPaused}
+                      onChange={(ev) =>
+                        setRetentionPaused(ev.target.checked)
+                      }
+                      aria-invalid={
+                        saveFieldErrors.retention_paused ? true : undefined
+                      }
+                    />
+                    <div className="flex flex-col gap-1">
+                      <Label htmlFor="profile-retention-pause">
+                        Pause rebooking reminders
+                      </Label>
+                      <p className="text-xs text-muted-foreground">
+                        When checked, we won&rsquo;t send &ldquo;time to
+                        book again&rdquo; emails or inbox nudges.
+                      </p>
+                      {saveFieldErrors.retention_paused ? (
+                        <p className="text-sm text-destructive">
+                          {saveFieldErrors.retention_paused}
+                        </p>
+                      ) : null}
                     </div>
                   </div>
 

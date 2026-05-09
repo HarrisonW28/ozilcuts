@@ -1,0 +1,571 @@
+"use client";
+
+import { SiteHeader } from "@/components/site-header";
+import { getStoredAuthToken } from "@/lib/auth-token";
+import { useSessionProfile } from "@/lib/use-session-profile";
+import {
+  ApiError,
+  applyServiceStarterPack,
+  fetchManageBarbers,
+  fetchManageServices,
+  patchShopOnboarding,
+} from "@ozilcuts/api";
+import {
+  Button,
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+  ScreenTitle,
+  buttonVariants,
+  cn,
+} from "@ozilcuts/ui";
+import { OZILCUTS_APP_NAME } from "@ozilcuts/types";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
+
+const STEP_LABELS = [
+  "Shop details",
+  "Business hours",
+  "Add barbers",
+  "Add services",
+  "Payments",
+  "Go live",
+] as const;
+
+const TOTAL_STEPS = STEP_LABELS.length;
+
+export default function AdminOnboardingPage() {
+  const router = useRouter();
+  const { profile, signOut, replaceProfile } = useSessionProfile();
+  const [step, setStep] = useState(1);
+  const [shopName, setShopName] = useState("");
+  const [cashOnly, setCashOnly] = useState(true);
+  const [depositsEnabled, setDepositsEnabled] = useState(true);
+  const [tapToPayLater, setTapToPayLater] = useState(true);
+  const [barberTotal, setBarberTotal] = useState<number | null>(null);
+  const [serviceTotal, setServiceTotal] = useState<number | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [starterBusy, setStarterBusy] = useState(false);
+  const [stepError, setStepError] = useState<string | null>(null);
+
+  const refreshCounts = useCallback(async () => {
+    const token = getStoredAuthToken();
+    if (!token) return;
+    try {
+      const [barbers, services] = await Promise.all([
+        fetchManageBarbers(token, 1),
+        fetchManageServices(token, 1),
+      ]);
+      setBarberTotal(barbers.meta.total);
+      setServiceTotal(services.meta.total);
+    } catch (e: unknown) {
+      if (e instanceof ApiError) {
+        setStepError(e.message);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    if (profile.kind !== "ready") return;
+    if (profile.user.role.slug !== "admin") return;
+    const sa = profile.user.shop_admin;
+    if (sa?.onboarding_completed_at) {
+      router.replace("/admin/services");
+      return;
+    }
+    if (!sa) return;
+    const s = Math.min(Math.max(sa.onboarding_step, 1), TOTAL_STEPS);
+    setStep(s);
+    setShopName(
+      sa.shop_display_name?.trim() !== ""
+        ? (sa.shop_display_name ?? "")
+        : profile.user.name,
+    );
+    setCashOnly(sa.shop_pays_cash_only);
+    setDepositsEnabled(sa.shop_deposits_enabled);
+    setTapToPayLater(sa.shop_tap_to_pay_later);
+  }, [profile, router]);
+
+  useEffect(() => {
+    if (profile.kind !== "ready" || profile.user.role.slug !== "admin") {
+      return;
+    }
+    if (step >= 3) {
+      void refreshCounts();
+    }
+  }, [profile, step, refreshCounts]);
+
+  async function persist(
+    body: Parameters<typeof patchShopOnboarding>[1],
+    nextStep: number,
+  ) {
+    const token = getStoredAuthToken();
+    if (!token) return;
+    setBusy(true);
+    setStepError(null);
+    try {
+      const user = await patchShopOnboarding(token, {
+        ...body,
+        onboarding_step: nextStep,
+      });
+      replaceProfile(user);
+      setStep(nextStep);
+    } catch (e: unknown) {
+      if (e instanceof ApiError) {
+        setStepError(e.message);
+      } else {
+        setStepError("Something went wrong. Try again.");
+      }
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function goBack() {
+    if (step <= 1 || busy) return;
+    const token = getStoredAuthToken();
+    if (!token) return;
+    setBusy(true);
+    setStepError(null);
+    try {
+      const prev = step - 1;
+      const user = await patchShopOnboarding(token, { onboarding_step: prev });
+      replaceProfile(user);
+      setStep(prev);
+    } catch (e: unknown) {
+      if (e instanceof ApiError) {
+        setStepError(e.message);
+      }
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function onApplyStarterPack() {
+    const token = getStoredAuthToken();
+    if (!token) return;
+    setStarterBusy(true);
+    setStepError(null);
+    try {
+      await applyServiceStarterPack(token);
+      await refreshCounts();
+    } catch (e: unknown) {
+      if (e instanceof ApiError) {
+        setStepError(e.message);
+      } else {
+        setStepError("Could not add starter services.");
+      }
+    } finally {
+      setStarterBusy(false);
+    }
+  }
+
+  async function onFinish() {
+    const token = getStoredAuthToken();
+    if (!token) return;
+    setBusy(true);
+    setStepError(null);
+    try {
+      const user = await patchShopOnboarding(token, { complete: true });
+      replaceProfile(user);
+      router.push("/admin/services");
+      router.refresh();
+    } catch (e: unknown) {
+      if (e instanceof ApiError) {
+        setStepError(e.message);
+      }
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  if (profile.kind === "loading" || profile.kind === "none") {
+    return (
+      <div className="flex min-h-dvh flex-1 flex-col">
+        <SiteHeader profile={profile} onSignOut={signOut} />
+        <main
+          id="main-content"
+          className="flex flex-1 items-center justify-center px-4 py-10"
+        >
+          <p className="text-sm text-muted-foreground">Loading…</p>
+        </main>
+      </div>
+    );
+  }
+
+  if (profile.kind === "error") {
+    return (
+      <div className="flex min-h-dvh flex-1 flex-col">
+        <SiteHeader profile={profile} onSignOut={signOut} />
+        <main
+          id="main-content"
+          className="flex flex-1 flex-col items-center justify-center gap-4 px-4 py-10"
+        >
+          <p className="text-sm text-muted-foreground">
+            We couldn&apos;t load your account.
+          </p>
+          <Link
+            href="/login"
+            className={cn(buttonVariants({ variant: "outline" }))}
+          >
+            Sign in
+          </Link>
+        </main>
+      </div>
+    );
+  }
+
+  if (profile.user.role.slug !== "admin" || !profile.user.shop_admin) {
+    return (
+      <div className="flex min-h-dvh flex-1 flex-col">
+        <SiteHeader profile={profile} onSignOut={signOut} />
+        <main
+          id="main-content"
+          className="flex flex-1 flex-col items-center justify-center gap-4 px-4 py-10"
+        >
+          <p className="max-w-sm text-center text-sm text-muted-foreground">
+            Shop setup is only available to shop admin accounts.
+          </p>
+          <Link href="/" className={cn(buttonVariants({ variant: "outline" }))}>
+            Home
+          </Link>
+        </main>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex min-h-dvh flex-1 flex-col">
+      <SiteHeader profile={profile} onSignOut={signOut} />
+      <main
+        id="main-content"
+        className="flex flex-1 flex-col px-4 pb-10 pt-6 sm:px-6 sm:pt-10"
+      >
+        <div className="mx-auto w-full max-w-lg">
+          <ScreenTitle
+            eyebrow={OZILCUTS_APP_NAME}
+            title="Set up your shop"
+            description="A short, guided checklist—one step at a time. You can change everything later."
+          />
+
+          <nav
+            aria-label="Onboarding progress"
+            className="mt-8 flex flex-col gap-3"
+          >
+            <p className="text-xs font-medium text-muted-foreground">
+              Step {step} of {TOTAL_STEPS}: {STEP_LABELS[step - 1]}
+            </p>
+            <ol className="flex gap-1.5" aria-hidden>
+              {STEP_LABELS.map((_, i) => {
+                const idx = i + 1;
+                const done = idx < step;
+                const current = idx === step;
+                return (
+                  <li key={idx} className="h-1 min-w-0 flex-1">
+                    <div
+                      className={cn(
+                        "h-full rounded-full transition-colors",
+                        done && "bg-primary",
+                        current && "bg-primary/65",
+                        !done && !current && "bg-muted",
+                      )}
+                    />
+                  </li>
+                );
+              })}
+            </ol>
+          </nav>
+
+          {stepError ? (
+            <p
+              className="mt-6 text-sm text-destructive"
+              role="alert"
+              aria-live="polite"
+            >
+              {stepError}
+            </p>
+          ) : null}
+
+          <Card className="mt-6 border-primary/20 shadow-sm">
+            <CardHeader className="space-y-1 pb-2">
+              <CardTitle className="text-lg">{STEP_LABELS[step - 1]}</CardTitle>
+              <CardDescription className="text-pretty">
+                {step === 1
+                  ? "This is how clients will refer to your business in Ozilcuts."
+                  : null}
+                {step === 2
+                  ? "Keep schedules simple: each barber picks the times they take bookings."
+                  : null}
+                {step === 3
+                  ? "Add at least one barber so you can take appointments."
+                  : null}
+                {step === 4
+                  ? "Start from our suggested menu or add your own in the catalog later."
+                  : null}
+                {step === 5
+                  ? "We&apos;ll use these defaults for how you want to get paid."
+                  : null}
+                {step === 6
+                  ? "You&apos;re ready to welcome clients. Head to the catalog when you need to tweak offerings."
+                  : null}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6 pt-2">
+              {step === 1 ? (
+                <div className="space-y-2">
+                  <label
+                    htmlFor="shop-display-name"
+                    className="text-sm font-medium leading-none"
+                  >
+                    Shop name
+                  </label>
+                  <input
+                    id="shop-display-name"
+                    name="shop_display_name"
+                    autoComplete="organization"
+                    className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-base shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:text-sm"
+                    value={shopName}
+                    onChange={(e) => setShopName(e.target.value)}
+                    placeholder="e.g. Northside Barbers"
+                    aria-describedby="shop-name-hint"
+                  />
+                  <p
+                    id="shop-name-hint"
+                    className="text-xs text-muted-foreground"
+                  >
+                    Use the name on your storefront or Instagram—clients
+                    recognize it.
+                  </p>
+                </div>
+              ) : null}
+
+              {step === 2 ? (
+                <div className="space-y-4 text-sm text-muted-foreground">
+                  <p className="text-pretty leading-relaxed">
+                    After you add barbers in the next step, open{" "}
+                    <span className="font-medium text-foreground">Team</span> to
+                    set each person&apos;s bookable hours. There&apos;s no giant
+                    grid here—just calm, one-at-a-time setup.
+                  </p>
+                  <p className="leading-relaxed">
+                    Tip: most shops start with one weekly template per chair,
+                    then refine later.
+                  </p>
+                </div>
+              ) : null}
+
+              {step === 3 ? (
+                <div className="space-y-4">
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    Create barber logins from your team page. When at least one
+                    barber exists, you can continue.
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    <Link
+                      href="/admin/barbers"
+                      className={cn(
+                        buttonVariants({ variant: "outline", size: "sm" }),
+                      )}
+                    >
+                      Open team
+                    </Link>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="min-h-11 sm:min-h-9"
+                      onClick={() => void refreshCounts()}
+                    >
+                      Refresh status
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground" aria-live="polite">
+                    {barberTotal === null
+                      ? "Checking your roster…"
+                      : barberTotal === 0
+                        ? "No barbers yet—add one on the team page."
+                        : `${barberTotal} barber${barberTotal === 1 ? "" : "s"} on file.`}
+                  </p>
+                </div>
+              ) : null}
+
+              {step === 4 ? (
+                <div className="space-y-4">
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    Add Haircut, Skin Fade, Hair + Beard, and Beard Trim with
+                    sensible defaults. Existing slugs are skipped—you won&apos;t
+                    get duplicates.
+                  </p>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    className="min-h-11 w-full sm:w-auto"
+                    disabled={starterBusy}
+                    onClick={() => void onApplyStarterPack()}
+                  >
+                    {starterBusy ? "Adding…" : "Add suggested services"}
+                  </Button>
+                  <p className="text-xs text-muted-foreground" aria-live="polite">
+                    {serviceTotal === null
+                      ? "Checking your catalog…"
+                      : serviceTotal === 0
+                        ? "No services yet—use the button above or add manually in Catalog."
+                        : `${serviceTotal} service${serviceTotal === 1 ? "" : "s"} available.`}
+                  </p>
+                </div>
+              ) : null}
+
+              {step === 5 ? (
+                <ul className="space-y-4">
+                  <li className="flex gap-3 rounded-lg border border-border/80 bg-muted/25 p-3">
+                    <input
+                      id="pay-cash"
+                      type="checkbox"
+                      className="mt-1 size-4 shrink-0 rounded border-input"
+                      checked={cashOnly}
+                      onChange={(e) => setCashOnly(e.target.checked)}
+                    />
+                    <div>
+                      <label htmlFor="pay-cash" className="font-medium text-sm">
+                        Cash only at checkout
+                      </label>
+                      <p className="mt-0.5 text-xs text-muted-foreground leading-relaxed">
+                        Simple default for shops that settle up in the chair.
+                      </p>
+                    </div>
+                  </li>
+                  <li className="flex gap-3 rounded-lg border border-border/80 bg-muted/25 p-3">
+                    <input
+                      id="pay-deposit"
+                      type="checkbox"
+                      className="mt-1 size-4 shrink-0 rounded border-input"
+                      checked={depositsEnabled}
+                      onChange={(e) => setDepositsEnabled(e.target.checked)}
+                    />
+                    <div>
+                      <label
+                        htmlFor="pay-deposit"
+                        className="font-medium text-sm"
+                      >
+                        Deposits enabled
+                      </label>
+                      <p className="mt-0.5 text-xs text-muted-foreground leading-relaxed">
+                        Hold appointments with a card or deposit policy on
+                        services.
+                      </p>
+                    </div>
+                  </li>
+                  <li className="flex gap-3 rounded-lg border border-border/80 bg-muted/25 p-3">
+                    <input
+                      id="pay-tap"
+                      type="checkbox"
+                      className="mt-1 size-4 shrink-0 rounded border-input"
+                      checked={tapToPayLater}
+                      onChange={(e) => setTapToPayLater(e.target.checked)}
+                    />
+                    <div>
+                      <label htmlFor="pay-tap" className="font-medium text-sm">
+                        Tap to Pay later
+                      </label>
+                      <p className="mt-0.5 text-xs text-muted-foreground leading-relaxed">
+                        Plan for in-person tap when you&apos;re ready—we&apos;ll
+                        keep the path open.
+                      </p>
+                    </div>
+                  </li>
+                </ul>
+              ) : null}
+
+              {step === 6 ? (
+                <div className="space-y-3 text-sm text-muted-foreground leading-relaxed">
+                  <p className="text-pretty">
+                    Nice work. Your shop name, team, services, and payment
+                    defaults are in place. Open the catalog or reports any time
+                    from the header.
+                  </p>
+                </div>
+              ) : null}
+            </CardContent>
+            <CardFooter className="flex flex-col gap-3 border-t border-border/60 bg-muted/15 px-6 py-4 sm:flex-row sm:justify-between">
+              <div className="flex w-full flex-wrap gap-2 sm:flex-1">
+                {step > 1 && step < 6 ? (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="min-h-11"
+                    disabled={busy}
+                    onClick={() => void goBack()}
+                  >
+                    Back
+                  </Button>
+                ) : null}
+              </div>
+              <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:justify-end">
+                {step < 6 ? (
+                  <Button
+                    type="button"
+                    className="min-h-11 w-full sm:w-auto"
+                    disabled={
+                      busy ||
+                      (step === 1 && shopName.trim().length < 2) ||
+                      (step === 3 && barberTotal !== null && barberTotal < 1) ||
+                      (step === 4 && serviceTotal !== null && serviceTotal < 1)
+                    }
+                    onClick={() => {
+                      if (step === 1) {
+                        void persist(
+                          { shop_display_name: shopName.trim() },
+                          2,
+                        );
+                      } else if (step === 2) {
+                        void persist({}, 3);
+                      } else if (step === 3) {
+                        if (barberTotal === null || barberTotal < 1) {
+                          setStepError("Add at least one barber to continue.");
+                          return;
+                        }
+                        void persist({}, 4);
+                      } else if (step === 4) {
+                        if (serviceTotal === null || serviceTotal < 1) {
+                          setStepError(
+                            "Add at least one service to continue.",
+                          );
+                          return;
+                        }
+                        void persist({}, 5);
+                      } else if (step === 5) {
+                        void persist(
+                          {
+                            shop_pays_cash_only: cashOnly,
+                            shop_deposits_enabled: depositsEnabled,
+                            shop_tap_to_pay_later: tapToPayLater,
+                          },
+                          6,
+                        );
+                      }
+                    }}
+                  >
+                    {busy ? "Saving…" : "Continue"}
+                  </Button>
+                ) : (
+                  <Button
+                    type="button"
+                    className="min-h-11 w-full sm:w-auto"
+                    disabled={busy}
+                    onClick={() => void onFinish()}
+                  >
+                    {busy ? "Finishing…" : "Finish & go to catalog"}
+                  </Button>
+                )}
+              </div>
+            </CardFooter>
+          </Card>
+        </div>
+      </main>
+    </div>
+  );
+}

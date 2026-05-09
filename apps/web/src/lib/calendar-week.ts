@@ -4,6 +4,14 @@ import type {
   BarberAvailabilityPayload,
 } from "@ozilcuts/types";
 
+/** Visible local-time window for barber timeline UIs (6:00a–10:00p). */
+export const CALENDAR_GRID_START_MIN = 6 * 60;
+
+export const CALENDAR_GRID_END_MIN = 22 * 60;
+
+export const CALENDAR_GRID_SPAN_MIN =
+  CALENDAR_GRID_END_MIN - CALENDAR_GRID_START_MIN;
+
 export type AvailabilityWindow = {
   starts_at: string;
   ends_at: string;
@@ -25,6 +33,9 @@ export type WeekDaySchedule = {
   windows: AvailabilityWindow[];
   bookings: BookingBlock[];
 };
+
+/** Visual density for calendar timelines (stored in localStorage on barber calendar). */
+export type CalendarDensity = "comfortable" | "compact";
 
 /** Week starts Sunday (weekday 0), matching API / PHP `date('w')`. */
 export function startOfWeekSunday(date: Date): Date {

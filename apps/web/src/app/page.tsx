@@ -2,6 +2,10 @@
 
 import { GoogleSignInButton } from "@/components/google-sign-in-button";
 import { SiteHeader } from "@/components/site-header";
+import {
+  ozilcutsPageEnterInitial,
+  ozilcutsPageEnterTransition,
+} from "@/lib/motion";
 import { useSessionProfile } from "@/lib/use-session-profile";
 import { fetchApiHealth } from "@ozilcuts/api";
 import {
@@ -65,9 +69,7 @@ export default function Home() {
     fetchHealthOnce(() => false);
   }, [fetchHealthOnce]);
 
-  const motionInitial = reduceMotion
-    ? { opacity: 1, y: 0 }
-    : { opacity: 0, y: 8 };
+  const motionInitial = ozilcutsPageEnterInitial(reduceMotion);
 
   const heroTitle =
     profile.kind === "ready"
@@ -103,7 +105,7 @@ export default function Home() {
         <motion.div
           initial={motionInitial}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.35, ease: "easeOut" }}
+          transition={ozilcutsPageEnterTransition}
           className="w-full max-w-lg sm:max-w-xl"
         >
           <Card>

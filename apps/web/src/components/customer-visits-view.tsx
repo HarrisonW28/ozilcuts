@@ -1,6 +1,7 @@
 "use client";
 
 import type {
+  AppointmentRecord,
   CustomerAnalyticsResponse,
 } from "@ozilcuts/types";
 import {
@@ -9,8 +10,10 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  cn,
 } from "@ozilcuts/ui";
 import Link from "next/link";
+import { useMemo } from "react";
 
 function formatUsd(cents: number): string {
   return new Intl.NumberFormat("en-US", {
@@ -31,17 +34,53 @@ function formatLong(iso: string | null): string {
   });
 }
 
-function formatDateTime(iso: string | null): string {
+function formatTimelineDay(iso: string | null): string {
   if (!iso) return "—";
   const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return iso;
-  return d.toLocaleString(undefined, {
+  if (Number.isNaN(d.getTime())) return "—";
+  return d.toLocaleDateString(undefined, {
     weekday: "short",
     month: "short",
     day: "numeric",
+  });
+}
+
+function formatTime(iso: string | null): string {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "—";
+  return d.toLocaleTimeString(undefined, {
     hour: "numeric",
     minute: "2-digit",
   });
+}
+
+function monthHeading(iso: string | null): string {
+  if (!iso) return "Unknown date";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "Unknown date";
+  return d.toLocaleDateString(undefined, { month: "long", year: "numeric" });
+}
+
+function groupHistoryByMonth(rows: AppointmentRecord[]) {
+  const groups: { heading: string; items: AppointmentRecord[] }[] = [];
+  for (const row of rows) {
+    const heading = monthHeading(row.starts_at);
+    const last = groups[groups.length - 1];
+    if (last && last.heading === heading) {
+      last.items.push(row);
+    } else {
+      groups.push({ heading, items: [row] });
+    }
+  }
+  return groups;
+}
+
+function statusStyles(status: AppointmentRecord["status"]): string {
+  if (status === "cancelled") {
+    return "border-destructive/25 bg-destructive/10 text-destructive";
+  }
+  return "border-primary/25 bg-primary/10 text-primary";
 }
 
 type Props = {
@@ -52,6 +91,11 @@ type Props = {
 
 export function CustomerVisitsView({ data, linkAppointments = false }: Props) {
   const s = data.summary;
+
+  const groupedHistory = useMemo(
+    () => groupHistoryByMonth(data.history),
+    [data.history],
+  );
 
   const tiles = [
     {
@@ -94,10 +138,13 @@ export function CustomerVisitsView({ data, linkAppointments = false }: Props) {
         className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5"
       >
         {tiles.map((tile) => (
-          <Card key={tile.label}>
+          <Card
+            key={tile.label}
+            className="border-border/50 shadow-sm transition-shadow hover:shadow-md"
+          >
             <CardHeader className="pb-2">
               <CardDescription>{tile.label}</CardDescription>
-              <CardTitle className="text-xl">{tile.value}</CardTitle>
+              <CardTitle className="text-xl tabular-nums">{tile.value}</CardTitle>
             </CardHeader>
             <CardContent className="text-xs text-muted-foreground">
               {tile.hint}
@@ -106,64 +153,126 @@ export function CustomerVisitsView({ data, linkAppointments = false }: Props) {
         ))}
       </section>
 
-      <section aria-label="Visit history">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base">Recent appointments</CardTitle>
+      <section aria-label="Visit timeline">
+        <Card className="border-border/50 shadow-sm">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base sm:text-lg">Visit timeline</CardTitle>
             <CardDescription>
-              Newest first, capped at 50 most recent.
+              Newest first (up to 50 visits). Grouped by month for quick
+              scanning on mobile.
             </CardDescription>
           </CardHeader>
-          <CardContent className="overflow-x-auto">
+          <CardContent>
             {data.history.length === 0 ? (
               <p className="text-sm text-muted-foreground">
                 No appointments yet.
               </p>
             ) : (
-              <table className="w-full min-w-[44rem] text-sm">
-                <thead>
-                  <tr className="border-b border-border/60 text-left text-muted-foreground">
-                    <th className="py-2 pr-3 font-medium">When</th>
-                    <th className="py-2 pr-3 font-medium">Service</th>
-                    <th className="py-2 pr-3 font-medium">Barber</th>
-                    <th className="py-2 pr-3 font-medium">Status</th>
-                    <th className="py-2 pr-3 font-medium">Paid</th>
-                    {linkAppointments ? <th className="py-2 pr-3" /> : null}
-                  </tr>
-                </thead>
-                <tbody>
-                  {data.history.map((row) => (
-                    <tr
-                      key={row.id}
-                      className="border-b border-border/30 last:border-0"
-                    >
-                      <td className="py-2 pr-3 font-medium">
-                        {formatDateTime(row.starts_at)}
-                      </td>
-                      <td className="py-2 pr-3">{row.service?.name ?? "—"}</td>
-                      <td className="py-2 pr-3">{row.barber?.name ?? "—"}</td>
-                      <td className="py-2 pr-3 capitalize text-muted-foreground">
-                        {row.status}
-                      </td>
-                      <td className="py-2 pr-3">
-                        {row.amount_paid_cents > 0
-                          ? formatUsd(row.amount_paid_cents)
-                          : "—"}
-                      </td>
-                      {linkAppointments ? (
-                        <td className="py-2 pr-3">
-                          <Link
-                            href={`/appointments/${row.id}/confirmation`}
-                            className="text-sm underline-offset-4 hover:underline"
+              <div className="space-y-8">
+                {groupedHistory.map((group, groupIdx) => (
+                  <div key={`${group.heading}-${groupIdx}`}>
+                    <h3 className="mb-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      {group.heading}
+                    </h3>
+                    <ul className="relative flex flex-col gap-0" role="list">
+                      {group.items.map((row, idx) => {
+                        const isLastInHistory =
+                          groupIdx === groupedHistory.length - 1
+                          && idx === group.items.length - 1;
+
+                        return (
+                          <li
+                            key={row.id}
+                            className="relative flex gap-3 sm:gap-4"
+                            role="listitem"
                           >
-                            View
-                          </Link>
-                        </td>
-                      ) : null}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                            <div
+                              className="flex w-9 shrink-0 flex-col items-center sm:w-10"
+                              aria-hidden
+                            >
+                              <span
+                                className={cn(
+                                  "z-10 mt-1.5 size-3 shrink-0 rounded-full border-2 border-background shadow-sm sm:mt-2 sm:size-3.5",
+                                  row.status === "confirmed"
+                                    ? "bg-primary ring-2 ring-primary/30"
+                                    : "bg-muted-foreground/50 ring-2 ring-border",
+                                )}
+                              />
+                              {!isLastInHistory ? (
+                                <span className="mt-0.5 mb-0 min-h-6 w-px flex-1 bg-gradient-to-b from-border to-border/20 sm:min-h-8" />
+                              ) : null}
+                            </div>
+
+                            <div
+                              className={cn(
+                                "min-w-0 flex-1 pb-6 sm:pb-8",
+                                isLastInHistory ? "pb-0 sm:pb-0" : null,
+                              )}
+                            >
+                              <article
+                                className={cn(
+                                  "motion-interactive rounded-2xl border border-border/55 bg-card/60 p-4 shadow-sm backdrop-blur-[1px] transition-[box-shadow,transform] duration-[var(--motion-duration-base)] ease-[var(--motion-ease-standard)]",
+                                  "hover:border-border hover:shadow-md motion-safe:hover:-translate-y-px",
+                                )}
+                              >
+                                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                                  <div className="min-w-0 space-y-1">
+                                    <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground tabular-nums">
+                                      {formatTimelineDay(row.starts_at)}
+                                      <span className="mx-1.5 text-border">
+                                        ·
+                                      </span>
+                                      {formatTime(row.starts_at)}
+                                    </p>
+                                    <h4 className="text-base font-semibold leading-snug text-foreground sm:text-lg">
+                                      {row.service?.name ?? "Appointment"}
+                                    </h4>
+                                    <p className="text-sm text-muted-foreground">
+                                      {row.barber?.name
+                                        ? `with ${row.barber.name}`
+                                        : "Barber TBD"}
+                                    </p>
+                                  </div>
+                                  <div className="flex flex-wrap items-center gap-2 sm:flex-col sm:items-end">
+                                    <span
+                                      className={cn(
+                                        "inline-flex shrink-0 rounded-full border px-2.5 py-0.5 text-xs font-medium capitalize",
+                                        statusStyles(row.status),
+                                      )}
+                                    >
+                                      {row.status}
+                                    </span>
+                                    {row.amount_paid_cents > 0 ? (
+                                      <span className="text-sm font-medium tabular-nums text-foreground">
+                                        {formatUsd(row.amount_paid_cents)}
+                                      </span>
+                                    ) : (
+                                      <span className="text-sm text-muted-foreground">
+                                        —
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+
+                                {linkAppointments ? (
+                                  <div className="mt-4 border-t border-border/35 pt-3">
+                                    <Link
+                                      href={`/appointments/${row.id}/confirmation`}
+                                      className="inline-flex min-h-11 items-center justify-center rounded-lg border border-border/60 bg-background px-4 text-sm font-medium text-foreground transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:min-h-10"
+                                    >
+                                      View details
+                                    </Link>
+                                  </div>
+                                ) : null}
+                              </article>
+                            </div>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
+                ))}
+              </div>
             )}
           </CardContent>
         </Card>

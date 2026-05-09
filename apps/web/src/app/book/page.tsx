@@ -1,6 +1,10 @@
 "use client";
 
 import { SiteHeader } from "@/components/site-header";
+import {
+  BookCatalogFormSkeleton,
+  TimeSlotChipsSkeleton,
+} from "@/components/load-empty";
 import { getStoredAuthToken } from "@/lib/auth-token";
 import { useSessionProfile } from "@/lib/use-session-profile";
 import {
@@ -9,10 +13,14 @@ import {
   createAppointment,
   fetchBarberSlots,
   fetchBarbers,
+  fetchCustomerProfile,
+  fetchNextVisitSuggestion,
   fetchServices,
 } from "@ozilcuts/api";
 import type {
   BarberProfilePublic,
+  CustomerProfile,
+  RebookSuggestion,
   ServiceSummary,
 } from "@ozilcuts/types";
 import { OZILCUTS_APP_NAME } from "@ozilcuts/types";
@@ -63,6 +71,15 @@ type SlotsState =
   | { kind: "ok"; slots: string[] }
   | { kind: "error"; message: string };
 
+type QuickRepeatState =
+  | { kind: "idle" }
+  | { kind: "loading" }
+  | {
+      kind: "ok";
+      nextVisit: RebookSuggestion | null;
+      customerProfile: CustomerProfile | null;
+    };
+
 function parsePositiveIntParam(value: string | null): number | null {
   if (value === null) return null;
   const n = Number.parseInt(value, 10);
@@ -73,6 +90,16 @@ function parseIsoDateParam(value: string | null, fallback: string): string {
   if (value === null) return fallback;
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return fallback;
   return value < fallback ? fallback : value;
+}
+
+function formatIsoDate(date: string): string {
+  const [y, m, d] = date.split("-").map((s) => Number.parseInt(s, 10));
+  if (!y || !m || !d) return date;
+  return new Date(y, m - 1, d).toLocaleDateString(undefined, {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+  });
 }
 
 function BookingFlow() {
@@ -100,6 +127,9 @@ function BookingFlow() {
   const [notes, setNotes] = useState("");
   const [bookBusy, setBookBusy] = useState(false);
   const [bookError, setBookError] = useState<string | null>(null);
+  const [quickRepeat, setQuickRepeat] = useState<QuickRepeatState>({
+    kind: "idle",
+  });
 
   useEffect(() => {
     let cancelled = false;
@@ -137,6 +167,37 @@ function BookingFlow() {
     };
   }, []);
 
+  useEffect(() => {
+    if (profile.kind !== "ready" || profile.user.role.slug !== "customer") {
+      setQuickRepeat({ kind: "idle" });
+      return;
+    }
+
+    const token = getStoredAuthToken();
+    if (!token) return;
+
+    let cancelled = false;
+    setQuickRepeat({ kind: "loading" });
+    Promise.allSettled([
+      fetchNextVisitSuggestion(token),
+      fetchCustomerProfile(token),
+    ]).then(([nextVisitResult, profileResult]) => {
+      if (cancelled) return;
+
+      setQuickRepeat({
+        kind: "ok",
+        nextVisit:
+          nextVisitResult.status === "fulfilled" ? nextVisitResult.value : null,
+        customerProfile:
+          profileResult.status === "fulfilled" ? profileResult.value : null,
+      });
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [profile]);
+
   const loadSlots = useCallback(async () => {
     if (serviceId === null || barberId === null || !date) {
       setSlots({ kind: "idle" });
@@ -171,6 +232,27 @@ function BookingFlow() {
     if (catalog.kind !== "ok" || barberId === null) return null;
     return catalog.barbers.find((b) => b.barber.id === barberId) ?? null;
   }, [catalog, barberId]);
+
+  const preferredBarber = useMemo(() => {
+    if (catalog.kind !== "ok" || quickRepeat.kind !== "ok") return null;
+    const preferredId = quickRepeat.customerProfile?.preferred_barber_user_id;
+    if (preferredId === null || preferredId === undefined) return null;
+    return catalog.barbers.find((b) => b.barber.id === preferredId) ?? null;
+  }, [catalog, quickRepeat]);
+
+  function applyNextVisitSuggestion(suggestion: RebookSuggestion) {
+    setServiceId(suggestion.service_id);
+    setBarberId(suggestion.barber_user_id);
+    setDate(parseIsoDateParam(suggestion.suggested_date, today));
+    setSelectedSlot(null);
+    setBookError(null);
+  }
+
+  function applyPreferredBarberShortcut(barberUserId: number) {
+    setBarberId(barberUserId);
+    setSelectedSlot(null);
+    setBookError(null);
+  }
 
   async function onBook(e: React.FormEvent) {
     e.preventDefault();
@@ -250,6 +332,102 @@ function BookingFlow() {
             </Card>
           ) : null}
 
+          {isReady &&
+          profile.user.role.slug === "customer" &&
+          quickRepeat.kind === "loading" ? (
+            <Card
+              className="border-primary/25 bg-primary/[0.03] shadow-sm dark:border-primary/20 dark:bg-primary/[0.05]"
+              aria-busy="true"
+              aria-label="Loading quick rebook suggestions"
+            >
+              <CardHeader className="pb-2">
+                <div className="h-5 w-36 max-w-full animate-pulse rounded-md bg-muted/60" />
+                <div className="mt-2 h-4 w-full max-w-md animate-pulse rounded-md bg-muted/45" />
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="h-24 rounded-xl border border-border/40 bg-muted/25 p-3">
+                  <div className="h-4 w-40 animate-pulse rounded bg-muted/55" />
+                  <div className="mt-3 h-3 w-full animate-pulse rounded bg-muted/40" />
+                  <div className="mt-2 h-3 w-4/5 max-w-sm animate-pulse rounded bg-muted/35" />
+                  <div className="mt-4 h-10 w-36 animate-pulse rounded-md bg-muted/50" />
+                </div>
+                <p className="text-xs text-muted-foreground" role="status">
+                  Looking for your usual cut…
+                </p>
+              </CardContent>
+            </Card>
+          ) : null}
+
+          {isReady &&
+          profile.user.role.slug === "customer" &&
+          quickRepeat.kind === "ok" &&
+          (quickRepeat.nextVisit || preferredBarber) ? (
+            <Card className="border-primary/35 bg-primary/5 shadow-sm dark:border-primary/30">
+              <CardHeader className="space-y-1 pb-3">
+                <CardTitle className="text-lg tracking-tight sm:text-xl">
+                  Quick rebook
+                </CardTitle>
+                <CardDescription>
+                  Jump back into your usual flow, then choose the exact time
+                  that works for you.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3 text-sm">
+                {quickRepeat.nextVisit ? (
+                  <div className="rounded-xl border border-border/55 bg-background/80 p-4 shadow-sm">
+                    <p className="font-semibold text-foreground">
+                      Repeat your last cut
+                    </p>
+                    <p className="mt-1.5 leading-relaxed text-muted-foreground">
+                      {quickRepeat.nextVisit.service?.name ?? "Your service"}
+                      {quickRepeat.nextVisit.barber
+                        ? ` with ${quickRepeat.nextVisit.barber.name}`
+                        : ""}
+                      {" · suggested "}
+                      {formatIsoDate(quickRepeat.nextVisit.suggested_date)}
+                    </p>
+                    <Button
+                      type="button"
+                      size="sm"
+                      className="mt-4 min-h-11 touch-manipulation sm:min-h-10"
+                      onClick={() =>
+                        applyNextVisitSuggestion(quickRepeat.nextVisit!)
+                      }
+                    >
+                      Use this cut
+                    </Button>
+                  </div>
+                ) : null}
+
+                {preferredBarber ? (
+                  <div className="rounded-xl border border-border/55 bg-background/80 p-4 shadow-sm">
+                    <p className="font-semibold text-foreground">
+                      Favourite barber
+                    </p>
+                    <p className="mt-1.5 leading-relaxed text-muted-foreground">
+                      Start with {preferredBarber.barber.name}
+                      {preferredBarber.title
+                        ? ` · ${preferredBarber.title}`
+                        : ""}
+                      .
+                    </p>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="mt-4 min-h-11 touch-manipulation sm:min-h-10"
+                      onClick={() =>
+                        applyPreferredBarberShortcut(preferredBarber.barber.id)
+                      }
+                    >
+                      Book with {preferredBarber.barber.name.split(" ")[0]}
+                    </Button>
+                  </div>
+                ) : null}
+              </CardContent>
+            </Card>
+          ) : null}
+
           {profile.kind === "none" ? (
             <Card>
               <CardHeader>
@@ -280,9 +458,7 @@ function BookingFlow() {
               </CardHeader>
               <CardContent>
                 {catalog.kind === "loading" ? (
-                  <p className="text-sm text-muted-foreground" role="status">
-                    Loading…
-                  </p>
+                  <BookCatalogFormSkeleton />
                 ) : null}
                 {catalog.kind === "error" ? (
                   <p className="text-sm text-destructive" role="alert">
@@ -363,12 +539,7 @@ function BookingFlow() {
                         </p>
                       ) : null}
                       {slots.kind === "loading" ? (
-                        <p
-                          className="text-sm text-muted-foreground"
-                          role="status"
-                        >
-                          Loading times…
-                        </p>
+                        <TimeSlotChipsSkeleton />
                       ) : null}
                       {slots.kind === "error" ? (
                         <p

@@ -50,5 +50,28 @@ export function useSessionProfile() {
     router.refresh();
   }, [router]);
 
-  return { profile, signOut };
+  const replaceProfile = useCallback((user: AuthUser) => {
+    setProfile({ kind: "ready", user });
+  }, []);
+
+  const refreshProfile = useCallback(async () => {
+    const token = getStoredAuthToken();
+    if (!token) {
+      setProfile({ kind: "none" });
+      return;
+    }
+    setProfile({ kind: "loading" });
+    try {
+      const user = await fetchCurrentUser(token);
+      setProfile({ kind: "ready", user });
+    } catch {
+      if (!getStoredAuthToken()) {
+        setProfile({ kind: "none" });
+      } else {
+        setProfile({ kind: "error" });
+      }
+    }
+  }, []);
+
+  return { profile, signOut, replaceProfile, refreshProfile };
 }
