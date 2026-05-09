@@ -572,6 +572,7 @@ export const NOTIFICATION_EVENTS = [
   "appointment.cancelled",
   "appointment.rescheduled",
   "appointment.reminder",
+  "appointment.rebook_suggested",
   "staff.booking.created",
   "staff.booking.cancelled",
   "staff.booking.rescheduled",
@@ -592,6 +593,11 @@ export type NotificationData = {
   previous_starts_at?: string | null;
   actor_name?: string | null;
   audience?: "admin" | "barber" | string | null;
+  /** Smart rebook payload — present on appointment.rebook_suggested. */
+  suggested_date?: string;
+  interval_days?: number;
+  service_id?: number;
+  barber_user_id?: number;
   // Forward-compatible fallback for unknown payload keys.
   [extra: string]: unknown;
 };
@@ -625,6 +631,12 @@ export type NotificationUnreadCountResponse = {
 export type NotificationMarkAllReadResponse = {
   updated: number;
   unread: number;
+};
+
+export type SnoozeRebookNudgeResponse = {
+  state: "sent" | "snoozed";
+  /** ISO 8601, present when state is 'snoozed'. */
+  snooze_until: string | null;
 };
 
 export type BarberAnalyticsSummary = {

@@ -79,6 +79,7 @@ export { fetchPaymentConfig } from "./payments";
 export {
   fetchAppointmentRebookHint,
   fetchNextVisitSuggestion,
+  snoozeRebookNudge,
 } from "./rebookSuggestions";
 export {
   downloadRevenueReportCsv,
