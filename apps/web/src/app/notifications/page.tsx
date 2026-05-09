@@ -39,6 +39,10 @@ const EVENT_LABELS: Record<NotificationEvent, string> = {
   "appointment.confirmed": "Appointment confirmed",
   "appointment.cancelled": "Appointment cancelled",
   "appointment.rescheduled": "Appointment rescheduled",
+  "appointment.reminder": "Appointment reminder",
+  "staff.booking.created": "New booking alert",
+  "staff.booking.cancelled": "Cancellation alert",
+  "staff.booking.rescheduled": "Reschedule alert",
 };
 
 function formatDateTime(iso: string | null | undefined): string {
@@ -109,6 +113,39 @@ function describe(record: NotificationRecord): string {
       : `${service} moved to ${when}`;
     return previous ? `${base} (was ${previous}).` : `${base}.`;
   }
+  if (record.type === "appointment.reminder") {
+    const headline =
+      typeof data.headline === "string" && data.headline.length > 0
+        ? data.headline
+        : "Reminder";
+    return `${headline}${when ? ` · ${when}` : ""}`;
+  }
+  if (
+    record.type === "staff.booking.created" ||
+    record.type === "staff.booking.cancelled" ||
+    record.type === "staff.booking.rescheduled"
+  ) {
+    const customer =
+      typeof data.customer_name === "string" && data.customer_name.length > 0
+        ? data.customer_name
+        : "Customer";
+    const actor =
+      typeof data.actor_name === "string" && data.actor_name.length > 0
+        ? ` · Action by ${data.actor_name}`
+        : "";
+    const previous =
+      record.type === "staff.booking.rescheduled" &&
+      typeof data.previous_starts_at === "string"
+        ? ` · Was ${formatDateTime(data.previous_starts_at)}`
+        : "";
+    if (record.type === "staff.booking.created") {
+      return `${customer} booked ${service}${when ? ` · ${when}` : ""}${actor}`;
+    }
+    if (record.type === "staff.booking.cancelled") {
+      return `${customer} cancelled ${service}${when ? ` · ${when}` : ""}${actor}`;
+    }
+    return `${customer} rescheduled ${service}${when ? ` · ${when}` : ""}${previous}${actor}`;
+  }
   return EVENT_LABELS[record.type] ?? record.type;
 }
 
@@ -124,6 +161,7 @@ export default function NotificationsPage() {
   const { profile, signOut } = useSessionProfile();
   const [page, setPage] = useState<number>(1);
   const [unreadOnly, setUnreadOnly] = useState<boolean>(false);
+  const [operationalOnly, setOperationalOnly] = useState<boolean>(false);
   const [state, setState] = useState<LoadState>({ kind: "idle" });
   const [busyId, setBusyId] = useState<number | null>(null);
   const [allBusy, setAllBusy] = useState<boolean>(false);
@@ -140,6 +178,7 @@ export default function NotificationsPage() {
     try {
       const data = await fetchNotifications(token, {
         unread: unreadOnly,
+        operational: operationalOnly,
         page,
       });
       setState({ kind: "ok", page: data });
@@ -152,7 +191,7 @@ export default function NotificationsPage() {
             : "Failed to load notifications.";
       setState({ kind: "error", message });
     }
-  }, [page, unreadOnly]);
+  }, [operationalOnly, page, unreadOnly]);
 
   useEffect(() => {
     if (!isReady) return;
@@ -235,12 +274,13 @@ export default function NotificationsPage() {
                   <Button
                     type="button"
                     size="sm"
-                    variant={unreadOnly ? "outline" : "default"}
+                    variant={!unreadOnly && !operationalOnly ? "default" : "outline"}
                     onClick={() => {
                       setUnreadOnly(false);
+                      setOperationalOnly(false);
                       setPage(1);
                     }}
-                    aria-pressed={!unreadOnly}
+                    aria-pressed={!unreadOnly && !operationalOnly}
                   >
                     All
                   </Button>
@@ -250,11 +290,25 @@ export default function NotificationsPage() {
                     variant={unreadOnly ? "default" : "outline"}
                     onClick={() => {
                       setUnreadOnly(true);
+                      setOperationalOnly(false);
                       setPage(1);
                     }}
                     aria-pressed={unreadOnly}
                   >
                     Unread
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant={operationalOnly ? "default" : "outline"}
+                    onClick={() => {
+                      setUnreadOnly(false);
+                      setOperationalOnly(true);
+                      setPage(1);
+                    }}
+                    aria-pressed={operationalOnly}
+                  >
+                    Operational
                   </Button>
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -294,7 +348,9 @@ export default function NotificationsPage() {
                     <CardDescription>
                       {unreadOnly
                         ? "No unread notifications."
-                        : "Notifications about your appointments will appear here."}
+                        : operationalOnly
+                          ? "No operational alerts."
+                          : "Notifications about your appointments will appear here."}
                     </CardDescription>
                   </CardHeader>
                 </Card>
