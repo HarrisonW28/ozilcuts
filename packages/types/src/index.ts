@@ -451,6 +451,12 @@ export type AppointmentListFilters = {
   status?: AppointmentStatusFilter;
   range?: AppointmentRangeFilter;
   page?: number;
+  /** YYYY-MM-DD, inclusive lower bound. Pair with `to`. */
+  from?: string;
+  /** YYYY-MM-DD, inclusive upper bound. Pair with `from`. */
+  to?: string;
+  /** 1..200, server-clamped. Defaults to 20, or 200 when from+to are set. */
+  perPage?: number;
 };
 
 export type CustomerRanking = {

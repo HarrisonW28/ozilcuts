@@ -92,6 +92,15 @@ export async function fetchMyAppointments(
   if (filters.range && filters.range !== "all") {
     url.searchParams.set("range", filters.range);
   }
+  if (filters.from) {
+    url.searchParams.set("from", filters.from);
+  }
+  if (filters.to) {
+    url.searchParams.set("to", filters.to);
+  }
+  if (filters.perPage) {
+    url.searchParams.set("per_page", String(filters.perPage));
+  }
   const res = await fetch(url.toString(), {
     headers: authJsonHeaders(token),
     cache: "no-store",
