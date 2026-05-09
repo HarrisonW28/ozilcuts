@@ -82,6 +82,14 @@ export function HaircutPhotosSection({
     void load();
   }, [load]);
 
+  function updatePhotos(updater: (photos: HaircutPhoto[]) => HaircutPhoto[]) {
+    setState((current) =>
+      current.kind === "ok"
+        ? { ...current, photos: updater(current.photos) }
+        : current,
+    );
+  }
+
   async function onUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -90,7 +98,7 @@ export function HaircutPhotosSection({
     setUploadBusy(true);
     setUploadError(null);
     try {
-      await uploadHaircutPhoto(
+      const photo = await uploadHaircutPhoto(
         token,
         appointmentId,
         file,
@@ -99,7 +107,7 @@ export function HaircutPhotosSection({
       );
       setUploadCaption("");
       if (fileInputRef.current) fileInputRef.current.value = "";
-      await load();
+      updatePhotos((photos) => [...photos, photo]);
     } catch (err) {
       if (err instanceof ApiValidationError) {
         setUploadError(err.firstMessage() ?? "Could not upload that photo.");
@@ -119,8 +127,12 @@ export function HaircutPhotosSection({
     setBusyId(photo.id);
     setActionError(null);
     try {
-      await updateHaircutPhoto(token, photo.id, { customer_consent: consent });
-      await load();
+      const updated = await updateHaircutPhoto(token, photo.id, {
+        customer_consent: consent,
+      });
+      updatePhotos((photos) =>
+        photos.map((p) => (p.id === updated.id ? updated : p)),
+      );
     } catch (err) {
       setActionError(
         err instanceof ApiError
@@ -138,8 +150,12 @@ export function HaircutPhotosSection({
     setBusyId(photo.id);
     setActionError(null);
     try {
-      await updateHaircutPhoto(token, photo.id, { is_public: makePublic });
-      await load();
+      const updated = await updateHaircutPhoto(token, photo.id, {
+        is_public: makePublic,
+      });
+      updatePhotos((photos) =>
+        photos.map((p) => (p.id === updated.id ? updated : p)),
+      );
     } catch (err) {
       setActionError(
         err instanceof ApiError
@@ -159,7 +175,7 @@ export function HaircutPhotosSection({
     setActionError(null);
     try {
       await deleteHaircutPhoto(token, photo.id);
-      await load();
+      updatePhotos((photos) => photos.filter((p) => p.id !== photo.id));
     } catch (err) {
       setActionError(
         err instanceof ApiError ? err.message : "Could not delete that photo.",
