@@ -18,8 +18,12 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
+  EmptyState,
+  KpiCard,
+  KpiCardSkeleton,
   Label,
   ScreenTitle,
+  TableSkeleton,
 } from "@ozilcuts/ui";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -273,10 +277,23 @@ export default function AdminOperationalInsightsPage() {
                 </CardContent>
               </Card>
 
-              {state.kind === "loading" ? (
-                <p className="text-sm text-muted-foreground" role="status">
-                  Loading…
-                </p>
+              {state.kind === "loading" || state.kind === "idle" ? (
+                <div role="status" aria-label="Loading operations report">
+                  <span className="sr-only">Loading…</span>
+                  <section
+                    aria-hidden
+                    className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4"
+                  >
+                    {Array.from({ length: 4 }).map((_, i) => (
+                      <KpiCardSkeleton key={i} />
+                    ))}
+                  </section>
+                  <Card aria-hidden className="mt-6">
+                    <CardContent className="p-4">
+                      <TableSkeleton rows={6} columns={5} />
+                    </CardContent>
+                  </Card>
+                </div>
               ) : null}
               {state.kind === "error" ? (
                 <p className="text-sm text-destructive" role="alert">
@@ -290,57 +307,34 @@ export default function AdminOperationalInsightsPage() {
                     aria-label="Today"
                     className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4"
                   >
-                    <Card>
-                      <CardHeader className="pb-2">
-                        <CardDescription>
-                          Today&rsquo;s confirmed
-                        </CardDescription>
-                        <CardTitle className="text-2xl">
-                          {state.data.today.confirmed}
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="text-xs text-muted-foreground">
-                        {state.data.today.cancelled} cancelled today
-                      </CardContent>
-                    </Card>
-                    <Card>
-                      <CardHeader className="pb-2">
-                        <CardDescription>
-                          Deposits collected today
-                        </CardDescription>
-                        <CardTitle className="text-2xl">
-                          {formatUsd(state.data.today.deposits_collected_cents)}
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="text-xs text-muted-foreground">
-                        {formatUsd(state.data.today.deposits_pending_cents)}{" "}
-                        pending
-                      </CardContent>
-                    </Card>
-                    <Card>
-                      <CardHeader className="pb-2">
-                        <CardDescription>Next 7 days</CardDescription>
-                        <CardTitle className="text-2xl">
-                          {state.data.week.confirmed}
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="text-xs text-muted-foreground">
-                        {state.data.week.cancelled} cancelled ·{" "}
-                        {formatPct(state.data.week.cancel_rate)} cancel rate
-                      </CardContent>
-                    </Card>
-                    <Card>
-                      <CardHeader className="pb-2">
-                        <CardDescription>Deposits this week</CardDescription>
-                        <CardTitle className="text-2xl">
-                          {formatUsd(state.data.week.deposits_collected_cents)}
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="text-xs text-muted-foreground">
-                        {formatUsd(state.data.week.deposits_pending_cents)}{" "}
-                        pending in next 7 days
-                      </CardContent>
-                    </Card>
+                    <KpiCard
+                      label={<>Today&rsquo;s confirmed</>}
+                      value={state.data.today.confirmed}
+                      hint={`${state.data.today.cancelled} cancelled today`}
+                    />
+                    <KpiCard
+                      label="Deposits collected today"
+                      value={formatUsd(
+                        state.data.today.deposits_collected_cents,
+                      )}
+                      hint={`${formatUsd(
+                        state.data.today.deposits_pending_cents,
+                      )} pending`}
+                    />
+                    <KpiCard
+                      label="Next 7 days"
+                      value={state.data.week.confirmed}
+                      hint={`${state.data.week.cancelled} cancelled · ${formatPct(state.data.week.cancel_rate)} cancel rate`}
+                    />
+                    <KpiCard
+                      label="Deposits this week"
+                      value={formatUsd(
+                        state.data.week.deposits_collected_cents,
+                      )}
+                      hint={`${formatUsd(
+                        state.data.week.deposits_pending_cents,
+                      )} pending in next 7 days`}
+                    />
                   </section>
 
                   <section aria-label="Peak times">
@@ -356,9 +350,10 @@ export default function AdminOperationalInsightsPage() {
                       </CardHeader>
                       <CardContent className="overflow-x-auto">
                         {maxHeatmapCount === 0 ? (
-                          <p className="text-sm text-muted-foreground">
-                            No confirmed appointments in this range.
-                          </p>
+                          <EmptyState
+                            title="No confirmed appointments in this range"
+                            description="Pick a wider window or check back after more bookings come in."
+                          />
                         ) : (
                           <table className="w-full min-w-[44rem] border-separate border-spacing-px text-xs">
                             <thead>

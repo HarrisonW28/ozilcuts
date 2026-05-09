@@ -22,8 +22,12 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
+  EmptyState,
+  KpiCard,
+  KpiCardSkeleton,
   Label,
   ScreenTitle,
+  TableSkeleton,
   cn,
 } from "@ozilcuts/ui";
 import Link from "next/link";
@@ -346,10 +350,23 @@ export default function AdminRevenueReportPage() {
                 </CardContent>
               </Card>
 
-              {state.kind === "loading" ? (
-                <p className="text-sm text-muted-foreground" role="status">
-                  Loading report…
-                </p>
+              {state.kind === "loading" || state.kind === "idle" ? (
+                <div role="status" aria-label="Loading revenue report">
+                  <span className="sr-only">Loading…</span>
+                  <section
+                    aria-hidden
+                    className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4"
+                  >
+                    {Array.from({ length: 4 }).map((_, i) => (
+                      <KpiCardSkeleton key={i} />
+                    ))}
+                  </section>
+                  <Card aria-hidden className="mt-6">
+                    <CardContent className="p-4">
+                      <TableSkeleton rows={5} columns={4} />
+                    </CardContent>
+                  </Card>
+                </div>
               ) : null}
 
               {state.kind === "error" ? (
@@ -365,17 +382,12 @@ export default function AdminRevenueReportPage() {
                     className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4"
                   >
                     {summaryCards.map((card) => (
-                      <Card key={card.label}>
-                        <CardHeader className="pb-2">
-                          <CardDescription>{card.label}</CardDescription>
-                          <CardTitle className="text-2xl">
-                            {card.value}
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent className="text-xs text-muted-foreground">
-                          {card.hint}
-                        </CardContent>
-                      </Card>
+                      <KpiCard
+                        key={card.label}
+                        label={card.label}
+                        value={card.value}
+                        hint={card.hint}
+                      />
                     ))}
                   </section>
 
@@ -390,9 +402,10 @@ export default function AdminRevenueReportPage() {
                       </CardHeader>
                       <CardContent className="overflow-x-auto">
                         {state.report.by_barber.length === 0 ? (
-                          <p className="text-sm text-muted-foreground">
-                            No barber-attributed revenue in this period.
-                          </p>
+                          <EmptyState
+                            title="No barber-attributed revenue"
+                            description="Confirmed appointments in this range haven't been linked to a barber yet. Try widening the date range."
+                          />
                         ) : (
                           <table className="w-full min-w-[40rem] text-sm">
                             <thead>
@@ -440,9 +453,10 @@ export default function AdminRevenueReportPage() {
                       </CardHeader>
                       <CardContent className="overflow-x-auto">
                         {state.report.by_service.length === 0 ? (
-                          <p className="text-sm text-muted-foreground">
-                            No service-attributed revenue in this period.
-                          </p>
+                          <EmptyState
+                            title="No service-attributed revenue"
+                            description="No services drove paid revenue in this range."
+                          />
                         ) : (
                           <table className="w-full min-w-[40rem] text-sm">
                             <thead>
@@ -492,9 +506,10 @@ export default function AdminRevenueReportPage() {
                       </CardHeader>
                       <CardContent className="overflow-x-auto">
                         {state.report.series.length === 0 ? (
-                          <p className="text-sm text-muted-foreground">
-                            No data points in this range.
-                          </p>
+                          <EmptyState
+                            title="No data points in this range"
+                            description="Try a longer range or a different granularity."
+                          />
                         ) : (
                           <table className="w-full min-w-[36rem] text-sm">
                             <thead>

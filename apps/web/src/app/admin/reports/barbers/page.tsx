@@ -18,8 +18,10 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
+  EmptyState,
   Label,
   ScreenTitle,
+  TableSkeleton,
 } from "@ozilcuts/ui";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
@@ -254,10 +256,16 @@ export default function AdminBarberComparePage() {
                 </CardContent>
               </Card>
 
-              {state.kind === "loading" ? (
-                <p className="text-sm text-muted-foreground" role="status">
-                  Loading league table…
-                </p>
+              {state.kind === "loading" || state.kind === "idle" ? (
+                <Card aria-hidden>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base">League table</CardTitle>
+                    <CardDescription>Loading…</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <TableSkeleton rows={6} columns={6} />
+                  </CardContent>
+                </Card>
               ) : null}
 
               {state.kind === "error" ? (
@@ -272,12 +280,17 @@ export default function AdminBarberComparePage() {
                     <CardTitle className="text-base">League table</CardTitle>
                     <CardDescription>
                       {state.data.rows.length === 0
-                        ? "No barbers found."
+                        ? "Nothing to rank yet."
                         : `Ranked by booked revenue, ${state.data.from} to ${state.data.to}.`}
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="overflow-x-auto">
-                    {state.data.rows.length === 0 ? null : (
+                    {state.data.rows.length === 0 ? (
+                      <EmptyState
+                        title="No barbers in this period"
+                        description="Either no barbers exist yet, or none had bookings in this date range."
+                      />
+                    ) : (
                       <table className="w-full min-w-[56rem] text-sm">
                         <thead>
                           <tr className="border-b border-border/60 text-left text-muted-foreground">

@@ -18,8 +18,12 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
+  EmptyState,
+  KpiCard,
+  KpiCardSkeleton,
   Label,
   ScreenTitle,
+  TableSkeleton,
 } from "@ozilcuts/ui";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
@@ -261,10 +265,23 @@ export default function AdminCustomersReportPage() {
                 </CardContent>
               </Card>
 
-              {state.kind === "loading" ? (
-                <p className="text-sm text-muted-foreground" role="status">
-                  Loading…
-                </p>
+              {state.kind === "loading" || state.kind === "idle" ? (
+                <div role="status" aria-label="Loading customer report">
+                  <span className="sr-only">Loading…</span>
+                  <section
+                    aria-hidden
+                    className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4"
+                  >
+                    {Array.from({ length: 4 }).map((_, i) => (
+                      <KpiCardSkeleton key={i} />
+                    ))}
+                  </section>
+                  <Card aria-hidden className="mt-6">
+                    <CardContent className="p-4">
+                      <TableSkeleton rows={6} columns={4} />
+                    </CardContent>
+                  </Card>
+                </div>
               ) : null}
               {state.kind === "error" ? (
                 <p className="text-sm text-destructive" role="alert">
@@ -303,17 +320,12 @@ export default function AdminCustomersReportPage() {
                         hint: `Avg ${state.data.visits_per_customer_avg} visits / customer`,
                       },
                     ].map((tile) => (
-                      <Card key={tile.label}>
-                        <CardHeader className="pb-2">
-                          <CardDescription>{tile.label}</CardDescription>
-                          <CardTitle className="text-2xl">
-                            {tile.value}
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent className="text-xs text-muted-foreground">
-                          {tile.hint}
-                        </CardContent>
-                      </Card>
+                      <KpiCard
+                        key={tile.label}
+                        label={tile.label}
+                        value={tile.value}
+                        hint={tile.hint}
+                      />
                     ))}
                   </section>
 
@@ -367,9 +379,10 @@ export default function AdminCustomersReportPage() {
                       </CardHeader>
                       <CardContent className="overflow-x-auto">
                         {state.data.top_spenders.length === 0 ? (
-                          <p className="text-sm text-muted-foreground">
-                            No paid customers in this period.
-                          </p>
+                          <EmptyState
+                            title="No paid customers in this period"
+                            description="No customers had collected deposits in this range."
+                          />
                         ) : (
                           <table className="w-full min-w-[28rem] text-sm">
                             <thead>
@@ -422,9 +435,10 @@ export default function AdminCustomersReportPage() {
                       </CardHeader>
                       <CardContent className="overflow-x-auto">
                         {state.data.top_visitors.length === 0 ? (
-                          <p className="text-sm text-muted-foreground">
-                            No visitors in this period.
-                          </p>
+                          <EmptyState
+                            title="No visitors in this period"
+                            description="No customers had confirmed visits in this range."
+                          />
                         ) : (
                           <table className="w-full min-w-[28rem] text-sm">
                             <thead>

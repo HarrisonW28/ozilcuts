@@ -14,7 +14,11 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  EmptyState,
+  KpiCard,
+  KpiCardSkeleton,
   Label,
+  TableSkeleton,
 } from "@ozilcuts/ui";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
@@ -252,10 +256,23 @@ export function BarberAnalyticsView({
         </CardContent>
       </Card>
 
-      {state.kind === "loading" ? (
-        <p className="text-sm text-muted-foreground" role="status">
-          Loading analytics…
-        </p>
+      {state.kind === "loading" || state.kind === "idle" ? (
+        <div role="status" aria-label="Loading analytics">
+          <span className="sr-only">Loading analytics…</span>
+          <section
+            aria-hidden
+            className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5"
+          >
+            {Array.from({ length: 5 }).map((_, i) => (
+              <KpiCardSkeleton key={i} />
+            ))}
+          </section>
+          <Card aria-hidden className="mt-6">
+            <CardContent className="p-4">
+              <TableSkeleton rows={5} columns={4} />
+            </CardContent>
+          </Card>
+        </div>
       ) : null}
 
       {state.kind === "error" ? (
@@ -271,15 +288,12 @@ export function BarberAnalyticsView({
             className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5"
           >
             {summaryTiles.map((tile) => (
-              <Card key={tile.label}>
-                <CardHeader className="pb-2">
-                  <CardDescription>{tile.label}</CardDescription>
-                  <CardTitle className="text-2xl">{tile.value}</CardTitle>
-                </CardHeader>
-                <CardContent className="text-xs text-muted-foreground">
-                  {tile.hint}
-                </CardContent>
-              </Card>
+              <KpiCard
+                key={tile.label}
+                label={tile.label}
+                value={tile.value}
+                hint={tile.hint}
+              />
             ))}
           </section>
 
@@ -293,9 +307,10 @@ export function BarberAnalyticsView({
               </CardHeader>
               <CardContent className="overflow-x-auto">
                 {state.report.top_services.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">
-                    No services in this period.
-                  </p>
+                  <EmptyState
+                    title="No services in this period"
+                    description="No confirmed appointments fell into this date range."
+                  />
                 ) : (
                   <table className="w-full min-w-[32rem] text-sm">
                     <thead>
@@ -337,9 +352,10 @@ export function BarberAnalyticsView({
               </CardHeader>
               <CardContent className="overflow-x-auto">
                 {state.report.top_customers.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">
-                    No customers in this period.
-                  </p>
+                  <EmptyState
+                    title="No customers in this period"
+                    description="No customers booked confirmed visits in this range."
+                  />
                 ) : (
                   <table className="w-full min-w-[32rem] text-sm">
                     <thead>
@@ -381,9 +397,10 @@ export function BarberAnalyticsView({
               </CardHeader>
               <CardContent className="overflow-x-auto">
                 {state.report.series.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">
-                    No days in this range.
-                  </p>
+                  <EmptyState
+                    title="No days in this range"
+                    description="Pick a wider date range to see daily activity."
+                  />
                 ) : (
                   <table className="w-full min-w-[36rem] text-sm">
                     <thead>
