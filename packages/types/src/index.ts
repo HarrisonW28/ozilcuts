@@ -572,6 +572,9 @@ export const NOTIFICATION_EVENTS = [
   "appointment.cancelled",
   "appointment.rescheduled",
   "appointment.reminder",
+  "staff.booking.created",
+  "staff.booking.cancelled",
+  "staff.booking.rescheduled",
 ] as const;
 export type NotificationEvent = (typeof NOTIFICATION_EVENTS)[number];
 
@@ -587,6 +590,8 @@ export type NotificationData = {
   starts_at?: string | null;
   /** ISO 8601 */
   previous_starts_at?: string | null;
+  actor_name?: string | null;
+  audience?: "admin" | "barber" | string | null;
   // Forward-compatible fallback for unknown payload keys.
   [extra: string]: unknown;
 };
