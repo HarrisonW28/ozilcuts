@@ -100,6 +100,24 @@ export function formatYmd(date: Date): string {
   return isoYmd(date);
 }
 
+/**
+ * Parse a YYYY-MM-DD value (e.g. from a native <input type="date">) into
+ * a local-time Date. Returns null on malformed input rather than NaN so
+ * callers can fall through to a safe default.
+ */
+export function parseYmdToDate(value: string | null | undefined): Date | null {
+  if (!value) return null;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
+  const [y, m, d] = value.split("-").map((p) => Number.parseInt(p, 10));
+  if (!Number.isFinite(y) || !Number.isFinite(m) || !Number.isFinite(d)) {
+    return null;
+  }
+  const date = new Date(y, m - 1, d);
+  date.setHours(0, 0, 0, 0);
+
+  return date;
+}
+
 function bookingLabel(record: AppointmentRecord): string {
   const service = record.service?.name;
   const customer = record.customer?.name;
