@@ -56,8 +56,7 @@ export function getAccountMenuGroups(
   if (slug === "customer") {
     groups.push({
       id: "dashboard",
-      label: "Dashboard",
-      links: [{ href: "/dashboard", label: "My dashboard" }],
+      links: [{ href: "/dashboard", label: "Dashboard" }],
     });
     groups.push({
       id: "account",
@@ -79,12 +78,7 @@ export function getAccountMenuGroups(
   if (slug === "barber") {
     groups.push({
       id: "dashboard",
-      label: "Dashboard",
-      links: [
-        { href: "/barber/calendar", label: "Calendar" },
-        { href: "/barber/hours", label: "Hours" },
-        { href: "/barber/analytics", label: "Analytics" },
-      ],
+      links: [{ href: "/barber", label: "Dashboard" }],
     });
     groups.push({
       id: "settings",
@@ -95,39 +89,9 @@ export function getAccountMenuGroups(
   }
 
   if (slug === "admin") {
-    const sa = profile.user.shop_admin;
-    const setupIncomplete = Boolean(sa && !sa.onboarding_completed_at);
-
     groups.push({
       id: "dashboard",
-      label: "Dashboard",
-      links: [
-        { href: "/admin", label: "Shop overview" },
-        ...(setupIncomplete
-          ? [{ href: "/admin/onboarding", label: "Finish shop setup" }]
-          : []),
-      ],
-    });
-
-    groups.push({
-      id: "site-settings",
-      label: "Site settings",
-      links: [
-        { href: "/admin/services", label: "Catalog & services" },
-        { href: "/admin/barbers", label: "Team & barbers" },
-      ],
-    });
-
-    groups.push({
-      id: "reports",
-      label: "Reports",
-      links: [
-        { href: "/admin/reports/revenue", label: "Revenue" },
-        { href: "/admin/reports/barbers", label: "Compare barbers" },
-        { href: "/admin/reports/customers", label: "Customers" },
-        { href: "/admin/reports/operations", label: "Operations" },
-        { href: "/admin/reports/retention", label: "Retention" },
-      ],
+      links: [{ href: "/admin", label: "Dashboard" }],
     });
   }
 

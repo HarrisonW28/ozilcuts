@@ -7,7 +7,7 @@ export function getRoleDashboardHref(profile: ProfileState): string | null {
     case "customer":
       return "/appointments";
     case "barber":
-      return "/barber/calendar";
+      return "/barber";
     case "admin":
       return "/admin";
     default:

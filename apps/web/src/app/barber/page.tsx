@@ -14,23 +14,11 @@ import {
 import { OZILCUTS_APP_NAME } from "@ozilcuts/types";
 import Link from "next/link";
 
-const REPORT_LINKS = [
-  { href: "/admin/reports/revenue", label: "Revenue", hint: "Income and pricing trends" },
-  { href: "/admin/reports/barbers", label: "Compare barbers", hint: "Side-by-side performance" },
-  { href: "/admin/reports/customers", label: "Customers", hint: "Segments and activity" },
-  { href: "/admin/reports/operations", label: "Operations", hint: "Load and utilization" },
-  { href: "/admin/reports/retention", label: "Retention", hint: "Who to win back" },
-] as const;
-
-export default function AdminDashboardPage() {
+export default function BarberDashboardPage() {
   const { profile, signOut } = useSessionProfile();
 
-  const isAdmin =
-    profile.kind === "ready" && profile.user.role.slug === "admin";
-  const sa = profile.kind === "ready" ? profile.user.shop_admin : undefined;
-  const setupIncomplete = Boolean(
-    isAdmin && sa && !sa.onboarding_completed_at,
-  );
+  const isBarber =
+    profile.kind === "ready" && profile.user.role.slug === "barber";
 
   if (profile.kind === "loading" || profile.kind === "none") {
     return (
@@ -64,7 +52,7 @@ export default function AdminDashboardPage() {
     );
   }
 
-  if (!isAdmin) {
+  if (!isBarber) {
     return (
       <div className="flex min-h-dvh flex-1 flex-col">
         <SiteHeader profile={profile} onSignOut={signOut} />
@@ -73,7 +61,7 @@ export default function AdminDashboardPage() {
           className="flex flex-1 flex-col items-center justify-center gap-4 px-4 py-10"
         >
           <p className="max-w-sm text-center text-sm text-muted-foreground">
-            This dashboard is for shop administrators.
+            This dashboard is for barbers.
           </p>
           <Button asChild variant="outline">
             <Link href="/">Home</Link>
@@ -91,89 +79,64 @@ export default function AdminDashboardPage() {
           <ScreenTitle
             eyebrow={OZILCUTS_APP_NAME}
             title="Dashboard"
-            description="Shop overview, site settings, reports, and bookings—everything for running the shop."
+            description="Your chair, hours, and stats—everything for a day behind the bench."
           />
 
-          {setupIncomplete ? (
-            <Card className="border-primary/25 bg-primary/5 dark:bg-primary/10">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base">Shop setup</CardTitle>
-                <CardDescription>
-                  Finish the short checklist so hours, services, and team are
-                  ready for clients.
-                </CardDescription>
-              </CardHeader>
-              <CardFooter>
-                <Button asChild>
-                  <Link href="/admin/onboarding">Continue setup</Link>
-                </Button>
-              </CardFooter>
-            </Card>
-          ) : null}
-
-          <section aria-labelledby="admin-shop-heading" className="space-y-3">
-            <h2 id="admin-shop-heading" className="text-sm font-semibold text-foreground">
-              Site settings
+          <section aria-labelledby="barber-work-heading" className="space-y-3">
+            <h2
+              id="barber-work-heading"
+              className="text-sm font-semibold text-foreground"
+            >
+              Workspace
             </h2>
             <div className="grid gap-3 sm:grid-cols-2">
               <Card>
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-base">Catalog</CardTitle>
+                  <CardTitle className="text-base">Chair</CardTitle>
                   <CardDescription>
-                    Services, prices, durations, deposits.
+                    Day timeline, walk-ins, and the week strip.
                   </CardDescription>
                 </CardHeader>
                 <CardFooter>
                   <Button asChild variant="outline">
-                    <Link href="/admin/services">Open catalog</Link>
+                    <Link href="/barber/calendar">Open calendar</Link>
                   </Button>
                 </CardFooter>
               </Card>
               <Card>
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-base">Team</CardTitle>
+                  <CardTitle className="text-base">Hours</CardTitle>
                   <CardDescription>
-                    Barber accounts, hours, and analytics.
+                    When you accept online bookings.
                   </CardDescription>
                 </CardHeader>
                 <CardFooter>
                   <Button asChild variant="outline">
-                    <Link href="/admin/barbers">Manage team</Link>
+                    <Link href="/barber/hours">Manage hours</Link>
+                  </Button>
+                </CardFooter>
+              </Card>
+              <Card className="sm:col-span-2">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base">Analytics</CardTitle>
+                  <CardDescription>
+                    Booking and performance summary.
+                  </CardDescription>
+                </CardHeader>
+                <CardFooter>
+                  <Button asChild variant="outline">
+                    <Link href="/barber/analytics">View stats</Link>
                   </Button>
                 </CardFooter>
               </Card>
             </div>
           </section>
 
-          <section aria-labelledby="admin-reports-heading" className="space-y-3">
-            <h2 id="admin-reports-heading" className="text-sm font-semibold text-foreground">
-              Reports
-            </h2>
-            <ul className="grid gap-3 sm:grid-cols-2">
-              {REPORT_LINKS.map((r) => (
-                <li key={r.href}>
-                  <Card className="h-full">
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-base">{r.label}</CardTitle>
-                      <CardDescription>{r.hint}</CardDescription>
-                    </CardHeader>
-                    <CardFooter>
-                      <Button asChild variant="outline" size="sm">
-                        <Link href={r.href}>Open</Link>
-                      </Button>
-                    </CardFooter>
-                  </Card>
-                </li>
-              ))}
-            </ul>
-          </section>
-
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-base">Bookings</CardTitle>
               <CardDescription>
-                Same appointment list you use as a customer—filter and manage
-                from one place.
+                Your appointments list and confirmations.
               </CardDescription>
             </CardHeader>
             <CardFooter>

@@ -25,7 +25,8 @@ type QuickActionItem = {
 };
 
 const BARBER_ITEMS: QuickActionItem[] = [
-  { href: "/barber/calendar", label: "Calendar", icon: CalendarDays },
+  { href: "/barber", label: "Home", icon: LayoutDashboard },
+  { href: "/barber/calendar", label: "Chair", icon: CalendarDays },
   { href: "/barber/hours", label: "Hours", icon: Clock },
   { href: "/barber/analytics", label: "Stats", icon: BarChart3 },
   { href: "/appointments", label: "Bookings", icon: ClipboardList },
@@ -43,6 +44,7 @@ function routeActive(pathname: string, href: string) {
   if (pathname === href) return true;
   if (href === "/") return false;
   if (href === "/admin") return pathname === "/admin";
+  if (href === "/barber") return pathname === "/barber";
   return pathname.startsWith(`${href}/`);
 }
 
