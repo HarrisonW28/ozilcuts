@@ -21,6 +21,7 @@ import {
   ClipboardList,
   Clock,
   LayoutDashboard,
+  User,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -177,6 +178,14 @@ export default function BarberDashboardPage() {
               description="Day-to-day tools behind the chair."
             />
             <div className="grid gap-3 sm:grid-cols-2">
+              <HubCard
+                icon={User}
+                title="Your profile"
+                description="Title, bio, and experience on your public booking page."
+                href="/barber/profile"
+                cta="Edit profile"
+                className="sm:col-span-2"
+              />
               <HubCard
                 icon={CalendarDays}
                 title="Chair"

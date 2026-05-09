@@ -4,9 +4,10 @@ import {
   getAccountMenuGroups,
   type AccountMenuGroup,
 } from "@/lib/site-primary-nav";
+import { AccountMenuLinkInner } from "@/components/account-menu-link-inner";
 import type { ProfileState } from "@/lib/use-session-profile";
 import { Button, cn } from "@ozilcuts/ui";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, LogOut } from "lucide-react";
 import Link from "next/link";
 import {
   useCallback,
@@ -90,10 +91,10 @@ export function SiteAccountMenu({
               <li key={`${group.id}-${link.href}`}>
                 <Link
                   href={link.href}
-                  className="block rounded-lg px-2 py-2 text-sm font-medium text-foreground outline-none transition-colors hover:bg-muted/80 focus-visible:ring-2 focus-visible:ring-ring/40"
+                  className="flex items-center rounded-lg px-2 py-2 text-sm font-medium text-foreground outline-none transition-colors hover:bg-muted/80 focus-visible:ring-2 focus-visible:ring-ring/40"
                   onClick={onLink}
                 >
-                  {link.label}
+                  <AccountMenuLinkInner icon={link.icon} label={link.label} />
                 </Link>
               </li>
             ))}
@@ -105,12 +106,13 @@ export function SiteAccountMenu({
           type="button"
           variant="ghost"
           size="sm"
-          className="h-auto min-h-10 w-full justify-start px-2 py-2 text-destructive hover:bg-destructive/10 hover:text-destructive"
+          className="h-auto min-h-10 w-full justify-start gap-2 px-2 py-2 text-destructive hover:bg-destructive/10 hover:text-destructive"
           onClick={() => {
             close();
             void onSignOut();
           }}
         >
+          <LogOut className="size-4 shrink-0 opacity-80" aria-hidden />
           Sign out
         </Button>
       </div>

@@ -25,6 +25,7 @@ import {
   RotateCcw,
   Sparkles,
   TrendingUp,
+  User,
   UserCircle,
   Users,
 } from "lucide-react";
@@ -239,6 +240,27 @@ export default function AdminDashboardPage() {
               </CardFooter>
             </Card>
           ) : null}
+
+          <section
+            aria-labelledby="admin-account-heading"
+            className="space-y-4 rounded-2xl border border-border/50 bg-card/30 p-4 shadow-sm sm:p-5 dark:bg-card/20"
+          >
+            <SectionHeading
+              id="admin-account-heading"
+              title="Account"
+              icon={User}
+              description="Your admin login and shop connection."
+            />
+            <div className="grid gap-3 sm:grid-cols-2">
+              <HubCard
+                icon={User}
+                title="Your profile"
+                description="Account email, name, and shop display name (read-only summary)."
+                href="/admin/profile"
+                cta="Open profile"
+              />
+            </div>
+          </section>
 
           <section
             aria-labelledby="admin-shop-heading"

@@ -84,4 +84,35 @@ class ApiBarbersTest extends TestCase
 
         $this->getJson("/api/v1/barbers/{$user->id}")->assertNotFound();
     }
+
+    public function test_barber_self_profile_requires_authentication(): void
+    {
+        $this->getJson("/api/v1/barber/profile")->assertUnauthorized();
+    }
+
+    public function test_barber_self_profile_returns_for_authenticated_barber(): void
+    {
+        $user = User::factory()->barber()->create(['name' => 'Self Barber']);
+        BarberProfile::factory()->unpublished()->create([
+            'user_id' => $user->id,
+            'title' => 'Hidden',
+            'bio' => 'Not public yet',
+        ]);
+
+        $this->actingAs($user, 'sanctum')
+            ->getJson("/api/v1/barber/profile")
+            ->assertOk()
+            ->assertJsonPath('barber.name', 'Self Barber')
+            ->assertJsonPath('title', 'Hidden')
+            ->assertJsonPath('bio', 'Not public yet');
+    }
+
+    public function test_barber_self_profile_forbidden_for_customer(): void
+    {
+        $customer = User::factory()->create();
+
+        $this->actingAs($customer, 'sanctum')
+            ->getJson("/api/v1/barber/profile")
+            ->assertForbidden();
+    }
 }

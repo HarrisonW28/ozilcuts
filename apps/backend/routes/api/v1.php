@@ -32,6 +32,7 @@ use App\Http\Controllers\Api\V1\BarberManageStoreController;
 use App\Http\Controllers\Api\V1\BarberManageUpdateController;
 use App\Http\Controllers\Api\V1\BarberPortfolioController;
 use App\Http\Controllers\Api\V1\BarberShowController;
+use App\Http\Controllers\Api\V1\BarberSelfProfileShowController;
 use App\Http\Controllers\Api\V1\BarberSlotsController;
 use App\Http\Controllers\Api\V1\CurrentUserController;
 use App\Http\Controllers\Api\V1\CustomerAnalyticsAggregateController;
@@ -131,6 +132,7 @@ Route::middleware('auth:sanctum')->group(function (): void {
     Route::get('/customer/hair-profile', HairProfileShowController::class);
     Route::patch('/customer/hair-profile', HairProfileUpdateController::class)
         ->middleware('throttle:30,1');
+    Route::get('/barber/profile', BarberSelfProfileShowController::class);
     Route::post('/customer/hair-profile/photos', HairProfilePhotoStoreController::class)
         ->middleware('throttle:20,1');
     Route::delete('/customer/hair-profile/photos/{photo}', HairProfilePhotoDestroyController::class)

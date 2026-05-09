@@ -9,13 +9,27 @@ export type PrimaryNavSection = {
   links: PrimaryNavLink[];
 };
 
+export type AccountMenuIconId =
+  | "user"
+  | "layout-dashboard"
+  | "settings"
+  | "sparkles"
+  | "history"
+  | "bell";
+
+export type AccountMenuLink = {
+  href: string;
+  label: string;
+  icon: AccountMenuIconId;
+};
+
 export type AccountMenuGroup = {
   id: string;
   label?: string;
-  links: PrimaryNavLink[];
+  links: AccountMenuLink[];
 };
 
-/** Top-of-page links — role tools live in the account menu. */
+/** Top-of-page links — role tools mostly live on each role’s dashboard. */
 export function getPrimaryNavSections(profile: ProfileState): PrimaryNavSection[] {
   const sections: PrimaryNavSection[] = [
     {
@@ -42,7 +56,9 @@ export function getPrimaryNavSections(profile: ProfileState): PrimaryNavSection[
   return sections;
 }
 
-/** Account menu: role dashboards, customer-only account pages, shared settings alias. */
+/**
+ * Account dropdown / mobile drawer: Profile → Dashboard → Settings (role-specific).
+ */
 export function getAccountMenuGroups(
   profile: ProfileState,
 ): AccountMenuGroup[] {
@@ -55,43 +71,89 @@ export function getAccountMenuGroups(
 
   if (slug === "customer") {
     groups.push({
-      id: "dashboard",
-      links: [{ href: "/dashboard", label: "Dashboard" }],
+      id: "profile",
+      label: "Profile",
+      links: [
+        { href: "/profile", label: "Profile", icon: "user" },
+        { href: "/profile/hair", label: "Hair", icon: "sparkles" },
+        { href: "/profile/visits", label: "Visits", icon: "history" },
+      ],
     });
     groups.push({
-      id: "account",
-      label: "Account",
+      id: "dashboard",
+      label: "Dashboard",
       links: [
-        { href: "/profile", label: "Profile" },
-        { href: "/profile/hair", label: "Hair" },
-        { href: "/profile/visits", label: "Visits" },
+        { href: "/dashboard", label: "Dashboard", icon: "layout-dashboard" },
       ],
     });
     groups.push({
       id: "settings",
       label: "Settings",
-      links: [{ href: "/dashboard/settings", label: "Account settings" }],
+      links: [
+        {
+          href: "/dashboard/settings",
+          label: "Account settings",
+          icon: "settings",
+        },
+      ],
     });
     return groups;
   }
 
   if (slug === "barber") {
     groups.push({
+      id: "profile",
+      label: "Profile",
+      links: [
+        { href: "/barber/profile", label: "Profile", icon: "user" },
+      ],
+    });
+    groups.push({
       id: "dashboard",
-      links: [{ href: "/barber", label: "Dashboard" }],
+      label: "Dashboard",
+      links: [
+        { href: "/barber", label: "Dashboard", icon: "layout-dashboard" },
+      ],
     });
     groups.push({
       id: "settings",
       label: "Settings",
-      links: [{ href: "/dashboard/settings", label: "Notifications" }],
+      links: [
+        {
+          href: "/dashboard/settings",
+          label: "Notifications",
+          icon: "bell",
+        },
+      ],
     });
     return groups;
   }
 
   if (slug === "admin") {
     groups.push({
+      id: "profile",
+      label: "Profile",
+      links: [
+        { href: "/admin/profile", label: "Profile", icon: "user" },
+      ],
+    });
+    groups.push({
       id: "dashboard",
-      links: [{ href: "/admin", label: "Dashboard" }],
+      label: "Dashboard",
+      links: [
+        { href: "/admin", label: "Dashboard", icon: "layout-dashboard" },
+      ],
+    });
+    groups.push({
+      id: "settings",
+      label: "Settings",
+      links: [
+        {
+          href: "/dashboard/settings",
+          label: "Shop settings",
+          icon: "settings",
+        },
+      ],
     });
   }
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { AdminOnboardingResumeBar } from "@/components/admin-onboarding-resume-bar";
+import { AccountMenuLinkInner } from "@/components/account-menu-link-inner";
 import { ModeToggle } from "@/components/mode-toggle";
 import { NotificationsBell } from "@/components/notifications-bell";
 import { NotificationsToaster } from "@/components/notifications-toaster";
@@ -271,12 +272,17 @@ export function SiteHeader({ profile, onSignOut }: SiteHeaderProps) {
                               href={link.href}
                               className={cn(
                                 mobileNavLinkClass,
+                                "gap-3",
                                 link.href === "/book" &&
                                   "border-primary/35 bg-primary/10 font-semibold text-primary dark:border-primary/30 dark:bg-primary/15 dark:text-primary",
                               )}
                               onClick={() => setMobileNavOpen(false)}
                             >
-                              {link.label}
+                              <AccountMenuLinkInner
+                                icon={link.icon}
+                                label={link.label}
+                                iconClassName="size-[1.125rem]"
+                              />
                             </Link>
                           </li>
                         ))}

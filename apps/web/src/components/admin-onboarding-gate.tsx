@@ -22,6 +22,7 @@ export function AdminOnboardingGate({ children }: { children: ReactNode }) {
 
     const exempt =
       pathname === "/admin" ||
+      pathname === "/admin/profile" ||
       pathname === "/admin/onboarding" ||
       pathname.startsWith("/admin/onboarding/") ||
       pathname === "/admin/barbers" ||
