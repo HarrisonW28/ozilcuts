@@ -27,6 +27,7 @@ class AppointmentCancelledMail extends Mailable implements ShouldQueue
     {
         return new Content(
             markdown: 'emails.appointments.cancelled',
+            text: 'emails.appointments.cancelled_text',
             with: ['appointment' => $this->appointment],
         );
     }

@@ -30,6 +30,7 @@ class AppointmentRescheduledMail extends Mailable implements ShouldQueue
     {
         return new Content(
             markdown: 'emails.appointments.rescheduled',
+            text: 'emails.appointments.rescheduled_text',
             with: [
                 'appointment' => $this->appointment,
                 'previousStart' => $this->previousStart,

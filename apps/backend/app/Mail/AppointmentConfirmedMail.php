@@ -27,6 +27,7 @@ class AppointmentConfirmedMail extends Mailable implements ShouldQueue
     {
         return new Content(
             markdown: 'emails.appointments.confirmed',
+            text: 'emails.appointments.confirmed_text',
             with: [
                 'appointment' => $this->appointment,
                 'confirmationUrl' => $this->confirmationUrl(),
