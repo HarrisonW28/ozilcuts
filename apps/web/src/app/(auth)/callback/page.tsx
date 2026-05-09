@@ -2,12 +2,13 @@
 
 import { setStoredAuthToken } from "@/lib/auth-token";
 import {
-  Button,
+  buttonVariants,
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
+  cn,
 } from "@ozilcuts/ui";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -83,9 +84,12 @@ export default function AuthCallbackPage() {
           <CardDescription>{oauthErrorMessage(errorCode)}</CardDescription>
         </CardHeader>
         <CardContent>
-          <Button asChild className="w-full">
-            <Link href="/login">Back to sign in</Link>
-          </Button>
+          <Link
+            href="/login"
+            className={cn(buttonVariants(), "w-full")}
+          >
+            Back to sign in
+          </Link>
         </CardContent>
       </Card>
     );
