@@ -2,7 +2,6 @@
 
 import { ManageBarberHoursSection } from "@/components/manage-barber-hours-section";
 import { SiteHeader } from "@/components/site-header";
-import { useOperationalWorkspaceMode } from "@/lib/operational-workspace-context";
 import { useSessionProfile } from "@/lib/use-session-profile";
 import { OZILCUTS_APP_NAME } from "@ozilcuts/types";
 import {
@@ -18,7 +17,6 @@ import Link from "next/link";
 
 export default function BarberHoursPage() {
   const { profile, signOut } = useSessionProfile();
-  const { isFocused } = useOperationalWorkspaceMode();
 
   const userId = profile.kind === "ready" ? profile.user.id : null;
   const isBarber =
@@ -35,11 +33,7 @@ export default function BarberHoursPage() {
           <ScreenTitle
             eyebrow={OZILCUTS_APP_NAME}
             title="Weekly hours"
-            description={
-              isFocused
-                ? "Set when you take bookings—one row per open interval. Use Full workspace in the header for every tool."
-                : "Set when you accept bookings. Times use your shop’s local schedule (stored as simple start/end times)."
-            }
+            description="Set when you accept bookings. Times use your shop’s local schedule (stored as simple start/end times)."
           />
 
           {profile.kind === "loading" || profile.kind === "none" ? (
@@ -71,10 +65,7 @@ export default function BarberHoursPage() {
           ) : null}
 
           {isBarber && userId !== null ? (
-            <ManageBarberHoursSection
-              userId={userId}
-              compactAddRemove={isFocused}
-            />
+            <ManageBarberHoursSection userId={userId} compactAddRemove={false} />
           ) : null}
 
           {isBarber ? (

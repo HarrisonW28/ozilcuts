@@ -20,7 +20,6 @@ import {
   parseYmdToDate,
   startOfWeekSunday,
 } from "@/lib/calendar-week";
-import { useOperationalWorkspaceMode } from "@/lib/operational-workspace-context";
 import { useSessionProfile } from "@/lib/use-session-profile";
 import {
   ApiError,
@@ -55,7 +54,6 @@ function loadStoredDensity(): CalendarDensity {
 
 export default function BarberCalendarPage() {
   const { profile, signOut } = useSessionProfile();
-  const { isFocused } = useOperationalWorkspaceMode();
   const [weekStart, setWeekStart] = useState(() =>
     startOfWeekSunday(new Date()),
   );
@@ -243,11 +241,7 @@ export default function BarberCalendarPage() {
           <ScreenTitle
             eyebrow={OZILCUTS_APP_NAME}
             title="Chair"
-            description={
-              isFocused
-                ? "Your runway for the selected day — scroll the timeline, tap a booking to open it."
-                : "Day timeline first, walk-in below — tap a day to switch, pinch-friendly controls."
-            }
+            description="Day timeline first, walk-in below — tap a day to switch, pinch-friendly controls."
           />
 
           {profile.kind === "loading" || profile.kind === "none" ? (
@@ -427,10 +421,7 @@ export default function BarberCalendarPage() {
                       />
                     </label>
                     <div
-                      className={cn(
-                        "flex flex-wrap items-center gap-2",
-                        isFocused && "hidden",
-                      )}
+                      className="flex flex-wrap items-center gap-2"
                       role="group"
                       aria-label="Calendar density"
                     >
@@ -463,10 +454,7 @@ export default function BarberCalendarPage() {
                   </div>
 
                   <p
-                    className={cn(
-                      "text-xs text-muted-foreground lg:w-full lg:text-right",
-                      isFocused && "hidden",
-                    )}
+                    className="text-xs text-muted-foreground lg:w-full lg:text-right"
                     aria-live="polite"
                   >
                     <span className="whitespace-nowrap">
@@ -520,11 +508,7 @@ export default function BarberCalendarPage() {
                     onBooked={() => void load()}
                   />
 
-                  <div
-                    className={cn(
-                      isFocused ? "hidden" : "hidden lg:block",
-                    )}
-                  >
+                  <div className="hidden lg:block">
                     <h3 className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                       Week overview
                     </h3>

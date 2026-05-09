@@ -1,6 +1,5 @@
 "use client";
 
-import { useOperationalWorkspaceMode } from "@/lib/operational-workspace-context";
 import { useSessionProfile } from "@/lib/use-session-profile";
 import { cn } from "@ozilcuts/ui";
 import type { LucideIcon } from "lucide-react";
@@ -59,7 +58,6 @@ export function QuickActionsLayer({
 }) {
   const pathname = usePathname();
   const { profile } = useSessionProfile();
-  const { mode: workspaceMode } = useOperationalWorkspaceMode();
 
   if (profile.kind !== "ready") return null;
 
@@ -71,16 +69,7 @@ export function QuickActionsLayer({
     return null;
   }
 
-  const items =
-    variant === "barber"
-      ? workspaceMode === "focused"
-        ? BARBER_ITEMS.filter((i) => i.href !== "/barber/analytics")
-        : BARBER_ITEMS
-      : workspaceMode === "focused"
-        ? ADMIN_ITEMS.filter(
-            (i) => i.href !== "/admin/reports/revenue",
-          )
-        : ADMIN_ITEMS;
+  const items = variant === "barber" ? BARBER_ITEMS : ADMIN_ITEMS;
   const label =
     variant === "barber" ? "Barber quick actions" : "Admin quick actions";
 

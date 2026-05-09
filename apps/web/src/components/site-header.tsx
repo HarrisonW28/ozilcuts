@@ -1,12 +1,14 @@
 "use client";
 
-import { ModeToggle } from "@/components/mode-toggle";
 import { AdminOnboardingResumeBar } from "@/components/admin-onboarding-resume-bar";
+import { ModeToggle } from "@/components/mode-toggle";
 import { NotificationsBell } from "@/components/notifications-bell";
 import { NotificationsToaster } from "@/components/notifications-toaster";
-import { OperationalWorkspaceToggle } from "@/components/operational-workspace-toggle";
-import { useOperationalWorkspaceMode } from "@/lib/operational-workspace-context";
-import { getPrimaryNavSections } from "@/lib/site-primary-nav";
+import { SiteAccountMenu } from "@/components/site-account-menu";
+import {
+  getAccountMenuGroups,
+  getPrimaryNavSections,
+} from "@/lib/site-primary-nav";
 import type { ProfileState } from "@/lib/use-session-profile";
 import { Button, buttonVariants, cn } from "@ozilcuts/ui";
 import { OZILCUTS_APP_NAME } from "@ozilcuts/types";
@@ -34,14 +36,15 @@ const mobileNavLinkClass =
   "motion-interactive flex min-h-12 items-center rounded-xl border border-transparent px-3 text-base font-medium text-foreground transition-colors hover:border-border/60 hover:bg-muted/40 active:bg-muted/55";
 
 export function SiteHeader({ profile, onSignOut }: SiteHeaderProps) {
-  const { mode: workspaceMode } = useOperationalWorkspaceMode();
   const pathname = usePathname();
   const menuId = useId();
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const mobilePanelRef = useRef<ElementRef<"nav">>(null);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
-  const navSections = getPrimaryNavSections(profile, workspaceMode);
+  const navSections = getPrimaryNavSections(profile);
+  const accountMenuGroups =
+    profile.kind === "ready" ? getAccountMenuGroups(profile) : [];
 
   useEffect(() => {
     setMobileNavOpen(false);
@@ -133,13 +136,6 @@ export function SiteHeader({ profile, onSignOut }: SiteHeaderProps) {
             </nav>
           </div>
           <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-3">
-            {profile.kind === "ready" &&
-            (profile.user.role.slug === "barber" ||
-              profile.user.role.slug === "admin") ? (
-              <div className="hidden md:block">
-                <OperationalWorkspaceToggle />
-              </div>
-            ) : null}
             <Button
               ref={menuButtonRef}
               type="button"
@@ -209,26 +205,9 @@ export function SiteHeader({ profile, onSignOut }: SiteHeaderProps) {
               {profile.kind === "ready" ? (
                 <>
                   <NotificationsBell enabled />
-                  <span className="max-w-[9rem] truncate font-medium text-foreground sm:hidden">
-                    {profile.user.name.split(" ")[0] ?? profile.user.name}
-                  </span>
-                  <div className="hidden text-end sm:block">
-                    <div className="max-w-[14rem] truncate text-sm font-medium text-foreground">
-                      {profile.user.name}
-                    </div>
-                    <div className="text-xs capitalize text-muted-foreground">
-                      {profile.user.role.slug}
-                    </div>
+                  <div className="hidden md:block">
+                    <SiteAccountMenu profile={profile} onSignOut={onSignOut} />
                   </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => void onSignOut()}
-                    aria-label="Sign out of Ozilcuts"
-                  >
-                    Sign out
-                  </Button>
                 </>
               ) : null}
             </nav>
@@ -246,25 +225,6 @@ export function SiteHeader({ profile, onSignOut }: SiteHeaderProps) {
             aria-label="Primary"
           >
             <ul className="space-y-5">
-              {profile.kind === "ready" &&
-              profile.user.role.slug === "admin" &&
-              profile.user.shop_admin &&
-              !profile.user.shop_admin.onboarding_completed_at &&
-              pathname !== "/admin/onboarding" &&
-              !pathname.startsWith("/admin/onboarding/") ? (
-                <li>
-                  <Link
-                    href="/admin/onboarding"
-                    className={cn(
-                      mobileNavLinkClass,
-                      "border-primary/35 bg-primary/10 font-semibold text-primary dark:border-primary/30 dark:bg-primary/15 dark:text-primary",
-                    )}
-                    onClick={() => setMobileNavOpen(false)}
-                  >
-                    Resume shop setup
-                  </Link>
-                </li>
-              ) : null}
               {navSections.map((section) => (
                 <li key={section.id}>
                   {section.label ? (
@@ -291,13 +251,47 @@ export function SiteHeader({ profile, onSignOut }: SiteHeaderProps) {
                   </ul>
                 </li>
               ))}
-              {profile.kind === "ready" &&
-              (profile.user.role.slug === "barber" ||
-                profile.user.role.slug === "admin") ? (
-                <li>
-                  <div className="mt-4 border-t border-border/45 pt-4 md:hidden">
-                    <OperationalWorkspaceToggle compact />
-                  </div>
+              {profile.kind === "ready"
+                ? accountMenuGroups.map((group) => (
+                    <li key={`account-${group.id}`}>
+                      {group.label ? (
+                        <p className="mb-2 px-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                          {group.label}
+                        </p>
+                      ) : null}
+                      <ul className="space-y-1">
+                        {group.links.map((link) => (
+                          <li key={`account-${group.id}-${link.href}`}>
+                            <Link
+                              href={link.href}
+                              className={cn(
+                                mobileNavLinkClass,
+                                link.href === "/book" &&
+                                  "border-primary/35 bg-primary/10 font-semibold text-primary dark:border-primary/30 dark:bg-primary/15 dark:text-primary",
+                              )}
+                              onClick={() => setMobileNavOpen(false)}
+                            >
+                              {link.label}
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    </li>
+                  ))
+                : null}
+              {profile.kind === "ready" ? (
+                <li className="border-t border-border/45 pt-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="min-h-12 w-full justify-center"
+                    onClick={() => {
+                      setMobileNavOpen(false);
+                      void onSignOut();
+                    }}
+                  >
+                    Sign out
+                  </Button>
                 </li>
               ) : null}
             </ul>
