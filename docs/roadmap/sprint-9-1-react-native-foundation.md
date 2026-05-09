@@ -1,29 +1,33 @@
-# Sprint 9.1.react.native.foundation — React Native Foundation
+# Sprint 9.1 — React Native Foundation
 
 ## Goals
-Implement production-ready functionality following enterprise-grade standards.
+Bootstrap scalable mobile app architecture.
+
+## Focus Areas
+- Expo setup
+- navigation
+- auth integration
+- shared API layer
+- shared TypeScript types
+- scalable folder structure
+- environment configuration
 
 ## Requirements
-- Preserve existing architecture
-- Maintain WeSharp coding standards
-- Reuse existing abstractions/components/services
-- No duplicated logic
-- Mobile-first responsive UX
-- Atomic commits only
+- preserve backend architecture
+- reuse API/business logic
+- no duplicated backend logic
+- maintain WeSharp standards
+- scalable mobile architecture
 
 ## QA Checklist
-- Responsive QA
-- Role testing
-- API validation
-- Loading/error states
-- Accessibility review
-- Edge-case testing
+- iOS boot testing
+- Android boot testing
+- auth testing
+- API connectivity testing
+- responsive native layout testing
 
 ## Acceptance Criteria
-- Sprint functionality complete
-- No unrelated rewrites
-- Architecture consistency preserved
-- QA completed
-
-## Atomic Commit Example
-feat(9-1-react-native-foundation): implement react native foundation
+- working Expo app
+- working auth flow
+- shared API integration
+- scalable mobile structure

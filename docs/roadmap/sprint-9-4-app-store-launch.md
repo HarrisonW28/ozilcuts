@@ -1,29 +1,32 @@
-# Sprint 9.4.app.store.launch — App Store Launch
+# Sprint 9.4 — App Store Launch
 
 ## Goals
-Implement production-ready functionality following enterprise-grade standards.
+Prepare production mobile release.
+
+## Focus Areas
+- production builds
+- app icons
+- splash assets
+- screenshots
+- app store metadata
+- release optimization
+- build stability
 
 ## Requirements
-- Preserve existing architecture
-- Maintain WeSharp coding standards
-- Reuse existing abstractions/components/services
-- No duplicated logic
-- Mobile-first responsive UX
-- Atomic commits only
+- preserve architecture consistency
+- production-ready assets
+- maintain premium branding
+- maintain WeSharp quality standards
 
 ## QA Checklist
-- Responsive QA
-- Role testing
-- API validation
-- Loading/error states
-- Accessibility review
-- Edge-case testing
+- TestFlight QA
+- Android internal testing
+- production build verification
+- crash testing
+- store asset review
 
 ## Acceptance Criteria
-- Sprint functionality complete
-- No unrelated rewrites
-- Architecture consistency preserved
-- QA completed
-
-## Atomic Commit Example
-feat(9-4-app-store-launch): implement app store launch
+- successful production builds
+- app store-ready assets
+- stable release candidate
+- deployment-ready mobile apps

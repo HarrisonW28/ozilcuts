@@ -1,29 +1,31 @@
-# Sprint 9.3.push.notifications — Push Notifications
+# Sprint 9.3 — Push Notifications
 
 ## Goals
-Implement production-ready functionality following enterprise-grade standards.
+Implement scalable native push notification system.
+
+## Focus Areas
+- Firebase integration
+- Expo Notifications
+- appointment reminders
+- cancellation alerts
+- operational notifications
+- device token handling
 
 ## Requirements
-- Preserve existing architecture
-- Maintain WeSharp coding standards
-- Reuse existing abstractions/components/services
-- No duplicated logic
-- Mobile-first responsive UX
-- Atomic commits only
+- reusable notification architecture
+- preserve backend notification system
+- no duplicated logic
+- maintain WeSharp engineering standards
 
 ## QA Checklist
-- Responsive QA
-- Role testing
-- API validation
-- Loading/error states
-- Accessibility review
-- Edge-case testing
+- iOS push testing
+- Android push testing
+- token registration testing
+- reminder notification testing
+- cancellation notification testing
 
 ## Acceptance Criteria
-- Sprint functionality complete
-- No unrelated rewrites
-- Architecture consistency preserved
-- QA completed
-
-## Atomic Commit Example
-feat(9-3-push-notifications): implement push notifications
+- reliable push delivery
+- stable token handling
+- working reminder notifications
+- operational alerts functioning correctly

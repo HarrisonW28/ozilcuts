@@ -1,29 +1,29 @@
-# Sprint 10.1.repeat.booking.system — Repeat Booking System
+# Sprint 10.1 — Repeat Booking System
 
 ## Goals
-Implement production-ready functionality following enterprise-grade standards.
+Reduce booking friction for repeat customers.
+
+## Focus Areas
+- repeat previous cut
+- favourite barber shortcuts
+- quick rebook flows
+- streamlined booking UX
+- repeat appointment logic
 
 ## Requirements
-- Preserve existing architecture
-- Maintain WeSharp coding standards
-- Reuse existing abstractions/components/services
-- No duplicated logic
-- Mobile-first responsive UX
-- Atomic commits only
+- preserve booking architecture
+- reuse existing booking services
+- no duplicated booking logic
+- maintain premium UX quality
 
 ## QA Checklist
-- Responsive QA
-- Role testing
-- API validation
-- Loading/error states
-- Accessibility review
-- Edge-case testing
+- repeat booking QA
+- edge-case booking QA
+- mobile UX QA
+- booking state QA
 
 ## Acceptance Criteria
-- Sprint functionality complete
-- No unrelated rewrites
-- Architecture consistency preserved
-- QA completed
-
-## Atomic Commit Example
-feat(10-1-repeat-booking-system): implement repeat booking system
+- quick repeat booking flow works
+- reduced booking friction
+- preserved scheduling/payment integrity
+- responsive UX across devices

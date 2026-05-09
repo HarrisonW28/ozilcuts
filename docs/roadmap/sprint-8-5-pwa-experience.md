@@ -1,29 +1,33 @@
-# Sprint 8.5.pwa.experience — PWA Experience
+# Sprint 8.5 — PWA Experience
 
 ## Goals
-Implement production-ready functionality following enterprise-grade standards.
+Create installable app-like web experience.
+
+## Focus Areas
+- PWA manifest
+- install prompts
+- splash screens
+- app icons
+- offline handling foundations
+- mobile app feel
+- standalone mode behavior
 
 ## Requirements
-- Preserve existing architecture
-- Maintain WeSharp coding standards
-- Reuse existing abstractions/components/services
-- No duplicated logic
-- Mobile-first responsive UX
-- Atomic commits only
+- preserve existing architecture
+- mobile-first implementation
+- maintain design consistency
+- no duplicated business logic
+- maintain WeSharp standards
 
 ## QA Checklist
-- Responsive QA
-- Role testing
-- API validation
-- Loading/error states
-- Accessibility review
-- Edge-case testing
+- install testing
+- iOS Safari testing
+- Android Chrome testing
+- standalone mode QA
+- icon/splash QA
 
 ## Acceptance Criteria
-- Sprint functionality complete
-- No unrelated rewrites
-- Architecture consistency preserved
-- QA completed
-
-## Atomic Commit Example
-feat(8-5-pwa-experience): implement pwa experience
+- installable web app
+- proper standalone behavior
+- mobile-native feel improvements
+- consistent branding/assets

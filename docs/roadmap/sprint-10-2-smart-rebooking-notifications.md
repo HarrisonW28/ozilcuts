@@ -1,29 +1,29 @@
-# Sprint 10.2.smart.rebooking.notifications — Smart Rebooking Notifications
+# Sprint 10.2 — Smart Rebooking Notifications
 
 ## Goals
-Implement production-ready functionality following enterprise-grade standards.
+Implement intelligent retention notification workflows.
+
+## Focus Areas
+- haircut due reminders
+- inactivity nudges
+- automated rebooking prompts
+- retention notification timing
+- customer engagement workflows
 
 ## Requirements
-- Preserve existing architecture
-- Maintain WeSharp coding standards
-- Reuse existing abstractions/components/services
-- No duplicated logic
-- Mobile-first responsive UX
-- Atomic commits only
+- preserve notification architecture
+- reusable automation logic
+- maintain WeSharp standards
+- avoid spammy UX
 
 ## QA Checklist
-- Responsive QA
-- Role testing
-- API validation
-- Loading/error states
-- Accessibility review
-- Edge-case testing
+- reminder timing QA
+- notification delivery QA
+- automation workflow QA
+- customer preference QA
 
 ## Acceptance Criteria
-- Sprint functionality complete
-- No unrelated rewrites
-- Architecture consistency preserved
-- QA completed
-
-## Atomic Commit Example
-feat(10-2-smart-rebooking-notifications): implement smart rebooking notifications
+- automated retention notifications functioning
+- configurable reminder timing
+- preserved notification stability
+- improved customer re-engagement flows

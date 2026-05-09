@@ -1,29 +1,38 @@
-# Sprint 8.3.dashboard.ux.polish — Dashboard UX Polish
+# Sprint 8.3 — Dashboard UX Polish
 
 ## Goals
-Implement production-ready functionality following enterprise-grade standards.
+Polish operational dashboards to production quality.
+
+## Focus Areas
+- loading states
+- empty states
+- analytics layout polish
+- onboarding UX
+- responsive spacing
+- dashboard hierarchy
+- card consistency
+- touch usability
+- mobile dashboard experience
 
 ## Requirements
-- Preserve existing architecture
-- Maintain WeSharp coding standards
-- Reuse existing abstractions/components/services
-- No duplicated logic
-- Mobile-first responsive UX
-- Atomic commits only
+- preserve existing architecture
+- do not rewrite analytics/business logic
+- reuse existing dashboard components
+- maintain design consistency
+- maintain WeSharp frontend quality
+- mobile-first responsive UX
 
 ## QA Checklist
-- Responsive QA
-- Role testing
-- API validation
-- Loading/error states
-- Accessibility review
-- Edge-case testing
+- responsive dashboard QA
+- mobile usability QA
+- loading state QA
+- empty state QA
+- dark mode QA
+- accessibility QA
 
 ## Acceptance Criteria
-- Sprint functionality complete
-- No unrelated rewrites
-- Architecture consistency preserved
-- QA completed
-
-## Atomic Commit Example
-feat(8-3-dashboard-ux-polish): implement dashboard ux polish
+- dashboards feel production-ready
+- consistent spacing/layout hierarchy
+- polished loading/empty states
+- improved mobile usability
+- no business logic regressions

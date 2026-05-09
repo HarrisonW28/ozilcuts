@@ -1,29 +1,35 @@
-# Sprint 8.4.performance.optimization — Performance Optimization
+# Sprint 8.4 — Performance Optimization
 
 ## Goals
-Implement production-ready functionality following enterprise-grade standards.
+Improve frontend/backend performance without architectural rewrites.
+
+## Focus Areas
+- unnecessary renders
+- duplicated queries
+- API optimization
+- lazy loading
+- image optimization
+- caching improvements
+- loading performance
+- bundle optimization
 
 ## Requirements
-- Preserve existing architecture
-- Maintain WeSharp coding standards
-- Reuse existing abstractions/components/services
-- No duplicated logic
-- Mobile-first responsive UX
-- Atomic commits only
+- preserve architecture consistency
+- no premature overengineering
+- preserve UX behavior
+- maintain WeSharp coding standards
+- focused optimizations only
 
 ## QA Checklist
-- Responsive QA
-- Role testing
-- API validation
-- Loading/error states
-- Accessibility review
-- Edge-case testing
+- Lighthouse review
+- query inspection
+- mobile performance review
+- loading speed comparison
+- memory/render inspection
 
 ## Acceptance Criteria
-- Sprint functionality complete
-- No unrelated rewrites
-- Architecture consistency preserved
-- QA completed
-
-## Atomic Commit Example
-feat(8-4-performance-optimization): implement performance optimization
+- reduced unnecessary renders
+- reduced duplicate queries
+- improved loading responsiveness
+- preserved UX behavior
+- no regressions introduced

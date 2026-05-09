@@ -1,29 +1,32 @@
-# Sprint 9.2.customer.mobile.app — Customer Mobile App
+# Sprint 9.2 — Customer Mobile App
 
 ## Goals
-Implement production-ready functionality following enterprise-grade standards.
+Build customer mobile app MVP.
+
+## Focus Areas
+- booking flow
+- appointment management
+- notifications
+- customer profile
+- mobile navigation
+- smooth native interactions
 
 ## Requirements
-- Preserve existing architecture
-- Maintain WeSharp coding standards
-- Reuse existing abstractions/components/services
-- No duplicated logic
-- Mobile-first responsive UX
-- Atomic commits only
+- preserve backend architecture
+- reuse existing API abstractions
+- maintain mobile-first UX quality
+- avoid duplicated business logic
+- maintain WeSharp standards
 
 ## QA Checklist
-- Responsive QA
-- Role testing
-- API validation
-- Loading/error states
-- Accessibility review
-- Edge-case testing
+- iOS QA
+- Android QA
+- booking flow QA
+- auth QA
+- responsive native UX QA
 
 ## Acceptance Criteria
-- Sprint functionality complete
-- No unrelated rewrites
-- Architecture consistency preserved
-- QA completed
-
-## Atomic Commit Example
-feat(9-2-customer-mobile-app): implement customer mobile app
+- functional customer booking app
+- smooth mobile interactions
+- stable auth/API integration
+- production-ready mobile UX foundation
