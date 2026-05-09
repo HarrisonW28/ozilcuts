@@ -13,3 +13,9 @@ Artisan::command('inspire', function () {
 Schedule::command('appointments:send-reminders')
     ->everyFifteenMinutes()
     ->withoutOverlapping();
+
+// Smart rebooking nudges fire once a day in the late morning. Idempotent
+// per source appointment via the appointment_rebook_nudges unique index.
+Schedule::command('appointments:send-rebook-nudges')
+    ->dailyAt('10:00')
+    ->withoutOverlapping();

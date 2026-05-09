@@ -16,6 +16,8 @@ final class NotificationEvents
 
     public const APPOINTMENT_REMINDER = 'appointment.reminder';
 
+    public const APPOINTMENT_REBOOK_SUGGESTED = 'appointment.rebook_suggested';
+
     public const STAFF_BOOKING_CREATED = 'staff.booking.created';
 
     public const STAFF_BOOKING_CANCELLED = 'staff.booking.cancelled';
@@ -35,6 +37,7 @@ final class NotificationEvents
         self::APPOINTMENT_CANCELLED,
         self::APPOINTMENT_RESCHEDULED,
         self::APPOINTMENT_REMINDER,
+        self::APPOINTMENT_REBOOK_SUGGESTED,
         self::STAFF_BOOKING_CREATED,
         self::STAFF_BOOKING_CANCELLED,
         self::STAFF_BOOKING_RESCHEDULED,
@@ -57,6 +60,10 @@ final class NotificationEvents
         self::APPOINTMENT_REMINDER => [
             'label' => 'Appointment reminder',
             'description' => 'Reminders before an upcoming appointment (e.g. 24 hours and 2 hours before).',
+        ],
+        self::APPOINTMENT_REBOOK_SUGGESTED => [
+            'label' => 'Time for your next visit',
+            'description' => 'Smart nudges around your usual cadence so you can rebook in one tap.',
         ],
         self::STAFF_BOOKING_CREATED => [
             'label' => 'Staff alert: new booking',
