@@ -2,6 +2,8 @@
 
 import { ModeToggle } from "@/components/mode-toggle";
 import { NotificationsBell } from "@/components/notifications-bell";
+import { NotificationsToaster } from "@/components/notifications-toaster";
+import { InboxProvider } from "@/lib/use-inbox";
 import type { ProfileState } from "@/lib/use-session-profile";
 import { Button, buttonVariants, cn } from "@ozilcuts/ui";
 import { OZILCUTS_APP_NAME } from "@ozilcuts/types";
@@ -13,8 +15,10 @@ type SiteHeaderProps = {
 };
 
 export function SiteHeader({ profile, onSignOut }: SiteHeaderProps) {
+  const inboxEnabled = profile.kind === "ready";
   return (
-    <header className="flex w-full flex-wrap items-center justify-end gap-2 border-b border-border/50 px-4 pt-[max(1rem,env(safe-area-inset-top,0px))] sm:gap-3 sm:px-6 sm:pt-6">
+    <InboxProvider enabled={inboxEnabled}>
+      <header className="flex w-full flex-wrap items-center justify-end gap-2 border-b border-border/50 px-4 pt-[max(1rem,env(safe-area-inset-top,0px))] sm:gap-3 sm:px-6 sm:pt-6">
       <div className="mr-auto flex flex-wrap items-center gap-x-4 gap-y-1">
         <Link
           href="/"
@@ -211,6 +215,8 @@ export function SiteHeader({ profile, onSignOut }: SiteHeaderProps) {
         ) : null}
       </nav>
       <ModeToggle />
-    </header>
+      </header>
+      <NotificationsToaster />
+    </InboxProvider>
   );
 }

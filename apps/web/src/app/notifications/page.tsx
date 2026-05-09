@@ -2,13 +2,9 @@
 
 import { SiteHeader } from "@/components/site-header";
 import { getStoredAuthToken } from "@/lib/auth-token";
+import { useInbox } from "@/lib/use-inbox";
 import { useSessionProfile } from "@/lib/use-session-profile";
-import {
-  ApiError,
-  fetchNotifications,
-  markAllNotificationsRead,
-  markNotificationRead,
-} from "@ozilcuts/api";
+import { ApiError, fetchNotifications } from "@ozilcuts/api";
 import type {
   NotificationData,
   NotificationEvent,
@@ -159,6 +155,7 @@ function appointmentHref(record: NotificationRecord): string | null {
 
 export default function NotificationsPage() {
   const { profile, signOut } = useSessionProfile();
+  const inbox = useInbox();
   const [page, setPage] = useState<number>(1);
   const [unreadOnly, setUnreadOnly] = useState<boolean>(false);
   const [operationalOnly, setOperationalOnly] = useState<boolean>(false);
@@ -200,11 +197,11 @@ export default function NotificationsPage() {
 
   async function onMarkRead(record: NotificationRecord) {
     if (record.read_at !== null) return;
-    const token = getStoredAuthToken();
-    if (!token) return;
     setBusyId(record.id);
     try {
-      await markNotificationRead(token, record.id);
+      // Provider handles the API call + optimistic badge update so the
+      // header bell stays in sync without waiting for the next poll.
+      await inbox.markRead(record.id);
       await load();
     } catch {
       // Surface inline; non-fatal.
@@ -214,11 +211,9 @@ export default function NotificationsPage() {
   }
 
   async function onMarkAllRead() {
-    const token = getStoredAuthToken();
-    if (!token) return;
     setAllBusy(true);
     try {
-      await markAllNotificationsRead(token);
+      await inbox.markAllRead();
       await load();
     } catch {
       // Soft-fail; user can retry.
