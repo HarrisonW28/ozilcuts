@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Mail\AppointmentCancelledMail;
 use App\Mail\AppointmentConfirmedMail;
 use App\Mail\AppointmentRescheduledMail;
+use App\Mail\AppointmentStaffAlertMail;
 use App\Models\Appointment;
 use App\Models\BarberAvailabilityWindow;
 use App\Models\BarberProfile;
@@ -54,7 +55,7 @@ class AppointmentMailTest extends TestCase
         return [$barber, $service];
     }
 
-    public function test_booking_queues_confirmation_email_to_customer_and_barber(): void
+    public function test_booking_queues_customer_confirmation_and_staff_alert_email(): void
     {
         [$barber, $service] = $this->makeBookable();
         $customer = User::factory()->create();
@@ -69,7 +70,11 @@ class AppointmentMailTest extends TestCase
 
         Mail::assertQueued(
             AppointmentConfirmedMail::class,
-            fn ($mail) => $mail->hasTo($customer->email) && $mail->hasCc($barber->email),
+            fn ($mail) => $mail->hasTo($customer->email) && ! $mail->hasCc($barber->email),
+        );
+        Mail::assertQueued(
+            AppointmentStaffAlertMail::class,
+            fn ($mail) => $mail->hasTo($barber->email),
         );
     }
 
@@ -92,7 +97,11 @@ class AppointmentMailTest extends TestCase
 
         Mail::assertQueued(
             AppointmentCancelledMail::class,
-            fn ($mail) => $mail->hasTo($customer->email) && $mail->hasCc($barber->email),
+            fn ($mail) => $mail->hasTo($customer->email) && ! $mail->hasCc($barber->email),
+        );
+        Mail::assertQueued(
+            AppointmentStaffAlertMail::class,
+            fn ($mail) => $mail->hasTo($barber->email),
         );
     }
 
@@ -121,12 +130,16 @@ class AppointmentMailTest extends TestCase
                 if (! $mail->hasTo($customer->email)) {
                     return false;
                 }
-                if (! $mail->hasCc($barber->email)) {
+                if ($mail->hasCc($barber->email)) {
                     return false;
                 }
 
                 return str_contains($mail->previousStart, '2026');
             },
+        );
+        Mail::assertQueued(
+            AppointmentStaffAlertMail::class,
+            fn ($mail) => $mail->hasTo($barber->email),
         );
     }
 

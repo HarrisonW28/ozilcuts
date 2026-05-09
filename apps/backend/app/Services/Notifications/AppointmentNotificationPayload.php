@@ -19,10 +19,14 @@ final class AppointmentNotificationPayload
      *     customer_name: string|null,
      *     starts_at: string|null,
      *     previous_starts_at?: string|null,
+     *     actor_name?: string|null,
      * }
      */
-    public static function build(Appointment $appointment, ?string $previousStartsAt = null): array
-    {
+    public static function build(
+        Appointment $appointment,
+        ?string $previousStartsAt = null,
+        ?string $actorName = null,
+    ): array {
         $payload = [
             'appointment_id' => (int) $appointment->id,
             'service_name' => $appointment->service?->name,
@@ -32,6 +36,9 @@ final class AppointmentNotificationPayload
         ];
         if ($previousStartsAt !== null) {
             $payload['previous_starts_at'] = $previousStartsAt;
+        }
+        if ($actorName !== null) {
+            $payload['actor_name'] = $actorName;
         }
 
         return $payload;

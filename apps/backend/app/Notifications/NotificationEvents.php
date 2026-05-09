@@ -16,12 +16,28 @@ final class NotificationEvents
 
     public const APPOINTMENT_REMINDER = 'appointment.reminder';
 
+    public const STAFF_BOOKING_CREATED = 'staff.booking.created';
+
+    public const STAFF_BOOKING_CANCELLED = 'staff.booking.cancelled';
+
+    public const STAFF_BOOKING_RESCHEDULED = 'staff.booking.rescheduled';
+
+    /** @var list<string> */
+    public const OPERATIONAL_ALERTS = [
+        self::STAFF_BOOKING_CREATED,
+        self::STAFF_BOOKING_CANCELLED,
+        self::STAFF_BOOKING_RESCHEDULED,
+    ];
+
     /** @var list<string> */
     public const ALL = [
         self::APPOINTMENT_CONFIRMED,
         self::APPOINTMENT_CANCELLED,
         self::APPOINTMENT_RESCHEDULED,
         self::APPOINTMENT_REMINDER,
+        self::STAFF_BOOKING_CREATED,
+        self::STAFF_BOOKING_CANCELLED,
+        self::STAFF_BOOKING_RESCHEDULED,
     ];
 
     /** @var array<string, array{label: string, description: string}> */
@@ -41,6 +57,18 @@ final class NotificationEvents
         self::APPOINTMENT_REMINDER => [
             'label' => 'Appointment reminder',
             'description' => 'Reminders before an upcoming appointment (e.g. 24 hours and 2 hours before).',
+        ],
+        self::STAFF_BOOKING_CREATED => [
+            'label' => 'Staff alert: new booking',
+            'description' => 'Operational alert for barbers and admins when a booking is created.',
+        ],
+        self::STAFF_BOOKING_CANCELLED => [
+            'label' => 'Staff alert: cancellation',
+            'description' => 'Operational alert for barbers and admins when a booking is cancelled.',
+        ],
+        self::STAFF_BOOKING_RESCHEDULED => [
+            'label' => 'Staff alert: reschedule',
+            'description' => 'Operational alert for barbers and admins when a booking is rescheduled.',
         ],
     ];
 }

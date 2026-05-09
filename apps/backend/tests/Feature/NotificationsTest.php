@@ -234,7 +234,7 @@ class NotificationsTest extends TestCase
         ]);
         $this->assertDatabaseHas('notifications', [
             'user_id' => $barber->id,
-            'type' => NotificationEvents::APPOINTMENT_CONFIRMED,
+            'type' => NotificationEvents::STAFF_BOOKING_CREATED,
             'read_at' => null,
         ]);
         Mail::assertQueued(AppointmentConfirmedMail::class);
@@ -261,11 +261,11 @@ class NotificationsTest extends TestCase
             ])
             ->assertCreated();
 
-        // Only the barber gets an in-app notification.
+        // Only the barber gets a staff in-app notification.
         $this->assertDatabaseCount('notifications', 1);
         $this->assertDatabaseHas('notifications', [
             'user_id' => $barber->id,
-            'type' => NotificationEvents::APPOINTMENT_CONFIRMED,
+            'type' => NotificationEvents::STAFF_BOOKING_CREATED,
         ]);
         Mail::assertQueued(AppointmentConfirmedMail::class);
     }

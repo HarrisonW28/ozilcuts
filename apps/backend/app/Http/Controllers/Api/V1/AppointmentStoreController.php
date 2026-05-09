@@ -10,6 +10,7 @@ use App\Models\Appointment;
 use App\Notifications\NotificationEvents;
 use App\Services\Booking\BookingService;
 use App\Services\Notifications\AppointmentNotificationPayload;
+use App\Services\Notifications\AppointmentStaffAlertService;
 use App\Services\Notifications\NotificationService;
 use App\Services\Payments\PaymentService;
 use Illuminate\Http\JsonResponse;
@@ -22,6 +23,7 @@ final class AppointmentStoreController extends Controller
         BookingService $booking,
         PaymentService $payments,
         NotificationService $notifications,
+        AppointmentStaffAlertService $staffAlerts,
     ): JsonResponse {
         $user = $request->user();
         if ($user === null) {
@@ -45,6 +47,7 @@ final class AppointmentStoreController extends Controller
         $appointment->load(['service', 'barber', 'customer']);
 
         $this->dispatchConfirmation($appointment, $notifications);
+        $staffAlerts->bookingCreated($appointment, $user);
 
         $body = (new AppointmentResource($appointment))->toArray($request);
         $body['payment'] = [
@@ -65,26 +68,13 @@ final class AppointmentStoreController extends Controller
         if ($customer === null) {
             return;
         }
-        $barber = $appointment->barber;
         $payload = AppointmentNotificationPayload::build($appointment);
 
-        // Customer is the primary recipient: gets the email (with the
-        // barber CC'd) and an in-app notification.
         $notifications->send(
             $customer,
             NotificationEvents::APPOINTMENT_CONFIRMED,
             $payload,
             mail: new AppointmentConfirmedMail($appointment),
-            mailCcEmails: $barber?->email !== null ? [$barber->email] : [],
         );
-
-        // Barber gets their own in-app notification (already CC'd on the mail).
-        if ($barber !== null && $barber->id !== $customer->id) {
-            $notifications->send(
-                $barber,
-                NotificationEvents::APPOINTMENT_CONFIRMED,
-                $payload,
-            );
-        }
     }
 }

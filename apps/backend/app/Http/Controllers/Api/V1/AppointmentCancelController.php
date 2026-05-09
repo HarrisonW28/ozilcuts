@@ -9,6 +9,7 @@ use App\Models\Appointment;
 use App\Notifications\NotificationEvents;
 use App\Services\Booking\BookingService;
 use App\Services\Notifications\AppointmentNotificationPayload;
+use App\Services\Notifications\AppointmentStaffAlertService;
 use App\Services\Notifications\NotificationService;
 use App\Services\Payments\PaymentService;
 use Illuminate\Http\JsonResponse;
@@ -22,6 +23,7 @@ final class AppointmentCancelController extends Controller
         BookingService $booking,
         PaymentService $payments,
         NotificationService $notifications,
+        AppointmentStaffAlertService $staffAlerts,
     ): JsonResponse {
         $this->authorize('cancel', $appointment);
 
@@ -31,6 +33,7 @@ final class AppointmentCancelController extends Controller
         $cancelled->load(['service', 'barber', 'customer']);
 
         $this->dispatchCancellation($cancelled, $notifications);
+        $staffAlerts->bookingCancelled($cancelled, $request->user());
 
         return response()->json(
             (new AppointmentResource($cancelled))->toArray($request),
@@ -45,7 +48,6 @@ final class AppointmentCancelController extends Controller
         if ($customer === null) {
             return;
         }
-        $barber = $appointment->barber;
         $payload = AppointmentNotificationPayload::build($appointment);
 
         $notifications->send(
@@ -53,15 +55,6 @@ final class AppointmentCancelController extends Controller
             NotificationEvents::APPOINTMENT_CANCELLED,
             $payload,
             mail: new AppointmentCancelledMail($appointment),
-            mailCcEmails: $barber?->email !== null ? [$barber->email] : [],
         );
-
-        if ($barber !== null && $barber->id !== $customer->id) {
-            $notifications->send(
-                $barber,
-                NotificationEvents::APPOINTMENT_CANCELLED,
-                $payload,
-            );
-        }
     }
 }

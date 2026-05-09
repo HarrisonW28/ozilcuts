@@ -10,6 +10,7 @@ use App\Models\Appointment;
 use App\Notifications\NotificationEvents;
 use App\Services\Booking\BookingService;
 use App\Services\Notifications\AppointmentNotificationPayload;
+use App\Services\Notifications\AppointmentStaffAlertService;
 use App\Services\Notifications\NotificationService;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\JsonResponse;
@@ -22,6 +23,7 @@ final class AppointmentRescheduleController extends Controller
         Appointment $appointment,
         BookingService $booking,
         NotificationService $notifications,
+        AppointmentStaffAlertService $staffAlerts,
     ): JsonResponse {
         $this->authorize('reschedule', $appointment);
 
@@ -45,6 +47,12 @@ final class AppointmentRescheduleController extends Controller
         $rescheduled->load(['service', 'barber', 'customer']);
 
         $this->dispatchReschedule($rescheduled, $previousStart, $previousStartIso, $notifications);
+        $staffAlerts->bookingRescheduled(
+            $rescheduled,
+            previousStartDisplay: $previousStart,
+            previousStartIso: $previousStartIso,
+            actor: $request->user(),
+        );
 
         return response()->json(
             (new AppointmentResource($rescheduled))->toArray($request),
@@ -61,7 +69,6 @@ final class AppointmentRescheduleController extends Controller
         if ($customer === null) {
             return;
         }
-        $barber = $appointment->barber;
         $payload = AppointmentNotificationPayload::build($appointment, $previousStartIso);
 
         $notifications->send(
@@ -69,15 +76,6 @@ final class AppointmentRescheduleController extends Controller
             NotificationEvents::APPOINTMENT_RESCHEDULED,
             $payload,
             mail: new AppointmentRescheduledMail($appointment, $previousStartDisplay),
-            mailCcEmails: $barber?->email !== null ? [$barber->email] : [],
         );
-
-        if ($barber !== null && $barber->id !== $customer->id) {
-            $notifications->send(
-                $barber,
-                NotificationEvents::APPOINTMENT_RESCHEDULED,
-                $payload,
-            );
-        }
     }
 }
