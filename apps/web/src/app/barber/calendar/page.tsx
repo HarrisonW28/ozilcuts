@@ -5,13 +5,22 @@ import { WeekAvailabilityCalendar } from "@/components/week-availability-calenda
 import { getStoredAuthToken } from "@/lib/auth-token";
 import {
   addDays,
+  applyBookingsToSchedule,
   buildWeekDaysFromAvailability,
   formatWeekRangeLabel,
+  formatYmd,
   startOfWeekSunday,
 } from "@/lib/calendar-week";
 import { useSessionProfile } from "@/lib/use-session-profile";
-import { ApiError, fetchManageBarberAvailability } from "@ozilcuts/api";
-import type { BarberAvailabilityPayload } from "@ozilcuts/types";
+import {
+  ApiError,
+  fetchManageBarberAvailability,
+  fetchMyAppointments,
+} from "@ozilcuts/api";
+import type {
+  AppointmentRecord,
+  BarberAvailabilityPayload,
+} from "@ozilcuts/types";
 import { OZILCUTS_APP_NAME } from "@ozilcuts/types";
 import {
   Button,
@@ -32,6 +41,7 @@ export default function BarberCalendarPage() {
   );
   const [availability, setAvailability] =
     useState<BarberAvailabilityPayload | null>(null);
+  const [bookings, setBookings] = useState<AppointmentRecord[]>([]);
   const [loadState, setLoadState] = useState<
     "idle" | "loading" | "ok" | "error"
   >("idle");
@@ -39,9 +49,15 @@ export default function BarberCalendarPage() {
 
   const userId = profile.kind === "ready" ? profile.user.id : null;
   const weekLabel = formatWeekRangeLabel(weekStart);
+  const weekFromYmd = formatYmd(weekStart);
+  const weekToYmd = formatYmd(addDays(weekStart, 6));
   const calendarDays = useMemo(
-    () => buildWeekDaysFromAvailability(weekStart, availability),
-    [weekStart, availability],
+    () =>
+      applyBookingsToSchedule(
+        buildWeekDaysFromAvailability(weekStart, availability),
+        bookings,
+      ),
+    [weekStart, availability, bookings],
   );
 
   const load = useCallback(async () => {
@@ -55,8 +71,18 @@ export default function BarberCalendarPage() {
     setLoadState("loading");
     setLoadMessage(null);
     try {
-      const data = await fetchManageBarberAvailability(token, userId);
-      setAvailability(data);
+      const [availabilityPayload, appointmentsPage] = await Promise.all([
+        fetchManageBarberAvailability(token, userId),
+        // Range query returns a wide per_page, so a single request covers
+        // every booking in the visible week without paginating.
+        fetchMyAppointments(token, {
+          from: weekFromYmd,
+          to: weekToYmd,
+          status: "confirmed",
+        }),
+      ]);
+      setAvailability(availabilityPayload);
+      setBookings(appointmentsPage.data);
       setLoadState("ok");
     } catch (e: unknown) {
       const message =
@@ -68,7 +94,7 @@ export default function BarberCalendarPage() {
       setLoadState("error");
       setLoadMessage(message);
     }
-  }, [userId]);
+  }, [userId, weekFromYmd, weekToYmd]);
 
   useEffect(() => {
     if (profile.kind !== "ready" || profile.user.role.slug !== "barber") {
@@ -91,7 +117,7 @@ export default function BarberCalendarPage() {
           <ScreenTitle
             eyebrow={OZILCUTS_APP_NAME}
             title="Calendar"
-            description="Week view of your recurring hours. Bookings will layer on this grid in a later sprint."
+            description="Week view of your recurring hours and confirmed bookings."
           />
 
           {profile.kind === "loading" || profile.kind === "none" ? (
