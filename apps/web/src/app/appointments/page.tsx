@@ -8,6 +8,7 @@ import {
   cancelAppointment,
   fetchMyAppointments,
   fetchNextVisitSuggestion,
+  sendAppointmentReminder,
 } from "@ozilcuts/api";
 import type {
   AppointmentPaymentStatus,
@@ -173,6 +174,10 @@ export default function AppointmentsPage() {
   const [status, setStatus] = useState<AppointmentStatusFilter>("confirmed");
   const [actionBusyId, setActionBusyId] = useState<number | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [reminderBusyId, setReminderBusyId] = useState<number | null>(null);
+  const [reminderSentForId, setReminderSentForId] = useState<number | null>(
+    null,
+  );
   const [nextVisit, setNextVisit] = useState<RebookSuggestion | null>(null);
   const [nextVisitDismissed, setNextVisitDismissed] = useState(false);
 
@@ -269,6 +274,30 @@ export default function AppointmentsPage() {
       );
     } finally {
       setActionBusyId(null);
+    }
+  }
+
+  async function onSendReminder(row: AppointmentRecord) {
+    const ok = window.confirm(
+      `Send a reminder for ${row.customer?.name ?? "this customer"}'s booking on ${formatStart(row.starts_at)}?`,
+    );
+    if (!ok) return;
+    const token = getStoredAuthToken();
+    if (!token) return;
+    setReminderBusyId(row.id);
+    setActionError(null);
+    setReminderSentForId(null);
+    try {
+      await sendAppointmentReminder(token, row.id);
+      setReminderSentForId(row.id);
+    } catch (err) {
+      setActionError(
+        err instanceof ApiError
+          ? err.message
+          : "Could not send reminder. Please try again.",
+      );
+    } finally {
+      setReminderBusyId(null);
     }
   }
 
@@ -459,6 +488,15 @@ export default function AppointmentsPage() {
                       profile.kind === "ready" &&
                       profile.user.role.slug === "customer" &&
                       row.customer?.id === profile.user.id;
+                    const canSendReminder =
+                      row.status === "confirmed" &&
+                      !past &&
+                      profile.kind === "ready" &&
+                      (profile.user.role.slug === "admin" ||
+                        (profile.user.role.slug === "barber" &&
+                          row.barber?.id === profile.user.id));
+                    const reminderBusy = reminderBusyId === row.id;
+                    const reminderSent = reminderSentForId === row.id;
                     const bookAgainHref =
                       isCustomer &&
                       row.status === "confirmed" &&
@@ -541,6 +579,22 @@ export default function AppointmentsPage() {
                                   {isBusy ? "Cancelling…" : "Cancel"}
                                 </Button>
                               </>
+                            ) : null}
+                            {canSendReminder ? (
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="outline"
+                                disabled={reminderBusy}
+                                onClick={() => void onSendReminder(row)}
+                                aria-live="polite"
+                              >
+                                {reminderBusy
+                                  ? "Sending…"
+                                  : reminderSent
+                                    ? "Reminder sent"
+                                    : "Send reminder"}
+                              </Button>
                             ) : null}
                             {bookAgainHref ? (
                               <Button asChild size="sm" variant="secondary">
