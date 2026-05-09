@@ -155,6 +155,61 @@ class AppointmentManagementTest extends TestCase
             ->assertJsonCount(3, 'data');
     }
 
+    public function test_index_filters_by_from_to_range_for_calendar_view(): void
+    {
+        [$barber, , $service] = $this->makeBookableBarber();
+        $customer = User::factory()->create();
+
+        // Three appointments straddling the 2026-05-10 .. 2026-05-16 window.
+        $this->createConfirmedAppointment(
+            $barber,
+            $service,
+            $customer,
+            '2026-05-09 09:00:00',
+            '2026-05-09 09:30:00',
+        );
+        $this->createConfirmedAppointment(
+            $barber,
+            $service,
+            $customer,
+            '2026-05-11 09:00:00',
+            '2026-05-11 09:30:00',
+        );
+        $this->createConfirmedAppointment(
+            $barber,
+            $service,
+            $customer,
+            '2026-05-16 23:30:00',
+            '2026-05-17 00:00:00',
+        );
+        $this->createConfirmedAppointment(
+            $barber,
+            $service,
+            $customer,
+            '2026-05-17 09:00:00',
+            '2026-05-17 09:30:00',
+        );
+
+        $response = $this->actingAs($barber, 'sanctum')
+            ->getJson('/api/v1/appointments?from=2026-05-10&to=2026-05-16')
+            ->assertOk()
+            ->json();
+
+        $this->assertCount(2, $response['data']);
+        // Range queries default to a fat per_page so a calendar week never
+        // gets paginated under realistic loads.
+        $this->assertSame(200, $response['meta']['per_page']);
+        $this->assertSame(
+            '2026-05-11T09:00:00+00:00',
+            $response['data'][0]['starts_at'],
+        );
+
+        $this->actingAs($barber, 'sanctum')
+            ->getJson('/api/v1/appointments?from=2026-05-16&to=2026-05-10')
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['to']);
+    }
+
     public function test_customer_can_cancel_own_upcoming_appointment(): void
     {
         [$barber, , $service] = $this->makeBookableBarber();

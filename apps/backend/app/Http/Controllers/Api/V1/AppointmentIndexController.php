@@ -22,6 +22,9 @@ final class AppointmentIndexController extends Controller
         $filters = $request->validate([
             'status' => ['sometimes', 'in:confirmed,cancelled,all'],
             'range' => ['sometimes', 'in:upcoming,past,all'],
+            'from' => ['sometimes', 'date_format:Y-m-d'],
+            'to' => ['sometimes', 'date_format:Y-m-d', 'after_or_equal:from'],
+            'per_page' => ['sometimes', 'integer', 'min:1', 'max:200'],
         ]);
 
         $query = Appointment::query()->with(['service', 'barber', 'customer']);
@@ -39,16 +42,29 @@ final class AppointmentIndexController extends Controller
             $query->where('status', $status);
         }
 
-        $range = $filters['range'] ?? 'all';
-        $now = CarbonImmutable::now()->toDateTimeString();
-        if ($range === 'upcoming') {
-            $query->where('starts_at', '>=', $now)->orderBy('starts_at');
-        } elseif ($range === 'past') {
-            $query->where('starts_at', '<', $now)->orderByDesc('starts_at');
+        // Calendar views supply an inclusive [from..to] day range. When set,
+        // the range filter takes precedence over the looser upcoming/past
+        // shorthand and we always sort ascending so blocks render in order.
+        $hasRange = isset($filters['from']) && isset($filters['to']);
+        if ($hasRange) {
+            $from = CarbonImmutable::parse((string) $filters['from'])->startOfDay();
+            $to = CarbonImmutable::parse((string) $filters['to'])->endOfDay();
+            $query->whereBetween('starts_at', [$from, $to])->orderBy('starts_at');
         } else {
-            $query->orderBy('starts_at');
+            $range = $filters['range'] ?? 'all';
+            $now = CarbonImmutable::now()->toDateTimeString();
+            if ($range === 'upcoming') {
+                $query->where('starts_at', '>=', $now)->orderBy('starts_at');
+            } elseif ($range === 'past') {
+                $query->where('starts_at', '<', $now)->orderByDesc('starts_at');
+            } else {
+                $query->orderBy('starts_at');
+            }
         }
 
-        return AppointmentResource::collection($query->paginate(20));
+        $perPage = (int) ($filters['per_page'] ?? ($hasRange ? 200 : 20));
+        $perPage = max(1, min($perPage, 200));
+
+        return AppointmentResource::collection($query->paginate($perPage));
     }
 }
