@@ -501,6 +501,13 @@ export default function AdminBarbersPage() {
                                   </Button>
                                   <Button asChild size="sm" variant="outline">
                                     <Link
+                                      href={`/admin/barbers/${row.user.id}/hours`}
+                                    >
+                                      Hours
+                                    </Link>
+                                  </Button>
+                                  <Button asChild size="sm" variant="outline">
+                                    <Link
                                       href={`/admin/barbers/${row.user.id}/analytics`}
                                     >
                                       Analytics

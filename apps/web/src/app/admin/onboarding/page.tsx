@@ -6,10 +6,13 @@ import { useSessionProfile } from "@/lib/use-session-profile";
 import {
   ApiError,
   applyServiceStarterPack,
+  fetchManageBarberAvailability,
   fetchManageBarbers,
   fetchManageServices,
   patchShopOnboarding,
 } from "@ozilcuts/api";
+import type { BarberManageRow } from "@ozilcuts/types";
+import { OZILCUTS_APP_NAME } from "@ozilcuts/types";
 import {
   Button,
   Card,
@@ -22,19 +25,34 @@ import {
   buttonVariants,
   cn,
 } from "@ozilcuts/ui";
-import { OZILCUTS_APP_NAME } from "@ozilcuts/types";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
 const STEP_LABELS = [
   "Shop details",
-  "Business hours",
   "Add barbers",
+  "Business hours",
   "Add services",
   "Payments",
   "Go live",
 ] as const;
+
+async function loadAllManageBarbers(
+  token: string,
+): Promise<BarberManageRow[]> {
+  const rows: BarberManageRow[] = [];
+  let page = 1;
+  let lastPage = 1;
+  do {
+    const batch = await fetchManageBarbers(token, page);
+    rows.push(...batch.data);
+    lastPage = batch.meta.last_page;
+    page += 1;
+  } while (page <= lastPage);
+
+  return rows;
+}
 
 const TOTAL_STEPS = STEP_LABELS.length;
 
@@ -48,20 +66,51 @@ export default function AdminOnboardingPage() {
   const [tapToPayLater, setTapToPayLater] = useState(true);
   const [barberTotal, setBarberTotal] = useState<number | null>(null);
   const [serviceTotal, setServiceTotal] = useState<number | null>(null);
+  const [hoursReady, setHoursReady] = useState<boolean | null>(null);
+  const [hoursGaps, setHoursGaps] = useState<
+    { userId: number; name: string }[]
+  >([]);
   const [busy, setBusy] = useState(false);
   const [starterBusy, setStarterBusy] = useState(false);
   const [stepError, setStepError] = useState<string | null>(null);
 
-  const refreshCounts = useCallback(async () => {
+  const refreshOnboardingSnapshot = useCallback(async () => {
     const token = getStoredAuthToken();
     if (!token) return;
     try {
-      const [barbers, services] = await Promise.all([
-        fetchManageBarbers(token, 1),
+      const [servicesRes, barberRows] = await Promise.all([
         fetchManageServices(token, 1),
+        loadAllManageBarbers(token),
       ]);
-      setBarberTotal(barbers.meta.total);
-      setServiceTotal(services.meta.total);
+      setServiceTotal(servicesRes.meta.total);
+      setBarberTotal(barberRows.length);
+
+      if (barberRows.length === 0) {
+        setHoursReady(false);
+        setHoursGaps([]);
+        return;
+      }
+
+      const avail = await Promise.all(
+        barberRows.map((r) =>
+          fetchManageBarberAvailability(token, r.user.id),
+        ),
+      );
+      const gaps: { userId: number; name: string }[] = [];
+      for (let i = 0; i < barberRows.length; i++) {
+        const windowsCount = avail[i].weekdays.reduce(
+          (n, d) => n + d.windows.length,
+          0,
+        );
+        if (windowsCount === 0) {
+          gaps.push({
+            userId: barberRows[i].user.id,
+            name: barberRows[i].user.name,
+          });
+        }
+      }
+      setHoursGaps(gaps);
+      setHoursReady(gaps.length === 0);
     } catch (e: unknown) {
       if (e instanceof ApiError) {
         setStepError(e.message);
@@ -94,10 +143,10 @@ export default function AdminOnboardingPage() {
     if (profile.kind !== "ready" || profile.user.role.slug !== "admin") {
       return;
     }
-    if (step >= 3) {
-      void refreshCounts();
+    if (step >= 2) {
+      void refreshOnboardingSnapshot();
     }
-  }, [profile, step, refreshCounts]);
+  }, [profile, step, refreshOnboardingSnapshot]);
 
   async function persist(
     body: Parameters<typeof patchShopOnboarding>[1],
@@ -152,7 +201,7 @@ export default function AdminOnboardingPage() {
     setStepError(null);
     try {
       await applyServiceStarterPack(token);
-      await refreshCounts();
+      await refreshOnboardingSnapshot();
     } catch (e: unknown) {
       if (e instanceof ApiError) {
         setStepError(e.message);
@@ -298,10 +347,10 @@ export default function AdminOnboardingPage() {
                   ? "This is how clients will refer to your business in Ozilcuts."
                   : null}
                 {step === 2
-                  ? "Keep schedules simple: each barber picks the times they take bookings."
+                  ? "Create barber accounts so clients can pick a chair and book online."
                   : null}
                 {step === 3
-                  ? "Add at least one barber so you can take appointments."
+                  ? "Each barber needs at least one weekly window before you can take bookings."
                   : null}
                 {step === 4
                   ? "Start from our suggested menu or add your own in the catalog later."
@@ -344,25 +393,10 @@ export default function AdminOnboardingPage() {
               ) : null}
 
               {step === 2 ? (
-                <div className="space-y-4 text-sm text-muted-foreground">
-                  <p className="text-pretty leading-relaxed">
-                    After you add barbers in the next step, open{" "}
-                    <span className="font-medium text-foreground">Team</span> to
-                    set each person&apos;s bookable hours. There&apos;s no giant
-                    grid here—just calm, one-at-a-time setup.
-                  </p>
-                  <p className="leading-relaxed">
-                    Tip: most shops start with one weekly template per chair,
-                    then refine later.
-                  </p>
-                </div>
-              ) : null}
-
-              {step === 3 ? (
                 <div className="space-y-4">
                   <p className="text-sm text-muted-foreground leading-relaxed">
                     Create barber logins from your team page. When at least one
-                    barber exists, you can continue.
+                    barber exists, you can continue to set their bookable hours.
                   </p>
                   <div className="flex flex-wrap gap-2">
                     <Link
@@ -378,7 +412,7 @@ export default function AdminOnboardingPage() {
                       variant="ghost"
                       size="sm"
                       className="min-h-11 sm:min-h-9"
-                      onClick={() => void refreshCounts()}
+                      onClick={() => void refreshOnboardingSnapshot()}
                     >
                       Refresh status
                     </Button>
@@ -389,6 +423,71 @@ export default function AdminOnboardingPage() {
                       : barberTotal === 0
                         ? "No barbers yet—add one on the team page."
                         : `${barberTotal} barber${barberTotal === 1 ? "" : "s"} on file.`}
+                  </p>
+                </div>
+              ) : null}
+
+              {step === 3 ? (
+                <div className="space-y-4">
+                  {barberTotal === 0 ? (
+                    <p className="text-sm text-amber-800 dark:text-amber-200">
+                      Add at least one barber first (previous step or{" "}
+                      <Link
+                        href="/admin/barbers"
+                        className="font-medium underline underline-offset-4"
+                      >
+                        Team
+                      </Link>
+                      ).
+                    </p>
+                  ) : null}
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    Open a barber&apos;s <span className="font-medium text-foreground">Hours</span> from{" "}
+                    <span className="font-medium text-foreground">Team</span>, or use the shortcuts below.{" "}
+                    Everyone on the roster needs at least one open interval.
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    <Link
+                      href="/admin/barbers"
+                      className={cn(
+                        buttonVariants({ variant: "outline", size: "sm" }),
+                      )}
+                    >
+                      Open team
+                    </Link>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="min-h-11 sm:min-h-9"
+                      onClick={() => void refreshOnboardingSnapshot()}
+                    >
+                      Refresh status
+                    </Button>
+                  </div>
+                  {hoursGaps.length > 0 ? (
+                    <ul className="space-y-2 rounded-lg border border-border/60 bg-muted/15 p-3 text-sm">
+                      <li className="font-medium text-foreground">
+                        Still need hours ({hoursGaps.length}):
+                      </li>
+                      {hoursGaps.map((g) => (
+                        <li key={g.userId}>
+                          <Link
+                            href={`/admin/barbers/${g.userId}/hours`}
+                            className="text-primary underline-offset-4 hover:underline"
+                          >
+                            Set hours for {g.name}
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
+                  <p className="text-xs text-muted-foreground" aria-live="polite">
+                    {barberTotal === null || hoursReady === null
+                      ? "Checking schedules…"
+                      : hoursReady
+                        ? "Every barber has at least one bookable window."
+                        : "Add windows for each barber before continuing."}
                   </p>
                 </div>
               ) : null}
@@ -415,6 +514,15 @@ export default function AdminOnboardingPage() {
                       : serviceTotal === 0
                         ? "No services yet—use the button above or add manually in Catalog."
                         : `${serviceTotal} service${serviceTotal === 1 ? "" : "s"} available.`}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    <Link
+                      href="/admin/services"
+                      className="text-primary underline-offset-4 hover:underline"
+                    >
+                      Open full catalog
+                    </Link>{" "}
+                    to add or edit services by hand.
                   </p>
                 </div>
               ) : null}
@@ -483,9 +591,9 @@ export default function AdminOnboardingPage() {
               {step === 6 ? (
                 <div className="space-y-3 text-sm text-muted-foreground leading-relaxed">
                   <p className="text-pretty">
-                    Nice work. Your shop name, team, services, and payment
-                    defaults are in place. Open the catalog or reports any time
-                    from the header.
+                    Nice work. Your shop name, team, bookable hours, services,
+                    and payment defaults are in place. Open the catalog or
+                    reports any time from the header.
                   </p>
                 </div>
               ) : null}
@@ -512,8 +620,11 @@ export default function AdminOnboardingPage() {
                     disabled={
                       busy ||
                       (step === 1 && shopName.trim().length < 2) ||
-                      (step === 3 && barberTotal !== null && barberTotal < 1) ||
-                      (step === 4 && serviceTotal !== null && serviceTotal < 1)
+                      (step === 2 &&
+                        (barberTotal === null || barberTotal < 1)) ||
+                      (step === 3 && hoursReady !== true) ||
+                      (step === 4 &&
+                        (serviceTotal === null || serviceTotal < 1))
                     }
                     onClick={() => {
                       if (step === 1) {
@@ -522,10 +633,16 @@ export default function AdminOnboardingPage() {
                           2,
                         );
                       } else if (step === 2) {
-                        void persist({}, 3);
-                      } else if (step === 3) {
                         if (barberTotal === null || barberTotal < 1) {
                           setStepError("Add at least one barber to continue.");
+                          return;
+                        }
+                        void persist({}, 3);
+                      } else if (step === 3) {
+                        if (hoursReady !== true) {
+                          setStepError(
+                            "Set at least one bookable window for every barber.",
+                          );
                           return;
                         }
                         void persist({}, 4);
