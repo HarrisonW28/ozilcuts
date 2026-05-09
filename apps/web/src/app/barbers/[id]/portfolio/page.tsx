@@ -21,18 +21,20 @@ import {
   CardTitle,
   ScreenTitle,
 } from "@ozilcuts/ui";
+import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
-type LoadState =
+type BarberState =
   | { kind: "loading" }
-  | {
-      kind: "ok";
-      barber: BarberProfilePublic;
-      portfolio: BarberPortfolioResponse;
-    }
+  | { kind: "ok"; barber: BarberProfilePublic }
   | { kind: "error"; message: string; notFound?: boolean };
+
+type PortfolioState =
+  | { kind: "loading" }
+  | { kind: "ok"; portfolio: BarberPortfolioResponse }
+  | { kind: "error"; message: string };
 
 const PER_PAGE = 24;
 
@@ -47,25 +49,27 @@ export default function BarberPortfolioPage() {
         : NaN;
 
   const { profile, signOut } = useSessionProfile();
-  const [state, setState] = useState<LoadState>({ kind: "loading" });
+  const [barberState, setBarberState] = useState<BarberState>({
+    kind: "loading",
+  });
+  const [portfolioState, setPortfolioState] = useState<PortfolioState>({
+    kind: "loading",
+  });
   const [page, setPage] = useState(1);
 
-  const load = useCallback(async () => {
+  const loadBarber = useCallback(async () => {
     if (!Number.isFinite(userId) || userId < 1) {
-      setState({ kind: "error", message: "Invalid portfolio link." });
+      setBarberState({ kind: "error", message: "Invalid portfolio link." });
 
       return;
     }
-    setState({ kind: "loading" });
+    setBarberState({ kind: "loading" });
     try {
-      const [barber, portfolio] = await Promise.all([
-        fetchBarber(userId),
-        fetchBarberPortfolio(userId, page, PER_PAGE),
-      ]);
-      setState({ kind: "ok", barber, portfolio });
+      const barber = await fetchBarber(userId);
+      setBarberState({ kind: "ok", barber });
     } catch (e: unknown) {
       if (e instanceof ApiError && e.status === 404) {
-        setState({
+        setBarberState({
           kind: "error",
           message: "This barber portfolio could not be found.",
           notFound: true,
@@ -79,13 +83,35 @@ export default function BarberPortfolioPage() {
           : e instanceof Error
             ? e.message
             : "Failed to load portfolio.";
-      setState({ kind: "error", message });
+      setBarberState({ kind: "error", message });
+    }
+  }, [userId]);
+
+  const loadPortfolio = useCallback(async () => {
+    if (!Number.isFinite(userId) || userId < 1) return;
+    setPortfolioState({ kind: "loading" });
+    try {
+      const portfolio = await fetchBarberPortfolio(userId, page, PER_PAGE);
+      setPortfolioState({ kind: "ok", portfolio });
+    } catch (e: unknown) {
+      const message =
+        e instanceof ApiError
+          ? e.message
+          : e instanceof Error
+            ? e.message
+            : "Failed to load portfolio photos.";
+      setPortfolioState({ kind: "error", message });
     }
   }, [userId, page]);
 
   useEffect(() => {
-    void load();
-  }, [load]);
+    setPage(1);
+    void loadBarber();
+  }, [loadBarber]);
+
+  useEffect(() => {
+    void loadPortfolio();
+  }, [loadPortfolio]);
 
   return (
     <div className="flex min-h-dvh flex-1 flex-col">
@@ -98,33 +124,36 @@ export default function BarberPortfolioPage() {
           <ScreenTitle
             eyebrow={OZILCUTS_APP_NAME}
             title={
-              state.kind === "ok"
-                ? `${state.barber.barber.name} — Portfolio`
+              barberState.kind === "ok"
+                ? `${barberState.barber.barber.name} — Portfolio`
                 : "Portfolio"
             }
             description={
-              state.kind === "ok" && state.barber.title
-                ? state.barber.title
+              barberState.kind === "ok" && barberState.barber.title
+                ? barberState.barber.title
                 : "Recent cuts shared with permission."
             }
           />
 
-          {state.kind === "loading" ? (
+          {barberState.kind === "loading" ||
+          (barberState.kind === "ok" && portfolioState.kind === "loading") ? (
             <p className="text-sm text-muted-foreground" role="status">
               Loading portfolio…
             </p>
           ) : null}
 
-          {state.kind === "error" ? (
+          {barberState.kind === "error" ? (
             <Card>
               <CardHeader>
                 <CardTitle>
-                  {state.notFound ? "Not found" : "Couldn\u2019t load portfolio"}
+                  {barberState.notFound
+                    ? "Not found"
+                    : "Couldn’t load portfolio"}
                 </CardTitle>
-                <CardDescription>{state.message}</CardDescription>
+                <CardDescription>{barberState.message}</CardDescription>
               </CardHeader>
               <CardFooter className="flex flex-wrap gap-2">
-                {state.notFound ? (
+                {barberState.notFound ? (
                   <Button asChild variant="outline">
                     <Link href="/barbers">All barbers</Link>
                   </Button>
@@ -132,7 +161,7 @@ export default function BarberPortfolioPage() {
                   <Button
                     type="button"
                     variant="secondary"
-                    onClick={() => void load()}
+                    onClick={() => void loadBarber()}
                   >
                     Retry
                   </Button>
@@ -141,36 +170,55 @@ export default function BarberPortfolioPage() {
             </Card>
           ) : null}
 
-          {state.kind === "ok" ? (
+          {barberState.kind === "ok" && portfolioState.kind === "error" ? (
+            <Card>
+              <CardHeader>
+                <CardTitle>Couldn’t load photos</CardTitle>
+                <CardDescription>{portfolioState.message}</CardDescription>
+              </CardHeader>
+              <CardFooter>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => void loadPortfolio()}
+                >
+                  Retry
+                </Button>
+              </CardFooter>
+            </Card>
+          ) : null}
+
+          {barberState.kind === "ok" && portfolioState.kind === "ok" ? (
             <>
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <p className="text-sm text-muted-foreground">
-                  {state.portfolio.meta.total === 0
+                  {portfolioState.portfolio.meta.total === 0
                     ? "No photos yet — check back soon."
-                    : `${state.portfolio.meta.total} photo${state.portfolio.meta.total === 1 ? "" : "s"}`}
+                    : `${portfolioState.portfolio.meta.total} photo${portfolioState.portfolio.meta.total === 1 ? "" : "s"}`}
                 </p>
                 <Button asChild variant="outline" size="sm">
                   <Link href={`/barbers/${userId}`}>Back to profile</Link>
                 </Button>
               </div>
 
-              {state.portfolio.data.length > 0 ? (
+              {portfolioState.portfolio.data.length > 0 ? (
                 <ul
                   className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4"
                   aria-label="Portfolio gallery"
                 >
-                  {state.portfolio.data.map((photo) => (
+                  {portfolioState.portfolio.data.map((photo, index) => (
                     <li
                       key={photo.id}
                       className="flex flex-col gap-1 rounded-lg border border-border/60 p-1.5"
                     >
                       <div className="relative aspect-square w-full overflow-hidden rounded-md bg-muted/40">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
+                        <Image
                           src={photo.url}
                           alt={photo.caption ?? `${photo.kind} photo`}
-                          className="absolute inset-0 h-full w-full object-cover"
-                          loading="lazy"
+                          fill
+                          sizes="(min-width: 768px) 25vw, (min-width: 640px) 33vw, 50vw"
+                          className="object-cover"
+                          priority={index < 4 && page === 1}
                         />
                       </div>
                       {photo.caption ? (
@@ -183,18 +231,18 @@ export default function BarberPortfolioPage() {
                 </ul>
               ) : null}
 
-              {state.portfolio.meta.last_page > 1 ? (
+              {portfolioState.portfolio.meta.last_page > 1 ? (
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <p className="text-sm text-muted-foreground">
-                    Page {state.portfolio.meta.current_page} of{" "}
-                    {state.portfolio.meta.last_page}
+                    Page {portfolioState.portfolio.meta.current_page} of{" "}
+                    {portfolioState.portfolio.meta.last_page}
                   </p>
                   <div className="flex gap-2">
                     <Button
                       type="button"
                       variant="outline"
                       size="sm"
-                      disabled={state.portfolio.meta.current_page <= 1}
+                      disabled={portfolioState.portfolio.meta.current_page <= 1}
                       onClick={() => setPage((p) => Math.max(1, p - 1))}
                     >
                       Previous
@@ -204,8 +252,8 @@ export default function BarberPortfolioPage() {
                       variant="outline"
                       size="sm"
                       disabled={
-                        state.portfolio.meta.current_page >=
-                        state.portfolio.meta.last_page
+                        portfolioState.portfolio.meta.current_page >=
+                        portfolioState.portfolio.meta.last_page
                       }
                       onClick={() => setPage((p) => p + 1)}
                     >
