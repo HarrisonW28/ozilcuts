@@ -409,7 +409,7 @@ export default function ProfilePage() {
             </Card>
           ) : null}
 
-          {profile.kind === "ready" && profile.user.role.slug === "customer" ? (
+          {isCustomer && state.kind === "ok" ? (
             <Card>
               <CardHeader>
                 <CardTitle>Visit history</CardTitle>
@@ -426,7 +426,7 @@ export default function ProfilePage() {
             </Card>
           ) : null}
 
-          {profile.kind === "ready" ? (
+          {session.kind === "ready" ? (
             <Card>
               <CardHeader>
                 <CardTitle>Notifications</CardTitle>

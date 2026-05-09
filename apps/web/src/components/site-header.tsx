@@ -4,7 +4,6 @@ import { ModeToggle } from "@/components/mode-toggle";
 import { NotificationsBell } from "@/components/notifications-bell";
 import { NotificationsToaster } from "@/components/notifications-toaster";
 import { OperationalWorkspaceToggle } from "@/components/operational-workspace-toggle";
-import { InboxProvider } from "@/lib/use-inbox";
 import { useOperationalWorkspaceMode } from "@/lib/operational-workspace-context";
 import { getPrimaryNavSections } from "@/lib/site-primary-nav";
 import type { ProfileState } from "@/lib/use-session-profile";
@@ -13,7 +12,14 @@ import { OZILCUTS_APP_NAME } from "@ozilcuts/types";
 import { Menu, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useCallback, useEffect, useId, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type ElementRef,
+} from "react";
 
 type SiteHeaderProps = {
   profile: ProfileState;
@@ -27,12 +33,11 @@ const mobileNavLinkClass =
   "motion-interactive flex min-h-12 items-center rounded-xl border border-transparent px-3 text-base font-medium text-foreground transition-colors hover:border-border/60 hover:bg-muted/40 active:bg-muted/55";
 
 export function SiteHeader({ profile, onSignOut }: SiteHeaderProps) {
-  const inboxEnabled = profile.kind === "ready";
   const { mode: workspaceMode } = useOperationalWorkspaceMode();
   const pathname = usePathname();
   const menuId = useId();
   const menuButtonRef = useRef<HTMLButtonElement>(null);
-  const mobilePanelRef = useRef<HTMLNavElement>(null);
+  const mobilePanelRef = useRef<ElementRef<"nav">>(null);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   const navSections = getPrimaryNavSections(profile, workspaceMode);
@@ -80,7 +85,7 @@ export function SiteHeader({ profile, onSignOut }: SiteHeaderProps) {
   }, []);
 
   return (
-    <InboxProvider enabled={inboxEnabled}>
+    <>
       <header className="sticky top-0 z-50 border-b border-border/50 bg-background/95 shadow-sm backdrop-blur-md supports-[backdrop-filter]:bg-background/85 dark:supports-[backdrop-filter]:bg-background/80">
         <div className="flex flex-wrap items-center justify-between gap-2 px-4 pt-[max(0.75rem,env(safe-area-inset-top,0px))] pb-3 sm:gap-3 sm:px-6 sm:pt-6 sm:pb-5">
           <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-4">
@@ -266,6 +271,6 @@ export function SiteHeader({ profile, onSignOut }: SiteHeaderProps) {
       ) : null}
 
       <NotificationsToaster />
-    </InboxProvider>
+    </>
   );
 }

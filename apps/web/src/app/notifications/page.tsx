@@ -228,7 +228,7 @@ function appointmentHref(record: NotificationRecord): string | null {
  * payload, so customers can confirm in one tap.
  */
 function rebookHref(record: NotificationRecord): string | null {
-  if (!isRetentionBookNotification(record)) return null;
+  if (!isRetentionBookNotification(record.type)) return null;
   const data = record.data;
   const params = new URLSearchParams();
   if (typeof data.service_id === "number" && data.service_id > 0) {
@@ -469,7 +469,7 @@ export default function NotificationsPage() {
                 <ul className="flex flex-col gap-3">
                   {state.page.data.map((row) => {
                     const bookFromRetention = isRetentionBookNotification(
-                      row,
+                      row.type,
                     );
                     const canSnoozeRebook =
                       row.type === "appointment.rebook_suggested";
