@@ -1,5 +1,6 @@
 "use client";
 
+import { AccountSubnav } from "@/components/account-subnav";
 import { SiteHeader } from "@/components/site-header";
 import { getStoredAuthToken } from "@/lib/auth-token";
 import { useSessionProfile } from "@/lib/use-session-profile";
@@ -34,6 +35,7 @@ import {
   Input,
   Label,
   ScreenTitle,
+  Skeleton,
 } from "@ozilcuts/ui";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -241,19 +243,32 @@ export default function HairProfilePage() {
       <SiteHeader profile={session} onSignOut={signOut} />
       <main
         id="main-content"
-        className="flex flex-1 flex-col px-4 py-8 sm:px-8 sm:py-12"
+        className="page-main"
       >
-        <div className="mx-auto w-full max-w-2xl space-y-8">
-          <ScreenTitle
-            eyebrow={OZILCUTS_APP_NAME}
-            title="Hair profile"
-            description="Help your barber pick the right approach. Add photos of recent cuts or styles you love."
-          />
+        <div className="mx-auto w-full max-w-3xl page-stack">
+          <div className="flex flex-col gap-6">
+            <ScreenTitle
+              className="gap-3"
+              eyebrow={OZILCUTS_APP_NAME}
+              title="Hair profile"
+              description="Help your barber pick the right approach. Add photos of recent cuts or styles you love."
+            />
+            {session.kind === "ready" ? (
+              <AccountSubnav isCustomer={isCustomer} />
+            ) : null}
+          </div>
 
-          {session.kind === "loading" || session.kind === "none" ? (
-            <p className="text-sm text-muted-foreground" role="status">
-              Loading…
-            </p>
+          {session.kind === "loading" ? (
+            <div
+              className="space-y-3"
+              role="status"
+              aria-busy="true"
+              aria-label="Loading account"
+            >
+              <span className="sr-only">Loading…</span>
+              <Skeleton className="h-10 w-full max-w-lg rounded-lg" />
+              <Skeleton className="h-64 w-full rounded-xl" />
+            </div>
           ) : null}
 
           {session.kind === "none" ? (
@@ -293,9 +308,38 @@ export default function HairProfilePage() {
           ) : null}
 
           {isCustomer && (state.kind === "loading" || state.kind === "idle") ? (
-            <p className="text-sm text-muted-foreground" role="status">
-              Loading hair profile…
-            </p>
+            <div className="space-y-5" role="status" aria-busy="true" aria-label="Loading hair profile">
+              <span className="sr-only">Loading hair profile…</span>
+              <Card>
+                <CardHeader className="space-y-2">
+                  <Skeleton className="h-5 w-36" />
+                  <Skeleton className="h-4 w-full max-w-md" />
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <Skeleton className="h-11 w-full rounded-lg" />
+                    <Skeleton className="h-11 w-full rounded-lg" />
+                    <Skeleton className="h-11 w-full rounded-lg" />
+                    <Skeleton className="h-11 w-full rounded-lg" />
+                  </div>
+                  <Skeleton className="h-28 w-full rounded-lg" />
+                  <div className="flex flex-wrap gap-2">
+                    <Skeleton className="h-11 w-36 rounded-md" />
+                    <Skeleton className="h-11 w-36 rounded-md" />
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="space-y-2">
+                  <Skeleton className="h-5 w-24" />
+                  <Skeleton className="h-4 w-64" />
+                </CardHeader>
+                <CardContent className="grid gap-3 sm:grid-cols-2">
+                  <Skeleton className="aspect-square w-full rounded-lg" />
+                  <Skeleton className="aspect-square w-full rounded-lg" />
+                </CardContent>
+              </Card>
+            </div>
           ) : null}
 
           {isCustomer && state.kind === "error" ? (

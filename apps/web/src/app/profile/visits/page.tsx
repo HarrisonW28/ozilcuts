@@ -1,5 +1,6 @@
 "use client";
 
+import { AccountSubnav } from "@/components/account-subnav";
 import { CustomerVisitsView } from "@/components/customer-visits-view";
 import { SiteHeader } from "@/components/site-header";
 import { getStoredAuthToken } from "@/lib/auth-token";
@@ -14,7 +15,9 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
+  KpiCardSkeleton,
   ScreenTitle,
+  Skeleton,
 } from "@ozilcuts/ui";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -67,19 +70,36 @@ export default function MyVisitsPage() {
       <SiteHeader profile={profile} onSignOut={signOut} />
       <main
         id="main-content"
-        className="flex flex-1 flex-col px-4 py-8 sm:px-8 sm:py-12"
+        className="page-main"
       >
-        <div className="mx-auto w-full max-w-5xl space-y-6">
-          <ScreenTitle
-            eyebrow={OZILCUTS_APP_NAME}
-            title="My visits"
-            description="Summary tiles and a month-grouped timeline of your appointments."
-          />
+        <div className="mx-auto w-full max-w-5xl page-stack">
+          <div className="flex flex-col gap-6">
+            <ScreenTitle
+              className="gap-3"
+              eyebrow={OZILCUTS_APP_NAME}
+              title="My visits"
+              description="Summary tiles and a month-grouped timeline of your appointments."
+            />
+            {profile.kind === "ready" ? (
+              <AccountSubnav isCustomer={isCustomer} />
+            ) : null}
+          </div>
 
-          {profile.kind === "loading" || profile.kind === "none" ? (
-            <p className="text-sm text-muted-foreground" role="status">
-              Loading…
-            </p>
+          {profile.kind === "loading" ? (
+            <div
+              className="space-y-6"
+              role="status"
+              aria-busy="true"
+              aria-label="Loading account"
+            >
+              <span className="sr-only">Loading…</span>
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                <KpiCardSkeleton />
+                <KpiCardSkeleton />
+                <KpiCardSkeleton className="sm:col-span-2 lg:col-span-1" />
+              </div>
+              <Skeleton className="h-56 w-full rounded-xl" />
+            </div>
           ) : null}
 
           {profile.kind === "none" ? (
@@ -116,9 +136,24 @@ export default function MyVisitsPage() {
           ) : null}
 
           {isCustomer && state.kind === "loading" ? (
-            <p className="text-sm text-muted-foreground" role="status">
-              Loading visits…
-            </p>
+            <div
+              className="space-y-6"
+              role="status"
+              aria-busy="true"
+              aria-label="Loading visits"
+            >
+              <span className="sr-only">Loading visits…</span>
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                <KpiCardSkeleton />
+                <KpiCardSkeleton />
+                <KpiCardSkeleton className="sm:col-span-2 lg:col-span-1" />
+              </div>
+              <div className="space-y-3">
+                <Skeleton className="h-5 w-48" />
+                <Skeleton className="h-24 w-full rounded-lg" />
+                <Skeleton className="h-24 w-full rounded-lg" />
+              </div>
+            </div>
           ) : null}
 
           {isCustomer && state.kind === "error" ? (

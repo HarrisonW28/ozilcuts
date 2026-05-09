@@ -1,5 +1,6 @@
 "use client";
 
+import { AccountSubnav } from "@/components/account-subnav";
 import { SiteHeader } from "@/components/site-header";
 import { getStoredAuthToken } from "@/lib/auth-token";
 import { useSessionProfile } from "@/lib/use-session-profile";
@@ -25,6 +26,8 @@ import {
   CardHeader,
   CardTitle,
   ScreenTitle,
+  Skeleton,
+  TableSkeleton,
 } from "@ozilcuts/ui";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -52,6 +55,8 @@ export default function NotificationPreferencesPage() {
   >({ kind: "idle" });
 
   const isReady = profile.kind === "ready";
+  const isCustomer =
+    profile.kind === "ready" && profile.user.role.slug === "customer";
 
   const load = useCallback(async () => {
     const token = getStoredAuthToken();
@@ -138,19 +143,32 @@ export default function NotificationPreferencesPage() {
       <SiteHeader profile={profile} onSignOut={signOut} />
       <main
         id="main-content"
-        className="flex flex-1 flex-col px-4 py-8 sm:px-8 sm:py-12"
+        className="page-main"
       >
-        <div className="mx-auto w-full max-w-3xl space-y-6">
-          <ScreenTitle
-            eyebrow={OZILCUTS_APP_NAME}
-            title="Notification preferences"
-            description="Choose which updates we send by email and which appear in your in-app inbox."
-          />
+        <div className="mx-auto w-full max-w-3xl page-stack">
+          <div className="flex flex-col gap-6">
+            <ScreenTitle
+              className="gap-3"
+              eyebrow={OZILCUTS_APP_NAME}
+              title="Notification preferences"
+              description="Choose which updates we send by email and which appear in your in-app inbox."
+            />
+            {profile.kind === "ready" ? (
+              <AccountSubnav isCustomer={isCustomer} />
+            ) : null}
+          </div>
 
-          {profile.kind === "loading" || profile.kind === "none" ? (
-            <p className="text-sm text-muted-foreground" role="status">
-              Loading…
-            </p>
+          {profile.kind === "loading" ? (
+            <Card role="status" aria-busy="true" aria-label="Loading account">
+              <span className="sr-only">Loading…</span>
+              <CardHeader className="space-y-2">
+                <Skeleton className="h-5 w-48" />
+                <Skeleton className="h-4 w-full max-w-xl" />
+              </CardHeader>
+              <CardContent>
+                <TableSkeleton columns={3} rows={6} />
+              </CardContent>
+            </Card>
           ) : null}
 
           {profile.kind === "none" ? (
@@ -170,12 +188,14 @@ export default function NotificationPreferencesPage() {
           ) : null}
 
           {isReady && state.kind === "loading" ? (
-            <p
-              className="text-sm text-muted-foreground"
+            <div
               role="status"
+              aria-busy="true"
+              aria-label="Loading preferences"
             >
-              Loading preferences…
-            </p>
+              <span className="sr-only">Loading preferences…</span>
+              <TableSkeleton columns={3} rows={6} />
+            </div>
           ) : null}
 
           {isReady && state.kind === "error" ? (

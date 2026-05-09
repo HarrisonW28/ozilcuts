@@ -1,5 +1,6 @@
 "use client";
 
+import { AccountSubnav } from "@/components/account-subnav";
 import { SiteHeader } from "@/components/site-header";
 import { getStoredAuthToken } from "@/lib/auth-token";
 import { useSessionProfile } from "@/lib/use-session-profile";
@@ -23,6 +24,7 @@ import {
   Input,
   Label,
   ScreenTitle,
+  Skeleton,
 } from "@ozilcuts/ui";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
@@ -156,19 +158,32 @@ export default function ProfilePage() {
       <SiteHeader profile={session} onSignOut={signOut} />
       <main
         id="main-content"
-        className="flex flex-1 flex-col px-4 py-8 sm:px-8 sm:py-12"
+        className="page-main"
       >
-        <div className="mx-auto w-full max-w-2xl space-y-8">
-          <ScreenTitle
-            eyebrow={OZILCUTS_APP_NAME}
-            title="Your profile"
-            description="Keep your contact details and haircut preferences ready for future bookings."
-          />
+        <div className="mx-auto w-full max-w-3xl page-stack">
+          <div className="flex flex-col gap-6">
+            <ScreenTitle
+              className="gap-3"
+              eyebrow={OZILCUTS_APP_NAME}
+              title="Your profile"
+              description="Keep your contact details and haircut preferences ready for future bookings."
+            />
+            {session.kind === "ready" ? (
+              <AccountSubnav isCustomer={isCustomer} />
+            ) : null}
+          </div>
 
-          {session.kind === "loading" || session.kind === "none" ? (
-            <p className="text-sm text-muted-foreground" role="status">
-              Loading…
-            </p>
+          {session.kind === "loading" ? (
+            <div
+              className="space-y-3"
+              role="status"
+              aria-busy="true"
+              aria-label="Loading account"
+            >
+              <span className="sr-only">Loading…</span>
+              <Skeleton className="h-10 w-full max-w-lg rounded-lg" />
+              <Skeleton className="h-48 w-full rounded-xl" />
+            </div>
           ) : null}
 
           {session.kind === "none" ? (
@@ -207,9 +222,41 @@ export default function ProfilePage() {
           ) : null}
 
           {isCustomer && (state.kind === "loading" || state.kind === "idle") ? (
-            <p className="text-sm text-muted-foreground" role="status">
-              Loading profile…
-            </p>
+            <Card
+              role="status"
+              aria-busy="true"
+              aria-label="Loading profile"
+            >
+              <span className="sr-only">Loading profile…</span>
+              <CardHeader className="space-y-2">
+                <Skeleton className="h-5 w-40" />
+                <Skeleton className="h-4 w-full max-w-sm" />
+              </CardHeader>
+              <CardContent className="space-y-5">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Skeleton className="h-3 w-16" />
+                    <Skeleton className="h-11 w-full rounded-lg" />
+                  </div>
+                  <div className="space-y-2">
+                    <Skeleton className="h-3 w-14" />
+                    <Skeleton className="h-11 w-full rounded-lg" />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Skeleton className="h-3 w-28" />
+                  <Skeleton className="h-11 w-full rounded-lg" />
+                </div>
+                <div className="space-y-2">
+                  <Skeleton className="h-3 w-32" />
+                  <Skeleton className="h-28 w-full rounded-lg" />
+                </div>
+                <div className="flex flex-wrap gap-2 pt-1">
+                  <Skeleton className="h-11 w-[7.5rem] rounded-md" />
+                  <Skeleton className="h-11 w-[7.5rem] rounded-md" />
+                </div>
+              </CardContent>
+            </Card>
           ) : null}
 
           {isCustomer && state.kind === "error" ? (
@@ -389,59 +436,6 @@ export default function ProfilePage() {
                   </div>
                 </form>
               </CardContent>
-            </Card>
-          ) : null}
-
-          {isCustomer && state.kind === "ok" ? (
-            <Card>
-              <CardHeader>
-                <CardTitle>Hair profile</CardTitle>
-                <CardDescription>
-                  Tell your barber about your hair type, sensitivities, and the
-                  styles you love. Add reference photos too.
-                </CardDescription>
-              </CardHeader>
-              <CardFooter>
-                <Button asChild variant="outline">
-                  <Link href="/profile/hair">Manage hair profile</Link>
-                </Button>
-              </CardFooter>
-            </Card>
-          ) : null}
-
-          {isCustomer && state.kind === "ok" ? (
-            <Card>
-              <CardHeader>
-                <CardTitle>Visit history</CardTitle>
-                <CardDescription>
-                  See your total visits, spend, average cadence, and recent
-                  appointments.
-                </CardDescription>
-              </CardHeader>
-              <CardFooter>
-                <Button asChild variant="outline">
-                  <Link href="/profile/visits">View my visits</Link>
-                </Button>
-              </CardFooter>
-            </Card>
-          ) : null}
-
-          {session.kind === "ready" ? (
-            <Card>
-              <CardHeader>
-                <CardTitle>Notifications</CardTitle>
-                <CardDescription>
-                  Choose which appointment updates we send by email and which
-                  appear in your in-app inbox.
-                </CardDescription>
-              </CardHeader>
-              <CardFooter>
-                <Button asChild variant="outline">
-                  <Link href="/profile/notifications">
-                    Manage notification preferences
-                  </Link>
-                </Button>
-              </CardFooter>
             </Card>
           ) : null}
 
