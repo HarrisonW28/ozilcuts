@@ -112,6 +112,9 @@ final class BookingService
     }
 
     /**
+     * Book an appointment. Customers book for themselves; admins and barbers may pass
+     * `customer_user_id` to book on behalf of a customer (no online deposit — settled like walk-ins).
+     *
      * @param  array{service_id: int, barber_user_id: int, starts_at: string, notes?: string|null, customer_user_id?: int|null}  $data
      */
     public function book(User $actor, array $data): Appointment
@@ -151,10 +154,24 @@ final class BookingService
 
         $this->assertAvailabilityCovers($profile, $start, $end);
 
-        return DB::transaction(function () use ($service, $barber, $customer, $start, $end, $data) {
+        $staffAssisted =
+            isset($data['customer_user_id'])
+            && (int) $data['customer_user_id'] > 0;
+
+        return DB::transaction(function () use (
+            $service,
+            $barber,
+            $customer,
+            $start,
+            $end,
+            $data,
+            $staffAssisted,
+        ) {
             $this->assertNoOverlap($barber->id, $start, $end);
 
-            $deposit = $this->depositForBooking($service, $customer);
+            $deposit = $staffAssisted
+                ? 0
+                : $this->depositForBooking($service, $customer);
 
             return Appointment::query()->create([
                 'service_id' => $service->id,

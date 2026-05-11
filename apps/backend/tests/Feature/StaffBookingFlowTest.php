@@ -131,6 +131,35 @@ class StaffBookingFlowTest extends TestCase
         );
     }
 
+    public function test_staff_booking_skips_deposit_like_walk_in(): void
+    {
+        [$barber, $service] = $this->makeBookableBarber();
+        $service->forceFill([
+            'deposit_cents' => 2500,
+            'deposit_policy' => Service::DEPOSIT_POLICY_ALWAYS,
+        ])->save();
+
+        $customer = User::factory()->create();
+        $admin = User::factory()->admin()->create();
+
+        $this->withToken($admin->createToken('t')->plainTextToken)
+            ->postJson('/api/v1/appointments', [
+                'service_id' => $service->id,
+                'barber_user_id' => $barber->id,
+                'starts_at' => '2026-05-11T09:00:00',
+                'customer_user_id' => $customer->id,
+            ])
+            ->assertCreated()
+            ->assertJsonPath('deposit_cents', 0)
+            ->assertJsonPath('payment_status', Appointment::PAYMENT_NOT_REQUIRED);
+
+        $this->assertDatabaseHas('appointments', [
+            'customer_user_id' => $customer->id,
+            'deposit_cents' => 0,
+            'payment_status' => Appointment::PAYMENT_NOT_REQUIRED,
+        ]);
+    }
+
     public function test_staff_customer_search_forbidden_for_customer_role(): void
     {
         $customer = User::factory()->create();

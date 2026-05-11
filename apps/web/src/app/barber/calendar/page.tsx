@@ -509,7 +509,7 @@ export default function BarberCalendarPage() {
                   />
 
                   <div className="hidden lg:block">
-                    <h3 className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    <h3 className="mb-3 text-sm font-semibold tracking-tight text-foreground">
                       Week overview
                     </h3>
                     <WeekAvailabilityCalendar

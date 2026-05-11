@@ -754,7 +754,7 @@ function BookingFlow() {
                           · {selectedService.duration_minutes} min ·{" "}
                           {formatUsd(selectedService.price_cents)}
                         </p>
-                        {selectedService.deposit_cents > 0 ? (
+                        {selectedService.deposit_cents > 0 && !isStaffBooker ? (
                           <p className="mt-2 text-muted-foreground">
                             Deposit due now{" "}
                             <span className="font-semibold text-foreground">
