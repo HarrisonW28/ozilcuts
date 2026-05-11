@@ -54,6 +54,11 @@ export function weekdaysFromShopAdminPayload(
   }));
 }
 
+/** Stable signature for comparing shop hours without relying on array identity. */
+export function shopHoursWeekdaysSignature(days: BarberAvailabilityDay[]): string {
+  return JSON.stringify(flattenShopHoursWeekdaysToPayload(days));
+}
+
 export function flattenShopHoursWeekdaysToPayload(
   days: BarberAvailabilityDay[],
 ): BarberAvailabilityWindowInput[] {

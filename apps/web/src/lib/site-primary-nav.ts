@@ -72,7 +72,6 @@ export function getAccountMenuGroups(
   if (slug === "customer") {
     groups.push({
       id: "profile",
-      label: "Profile",
       links: [
         { href: "/profile", label: "Profile", icon: "user" },
         { href: "/profile/hair", label: "Hair", icon: "sparkles" },
@@ -81,7 +80,6 @@ export function getAccountMenuGroups(
     });
     groups.push({
       id: "dashboard",
-      label: "Dashboard",
       links: [
         { href: "/dashboard", label: "Dashboard", icon: "layout-dashboard" },
       ],
@@ -103,14 +101,12 @@ export function getAccountMenuGroups(
   if (slug === "barber") {
     groups.push({
       id: "profile",
-      label: "Profile",
       links: [
         { href: "/barber/profile", label: "Profile", icon: "user" },
       ],
     });
     groups.push({
       id: "dashboard",
-      label: "Dashboard",
       links: [
         { href: "/barber", label: "Dashboard", icon: "layout-dashboard" },
       ],
@@ -132,14 +128,12 @@ export function getAccountMenuGroups(
   if (slug === "admin") {
     groups.push({
       id: "profile",
-      label: "Profile",
       links: [
         { href: "/admin/profile", label: "Profile", icon: "user" },
       ],
     });
     groups.push({
       id: "dashboard",
-      label: "Dashboard",
       links: [
         { href: "/admin", label: "Dashboard", icon: "layout-dashboard" },
       ],

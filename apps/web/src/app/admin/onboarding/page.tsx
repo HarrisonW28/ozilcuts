@@ -7,6 +7,7 @@ import {
   defaultShopHoursWeekdays,
   flattenShopHoursWeekdaysToPayload,
   shopHoursHaveBookableWindows,
+  shopHoursWeekdaysSignature,
   weekdaysFromShopAdminPayload,
 } from "@/lib/shop-default-hours";
 import { useSessionProfile } from "@/lib/use-session-profile";
@@ -83,8 +84,8 @@ export default function AdminOnboardingPage() {
   const [busy, setBusy] = useState(false);
   const [starterBusy, setStarterBusy] = useState(false);
   const [stepError, setStepError] = useState<string | null>(null);
-  /** Avoid resetting local shop hours when `profile` is replaced with the same API snapshot. */
-  const lastShopHoursApiSnapshotRef = useRef<string | undefined>(undefined);
+  /** Avoid resetting local step/hours UI every time `profile` is replaced (e.g. after PATCH). */
+  const onboardingStepBootstrappedForUserId = useRef<number | null>(null);
 
   const refreshOnboardingSnapshot = useCallback(async () => {
     const token = getStoredAuthToken();
@@ -131,19 +132,26 @@ export default function AdminOnboardingPage() {
   }, []);
 
   useEffect(() => {
-    if (profile.kind !== "ready") {
-      lastShopHoursApiSnapshotRef.current = undefined;
+    if (profile.kind === "none") {
+      onboardingStepBootstrappedForUserId.current = null;
       return;
     }
+    if (profile.kind !== "ready") return;
     if (profile.user.role.slug !== "admin") return;
     const sa = profile.user.shop_admin;
     if (!sa) return;
-    if (sa.onboarding_completed_at) {
-      setStep(1);
-    } else {
-      const s = Math.min(Math.max(sa.onboarding_step, 1), TOTAL_STEPS);
-      setStep(s);
+
+    const uid = profile.user.id;
+    if (onboardingStepBootstrappedForUserId.current !== uid) {
+      onboardingStepBootstrappedForUserId.current = uid;
+      if (sa.onboarding_completed_at) {
+        setStep(1);
+      } else {
+        const s = Math.min(Math.max(sa.onboarding_step, 1), TOTAL_STEPS);
+        setStep(s);
+      }
     }
+
     setShopName(
       sa.shop_display_name?.trim() !== ""
         ? (sa.shop_display_name ?? "")
@@ -152,12 +160,12 @@ export default function AdminOnboardingPage() {
     setCashOnly(sa.shop_pays_cash_only);
     setDepositsEnabled(sa.shop_deposits_enabled);
     setTapToPayLater(sa.shop_tap_to_pay_later);
-
-    const apiSnapshot = JSON.stringify(sa.shop_default_hours ?? null);
-    if (lastShopHoursApiSnapshotRef.current !== apiSnapshot) {
-      lastShopHoursApiSnapshotRef.current = apiSnapshot;
-      setShopHoursWeekdays(weekdaysFromShopAdminPayload(sa.shop_default_hours));
-    }
+    setShopHoursWeekdays((prev) => {
+      const next = weekdaysFromShopAdminPayload(sa.shop_default_hours);
+      return shopHoursWeekdaysSignature(prev) === shopHoursWeekdaysSignature(next)
+        ? prev
+        : next;
+    });
   }, [profile]);
 
   useEffect(() => {
@@ -694,6 +702,11 @@ export default function AdminOnboardingPage() {
                     className="min-h-11 w-full sm:w-auto"
                     disabled={
                       busy ||
+                      (step === 1 &&
+                        (shopName.trim().length < 2 ||
+                          !shopHoursHaveBookableWindows(
+                            shopHoursWeekdays,
+                          ))) ||
                       (step === 2 &&
                         (barberTotal === null || barberTotal < 1)) ||
                       (step === 3 && hoursReady !== true) ||
@@ -702,25 +715,9 @@ export default function AdminOnboardingPage() {
                     }
                     onClick={() => {
                       if (step === 1) {
-                        const name = shopName.trim();
-                        if (name.length < 2) {
-                          setStepError(
-                            "Enter a shop name (at least 2 characters).",
-                          );
-                          return;
-                        }
-                        if (
-                          !shopHoursHaveBookableWindows(shopHoursWeekdays)
-                        ) {
-                          setStepError(
-                            "Choose at least one open day and make sure closing time is after opening.",
-                          );
-                          return;
-                        }
-                        setStepError(null);
                         void persist(
                           {
-                            shop_display_name: name,
+                            shop_display_name: shopName.trim(),
                             shop_default_hours:
                               flattenShopHoursWeekdaysToPayload(
                                 shopHoursWeekdays,

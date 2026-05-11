@@ -191,10 +191,10 @@ export function SiteHeader({ profile, onSignOut }: SiteHeaderProps) {
               {profile.kind === "ready" ? (
                 <>
                   <div className="order-1 md:order-1">
-                    <SiteAccountMenu profile={profile} onSignOut={onSignOut} />
+                    <NotificationsBell enabled />
                   </div>
                   <div className="order-2 md:order-2">
-                    <NotificationsBell enabled />
+                    <SiteAccountMenu profile={profile} onSignOut={onSignOut} />
                   </div>
                 </>
               ) : null}
