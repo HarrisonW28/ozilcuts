@@ -7,7 +7,7 @@ import {
 import type { BarberAvailabilityDay } from "@ozilcuts/types";
 import { BARBER_WEEKDAY_LABELS } from "@ozilcuts/types";
 import { Button, Label, cn } from "@ozilcuts/ui";
-import { useEffect, useState } from "react";
+import { useMemo, useState } from "react";
 
 function minutesFromTimeString(t: string): number {
   const slice = t.slice(0, 5);
@@ -21,51 +21,80 @@ export type ShopDefaultHoursFieldsProps = {
   onChange: (next: BarberAvailabilityDay[]) => void;
 };
 
+/**
+ * Single source of truth: `value` from the parent. Day/time edits call `onChange`
+ * immediately so Continue always saves the visible schedule (no separate Apply step).
+ */
 export function ShopDefaultHoursFields({
   value,
   onChange,
 }: ShopDefaultHoursFieldsProps) {
-  const derived = quickSelectionFromWeekdays(value);
-  const [selected, setSelected] = useState<Set<number>>(derived.selected);
-  const [open, setOpen] = useState(derived.open);
-  const [close, setClose] = useState(derived.close);
-  const [applyError, setApplyError] = useState<string | null>(null);
+  const [draftError, setDraftError] = useState<string | null>(null);
 
-  useEffect(() => {
+  const { selectedDays, open, close } = useMemo(() => {
     const d = quickSelectionFromWeekdays(value);
-    setSelected(d.selected);
-    setOpen(d.open);
-    setClose(d.close);
+    return {
+      selectedDays: d.selected,
+      open: d.open,
+      close: d.close,
+    };
   }, [value]);
 
+  function commit(next: BarberAvailabilityDay[]) {
+    setDraftError(null);
+    onChange(next);
+  }
+
   function toggleDay(weekday: number) {
-    setSelected((prev) => {
-      const next = new Set(prev);
-      if (next.has(weekday)) next.delete(weekday);
-      else next.add(weekday);
-      return next;
-    });
-    setApplyError(null);
-  }
-
-  function presetDays(days: Iterable<number>) {
-    setSelected(new Set(days));
-    setApplyError(null);
-  }
-
-  function applyTemplate() {
-    if (selected.size === 0) {
-      setApplyError("Select at least one day.");
+    const nextSel = new Set(selectedDays);
+    if (nextSel.has(weekday)) nextSel.delete(weekday);
+    else nextSel.add(weekday);
+    if (nextSel.size === 0) {
+      setDraftError("Choose at least one day the shop is open.");
       return;
     }
     const startM = minutesFromTimeString(open);
     const endM = minutesFromTimeString(close);
     if (endM <= startM) {
-      setApplyError("Closing time must be after opening time.");
+      setDraftError("Closing time must be after opening time.");
       return;
     }
-    setApplyError(null);
-    onChange(buildShopHoursFromQuickSelection(selected, open, close));
+    commit(buildShopHoursFromQuickSelection(nextSel, open, close));
+  }
+
+  function presetDays(days: Iterable<number>) {
+    const nextSel = new Set(days);
+    if (nextSel.size === 0) {
+      setDraftError("Choose at least one day the shop is open.");
+      return;
+    }
+    const startM = minutesFromTimeString(open);
+    const endM = minutesFromTimeString(close);
+    if (endM <= startM) {
+      setDraftError("Closing time must be after opening time.");
+      return;
+    }
+    commit(buildShopHoursFromQuickSelection(nextSel, open, close));
+  }
+
+  function updateOpen(nextOpen: string) {
+    const startM = minutesFromTimeString(nextOpen);
+    const endM = minutesFromTimeString(close);
+    if (endM <= startM) {
+      setDraftError("Closing time must be after opening time.");
+      return;
+    }
+    commit(buildShopHoursFromQuickSelection(selectedDays, nextOpen, close));
+  }
+
+  function updateClose(nextClose: string) {
+    const startM = minutesFromTimeString(open);
+    const endM = minutesFromTimeString(nextClose);
+    if (endM <= startM) {
+      setDraftError("Closing time must be after opening time.");
+      return;
+    }
+    commit(buildShopHoursFromQuickSelection(selectedDays, open, nextClose));
   }
 
   return (
@@ -76,12 +105,13 @@ export function ShopDefaultHoursFields({
         </h3>
         <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
           New barbers copy these bookable hours until you change them per chair.
-          Step three is where you fine-tune individual schedules.
+          Toggle days and set open/close—they save when you tap Continue. Step
+          three is where you fine-tune individual schedules.
         </p>
       </div>
       <div className="flex flex-wrap gap-2">
         {BARBER_WEEKDAY_LABELS.map((label, weekday) => {
-          const on = selected.has(weekday);
+          const on = selectedDays.has(weekday);
           return (
             <button
               key={label}
@@ -89,7 +119,7 @@ export function ShopDefaultHoursFields({
               aria-pressed={on}
               onClick={() => toggleDay(weekday)}
               className={cn(
-                "min-h-11 min-w-[2.75rem] touch-manipulation rounded-full border px-2.5 text-xs font-semibold transition-colors sm:min-h-9",
+                "relative z-10 min-h-11 min-w-[2.75rem] touch-manipulation rounded-full border px-2.5 text-xs font-semibold transition-colors sm:min-h-9",
                 on
                   ? "border-primary/50 bg-primary/15 text-foreground"
                   : "border-border/70 bg-background/80 text-muted-foreground hover:border-border hover:bg-muted/40",
@@ -105,7 +135,7 @@ export function ShopDefaultHoursFields({
           type="button"
           variant="outline"
           size="sm"
-          className="min-h-10"
+          className="relative z-10 min-h-10"
           onClick={() => presetDays([1, 2, 3, 4, 5])}
         >
           Mon–Fri
@@ -114,7 +144,7 @@ export function ShopDefaultHoursFields({
           type="button"
           variant="outline"
           size="sm"
-          className="min-h-10"
+          className="relative z-10 min-h-10"
           onClick={() => presetDays([0, 1, 2, 3, 4, 5, 6])}
         >
           Every day
@@ -123,13 +153,13 @@ export function ShopDefaultHoursFields({
           type="button"
           variant="outline"
           size="sm"
-          className="min-h-10"
+          className="relative z-10 min-h-10"
           onClick={() => presetDays([0, 6])}
         >
           Weekend
         </Button>
       </div>
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="relative z-10 grid gap-4 sm:grid-cols-2">
         <div className="flex flex-col gap-2">
           <Label htmlFor="shop-default-opens">Opens</Label>
           <input
@@ -137,10 +167,7 @@ export function ShopDefaultHoursFields({
             type="time"
             step={60}
             value={open}
-            onChange={(ev) => {
-              setOpen(ev.target.value);
-              setApplyError(null);
-            }}
+            onChange={(ev) => updateOpen(ev.target.value)}
             className="border-input bg-background text-foreground focus-visible:ring-ring/50 flex h-11 w-full rounded-lg border px-3 text-base shadow-sm outline-none focus-visible:ring-[3px] sm:h-10 sm:text-sm"
           />
         </div>
@@ -151,25 +178,14 @@ export function ShopDefaultHoursFields({
             type="time"
             step={60}
             value={close}
-            onChange={(ev) => {
-              setClose(ev.target.value);
-              setApplyError(null);
-            }}
+            onChange={(ev) => updateClose(ev.target.value)}
             className="border-input bg-background text-foreground focus-visible:ring-ring/50 flex h-11 w-full rounded-lg border px-3 text-base shadow-sm outline-none focus-visible:ring-[3px] sm:h-10 sm:text-sm"
           />
         </div>
       </div>
-      <Button
-        type="button"
-        variant="secondary"
-        className="min-h-11 w-full sm:w-auto"
-        onClick={applyTemplate}
-      >
-        Apply to selected days
-      </Button>
-      {applyError ? (
+      {draftError ? (
         <p className="text-xs text-destructive" role="alert">
-          {applyError}
+          {draftError}
         </p>
       ) : null}
     </div>
