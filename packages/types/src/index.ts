@@ -465,12 +465,20 @@ export type AppointmentPendingPayment = {
   deposit_cents: number;
 };
 
+export type StaffCustomerLookupRow = {
+  id: number;
+  name: string;
+  email: string;
+};
+
 export type CreateAppointmentInput = {
   service_id: number;
   barber_user_id: number;
   /** ISO 8601 (e.g. `2026-05-11T09:00:00`). */
   starts_at: string;
   notes?: string | null;
+  /** Required when an admin or barber books on behalf of someone else. */
+  customer_user_id?: number;
 };
 
 export type CreateWalkInAppointmentInput = {

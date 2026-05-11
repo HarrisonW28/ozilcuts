@@ -31,8 +31,8 @@ use App\Http\Controllers\Api\V1\BarberManageIndexController;
 use App\Http\Controllers\Api\V1\BarberManageStoreController;
 use App\Http\Controllers\Api\V1\BarberManageUpdateController;
 use App\Http\Controllers\Api\V1\BarberPortfolioController;
-use App\Http\Controllers\Api\V1\BarberShowController;
 use App\Http\Controllers\Api\V1\BarberSelfProfileShowController;
+use App\Http\Controllers\Api\V1\BarberShowController;
 use App\Http\Controllers\Api\V1\BarberSlotsController;
 use App\Http\Controllers\Api\V1\CurrentUserController;
 use App\Http\Controllers\Api\V1\CustomerAnalyticsAggregateController;
@@ -76,6 +76,7 @@ use App\Http\Controllers\Api\V1\ServiceManageStoreController;
 use App\Http\Controllers\Api\V1\ServiceManageUpdateController;
 use App\Http\Controllers\Api\V1\ServiceStarterPackStoreController;
 use App\Http\Controllers\Api\V1\ShopOnboardingUpdateController;
+use App\Http\Controllers\Api\V1\StaffCustomerSearchController;
 use App\Http\Controllers\Api\V1\StripeWebhookController;
 use App\Http\Controllers\Api\V1\UserIndexController;
 use App\Http\Controllers\Api\V1\UserShowController;
@@ -163,6 +164,8 @@ Route::middleware('auth:sanctum')->group(function (): void {
         ->middleware('throttle:20,1');
     Route::post('/appointments/walk-in', AppointmentWalkInStoreController::class)
         ->middleware('throttle:30,1');
+    Route::get('/staff/customers/search', StaffCustomerSearchController::class)
+        ->middleware('throttle:90,1');
     Route::get('/appointments/{appointment}', AppointmentShowController::class);
     Route::get('/appointments/{appointment}/calendar-url', AppointmentCalendarLinkController::class)
         ->middleware('throttle:30,1');

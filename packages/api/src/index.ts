@@ -22,6 +22,7 @@ export {
   replaceManageBarberAvailability,
 } from "./barberAvailability";
 export { fetchBarber, fetchBarbers, fetchMyBarberProfile } from "./barbers";
+export { fetchStaffCustomerSearch } from "./staffCustomers";
 export {
   cancelAppointment,
   createAppointment,

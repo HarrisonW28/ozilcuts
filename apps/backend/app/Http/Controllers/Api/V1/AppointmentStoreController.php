@@ -31,12 +31,18 @@ final class AppointmentStoreController extends Controller
         }
 
         try {
-            $appointment = $booking->book($user, [
+            $payload = [
                 'service_id' => (int) $request->validated('service_id'),
                 'barber_user_id' => (int) $request->validated('barber_user_id'),
                 'starts_at' => (string) $request->validated('starts_at'),
                 'notes' => $request->validated('notes'),
-            ]);
+            ];
+            $customerUserId = $request->validated('customer_user_id');
+            if ($customerUserId !== null) {
+                $payload['customer_user_id'] = (int) $customerUserId;
+            }
+
+            $appointment = $booking->book($user, $payload);
         } catch (RuntimeException $e) {
             return response()->json([
                 'message' => $e->getMessage(),

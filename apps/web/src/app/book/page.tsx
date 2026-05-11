@@ -1,5 +1,6 @@
 "use client";
 
+import { StaffCustomerLookup } from "@/components/staff-customer-lookup";
 import { SiteHeader } from "@/components/site-header";
 import {
   BookCatalogFormSkeleton,
@@ -22,6 +23,7 @@ import type {
   CustomerProfile,
   RebookSuggestion,
   ServiceSummary,
+  StaffCustomerLookupRow,
 } from "@ozilcuts/types";
 import { OZILCUTS_APP_NAME } from "@ozilcuts/types";
 import {
@@ -128,6 +130,8 @@ function BookingFlow() {
   const [notes, setNotes] = useState("");
   const [bookBusy, setBookBusy] = useState(false);
   const [bookError, setBookError] = useState<string | null>(null);
+  const [selectedCustomer, setSelectedCustomer] =
+    useState<StaffCustomerLookupRow | null>(null);
   const [quickRepeat, setQuickRepeat] = useState<QuickRepeatState>({
     kind: "idle",
   });
@@ -199,6 +203,17 @@ function BookingFlow() {
     };
   }, [profile]);
 
+  useEffect(() => {
+    if (profile.kind !== "ready") return;
+    if (profile.user.role.slug !== "barber") return;
+    if (barberId !== null) return;
+    if (catalog.kind !== "ok") return;
+    const selfId = profile.user.id;
+    if (catalog.barbers.some((b) => b.barber.id === selfId)) {
+      setBarberId(selfId);
+    }
+  }, [profile, catalog, barberId]);
+
   const loadSlots = useCallback(async () => {
     if (serviceId === null || barberId === null || !date) {
       setSlots({ kind: "idle" });
@@ -259,8 +274,21 @@ function BookingFlow() {
     e.preventDefault();
     const token = getStoredAuthToken();
     if (!token) return;
-    if (serviceId === null || barberId === null || selectedSlot === null) {
-      setBookError("Select a service, barber, and time.");
+    const bookingAsStaff =
+      profile.kind === "ready" &&
+      (profile.user.role.slug === "admin" ||
+        profile.user.role.slug === "barber");
+    if (
+      serviceId === null ||
+      barberId === null ||
+      selectedSlot === null ||
+      (bookingAsStaff && selectedCustomer === null)
+    ) {
+      setBookError(
+        bookingAsStaff && selectedCustomer === null
+          ? "Search and select a customer."
+          : "Select a service, barber, and time.",
+      );
 
       return;
     }
@@ -272,6 +300,9 @@ function BookingFlow() {
         barber_user_id: barberId,
         starts_at: selectedSlot,
         notes: notes.trim() === "" ? null : notes.trim(),
+        ...(bookingAsStaff && selectedCustomer !== null
+          ? { customer_user_id: selectedCustomer.id }
+          : {}),
       });
       router.push(`/appointments/${booked.id}/confirmation?just_booked=1`);
       return;
@@ -290,13 +321,19 @@ function BookingFlow() {
 
   const isReady = profile.kind === "ready";
   const isCustomer = isReady && profile.user.role.slug === "customer";
+  const isStaffBooker =
+    isReady &&
+    (profile.user.role.slug === "admin" ||
+      profile.user.role.slug === "barber");
+  const canBookOnline = isCustomer || isStaffBooker;
   const catalogReady = catalog.kind === "ok";
   const bookingSelectionComplete =
-    isCustomer &&
+    canBookOnline &&
     catalogReady &&
     serviceId !== null &&
     barberId !== null &&
-    selectedSlot !== null;
+    selectedSlot !== null &&
+    (!isStaffBooker || selectedCustomer !== null);
   const needsMobileBookPadding = bookingSelectionComplete;
 
   return (
@@ -315,8 +352,12 @@ function BookingFlow() {
         >
           <ScreenTitle
             eyebrow={OZILCUTS_APP_NAME}
-            title="Reserve your chair"
-            description="Choose a service and barber, then pick a time that fits—quiet, fast, and mobile-first."
+            title={isStaffBooker ? "Book for a customer" : "Reserve your chair"}
+            description={
+              isStaffBooker
+                ? "Look up the customer, then choose service, barber, and time—the appointment is tied to their account."
+                : "Choose a service and barber, then pick a time that fits—quiet, fast, and mobile-first."
+            }
             className="gap-5 sm:gap-6"
           />
 
@@ -330,23 +371,6 @@ function BookingFlow() {
             <p className="text-sm text-destructive" role="alert">
               Session issue. Sign in again.
             </p>
-          ) : null}
-
-          {isReady && profile.user.role.slug !== "customer" ? (
-            <Card>
-              <CardHeader>
-                <CardTitle>Customer accounts only</CardTitle>
-                <CardDescription>
-                  Booking is for customer accounts. Staff manage availability
-                  from their own dashboard.
-                </CardDescription>
-              </CardHeader>
-              <CardFooter>
-                <Button asChild variant="outline">
-                  <Link href="/">Home</Link>
-                </Button>
-              </CardFooter>
-            </Card>
           ) : null}
 
           {isReady &&
@@ -464,11 +488,11 @@ function BookingFlow() {
             </Card>
           ) : null}
 
-          {isReady && profile.user.role.slug === "customer" ? (
+          {canBookOnline ? (
             <Card size="sm" className="dashboard-surface overflow-visible">
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg tracking-tight">
-                  Your appointment
+                  {isStaffBooker ? "Appointment details" : "Your appointment"}
                 </CardTitle>
                 <CardDescription>
                   Times refresh when you change service, barber, or date.
@@ -490,6 +514,16 @@ function BookingFlow() {
                     className="flex flex-col gap-6"
                     onSubmit={onBook}
                   >
+                    {isStaffBooker ? (
+                      <StaffCustomerLookup
+                        value={selectedCustomer}
+                        onChange={(row) => {
+                          setSelectedCustomer(row);
+                          setBookError(null);
+                        }}
+                      />
+                    ) : null}
+
                     <div className="flex flex-col gap-3">
                       <p
                         id="book-step-service"
@@ -704,6 +738,12 @@ function BookingFlow() {
 
                     {selectedService && selectedBarber && selectedSlot ? (
                       <div className="dashboard-surface rounded-xl p-4 text-sm">
+                        {selectedCustomer ? (
+                          <p className="mb-2 font-medium leading-snug">
+                            <span className="text-muted-foreground">For </span>
+                            <span>{selectedCustomer.name}</span>
+                          </p>
+                        ) : null}
                         <p className="font-medium leading-snug">
                           <span>{selectedService.name}</span>
                           <span className="text-muted-foreground"> with </span>
@@ -738,7 +778,8 @@ function BookingFlow() {
                         bookBusy ||
                         serviceId === null ||
                         barberId === null ||
-                        selectedSlot === null
+                        selectedSlot === null ||
+                        (isStaffBooker && selectedCustomer === null)
                       }
                       className="hidden w-full min-h-12 touch-manipulation sm:inline-flex sm:min-h-11 sm:w-auto"
                     >

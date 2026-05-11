@@ -112,10 +112,29 @@ final class BookingService
     }
 
     /**
-     * @param  array{service_id: int, barber_user_id: int, starts_at: string, notes?: string|null}  $data
+     * @param  array{service_id: int, barber_user_id: int, starts_at: string, notes?: string|null, customer_user_id?: int|null}  $data
      */
-    public function book(User $customer, array $data): Appointment
+    public function book(User $actor, array $data): Appointment
     {
+        $customerUserId = isset($data['customer_user_id']) ? (int) $data['customer_user_id'] : null;
+
+        if ($customerUserId !== null && $customerUserId !== 0) {
+            if (! $actor->isAdmin() && ! $actor->hasRole(Role::SLUG_BARBER)) {
+                throw new RuntimeException('Only shop staff can book on behalf of a customer.');
+            }
+
+            $customer = User::query()->findOrFail($customerUserId);
+            if (! $customer->hasRole(Role::SLUG_CUSTOMER)) {
+                throw new RuntimeException('Selected user is not a customer.');
+            }
+        } else {
+            if (! $actor->hasRole(Role::SLUG_CUSTOMER)) {
+                throw new RuntimeException('Choose a customer to complete this booking.');
+            }
+
+            $customer = $actor;
+        }
+
         $service = Service::query()->where('is_active', true)->findOrFail($data['service_id']);
         $barber = User::query()->findOrFail($data['barber_user_id']);
         if (! $barber->hasRole(Role::SLUG_BARBER)) {
