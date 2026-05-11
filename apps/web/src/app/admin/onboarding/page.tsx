@@ -122,10 +122,6 @@ export default function AdminOnboardingPage() {
     if (profile.kind !== "ready") return;
     if (profile.user.role.slug !== "admin") return;
     const sa = profile.user.shop_admin;
-    if (sa?.onboarding_completed_at) {
-      router.replace("/admin");
-      return;
-    }
     if (!sa) return;
     const s = Math.min(Math.max(sa.onboarding_step, 1), TOTAL_STEPS);
     setStep(s);
@@ -137,7 +133,7 @@ export default function AdminOnboardingPage() {
     setCashOnly(sa.shop_pays_cash_only);
     setDepositsEnabled(sa.shop_deposits_enabled);
     setTapToPayLater(sa.shop_tap_to_pay_later);
-  }, [profile, router]);
+  }, [profile]);
 
   useEffect(() => {
     if (profile.kind !== "ready" || profile.user.role.slug !== "admin") {
@@ -214,6 +210,12 @@ export default function AdminOnboardingPage() {
   }
 
   async function onFinish() {
+    const sa = profile.kind === "ready" ? profile.user.shop_admin : undefined;
+    if (sa?.onboarding_completed_at) {
+      router.push("/admin");
+      return;
+    }
+
     const token = getStoredAuthToken();
     if (!token) return;
     setBusy(true);
@@ -287,6 +289,9 @@ export default function AdminOnboardingPage() {
     );
   }
 
+  const shopAdmin = profile.user.shop_admin;
+  const setupAlreadyComplete = Boolean(shopAdmin.onboarding_completed_at);
+
   return (
     <div className="flex min-h-dvh flex-1 flex-col">
       <SiteHeader profile={profile} onSignOut={signOut} />
@@ -301,6 +306,19 @@ export default function AdminOnboardingPage() {
             description="A short, guided checklist—one step at a time. You can change everything later."
           />
 
+          {setupAlreadyComplete ? (
+            <div
+              className="rounded-xl border border-primary/25 bg-primary/[0.05] px-4 py-3 text-sm text-muted-foreground dark:border-primary/30 dark:bg-primary/[0.08]"
+              role="status"
+            >
+              <span className="font-medium text-foreground">
+                Guided setup is complete.
+              </span>{" "}
+              Review any step below; choosing Continue still saves your shop
+              settings.
+            </div>
+          ) : null}
+
           <p className="text-xs text-muted-foreground">
             You can open Team, catalog, or barber hours anytime; use{" "}
             <span className="font-medium text-foreground">
@@ -313,7 +331,7 @@ export default function AdminOnboardingPage() {
             aria-label="Onboarding progress"
             className="flex flex-col gap-3"
           >
-            <p className="text-[11px] font-semibold uppercase tracking-widecaps">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
               <span className="text-muted-foreground">
                 Step {step} of {TOTAL_STEPS}
                 {": "}
@@ -612,7 +630,7 @@ export default function AdminOnboardingPage() {
             </CardContent>
             <CardFooter className="flex flex-col gap-3 border-t border-border/60 bg-muted/15 px-6 py-4 sm:flex-row sm:justify-between">
               <div className="flex w-full flex-wrap gap-2 sm:flex-1">
-                {step > 1 && step < 6 ? (
+                {step > 1 && (step < 6 || setupAlreadyComplete) ? (
                   <Button
                     type="button"
                     variant="ghost"
@@ -687,7 +705,11 @@ export default function AdminOnboardingPage() {
                     disabled={busy}
                     onClick={() => void onFinish()}
                   >
-                    {busy ? "Finishing…" : "Finish & go to catalog"}
+                    {busy
+                      ? "Finishing…"
+                      : setupAlreadyComplete
+                        ? "Back to dashboard"
+                        : "Finish & go to catalog"}
                   </Button>
                 )}
               </div>
