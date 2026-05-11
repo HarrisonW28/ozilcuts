@@ -137,6 +137,77 @@ function bookingLabel(record: AppointmentRecord): string {
 }
 
 /**
+ * Read the literal `YYYY-MM-DD` and `HH:mm` from an ISO-like API datetime string,
+ * ignoring any `Z` / offset suffix. This keeps appointments aligned with
+ * availability windows, which are plain shop wall-clock times — using `Date`
+ * would shift times by the viewer's browser timezone when the payload carries
+ * `Z` / UTC offsets.
+ */
+export function parseIsoWallClock(
+  iso: string,
+): { ymd: string; minuteOfDay: number } | null {
+  const trimmed = iso.trim();
+  const m = trimmed.match(
+    /^(\d{4}-\d{2}-\d{2})[T ](\d{2}):(\d{2})(?::(\d{2}))?(?:\.\d+)?/,
+  );
+  if (!m) return null;
+  const ymd = m[1];
+  const h = Number.parseInt(m[2], 10);
+  const min = Number.parseInt(m[3], 10);
+  if (
+    !Number.isFinite(h) ||
+    !Number.isFinite(min) ||
+    h < 0 ||
+    h > 23 ||
+    min < 0 ||
+    min > 59
+  ) {
+    return null;
+  }
+
+  return { ymd, minuteOfDay: h * 60 + min };
+}
+
+export type PlacedBooking = {
+  booking: BookingBlock;
+  column: number;
+};
+
+/**
+ * Greedy column assignment for overlapping bookings (week columns + day timeline).
+ */
+export function placeBookings(bookings: BookingBlock[]): {
+  placed: PlacedBooking[];
+  columnCount: number;
+} {
+  if (bookings.length === 0) {
+    return { placed: [], columnCount: 1 };
+  }
+
+  const sorted = [...bookings].sort(
+    (a, b) => a.startMin - b.startMin || a.endMin - b.endMin,
+  );
+
+  const columnEnds: number[] = [];
+  const placed: PlacedBooking[] = [];
+
+  for (const booking of sorted) {
+    let col = 0;
+    while (col < columnEnds.length && columnEnds[col]! > booking.startMin) {
+      col++;
+    }
+    if (col === columnEnds.length) {
+      columnEnds.push(booking.endMin);
+    } else {
+      columnEnds[col] = booking.endMin;
+    }
+    placed.push({ booking, column: col });
+  }
+
+  return { placed, columnCount: Math.max(1, columnEnds.length) };
+}
+
+/**
  * Bucket booked appointments into the week grid by their local date, and
  * convert their start/end timestamps into minute-of-day offsets so the
  * calendar component can render them with the same percentage math it
@@ -152,18 +223,31 @@ export function applyBookingsToSchedule(
   const byDay = new Map<string, BookingBlock[]>();
   for (const appt of appointments) {
     if (!appt.starts_at || !appt.ends_at) continue;
-    const start = new Date(appt.starts_at);
-    const end = new Date(appt.ends_at);
-    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) continue;
 
-    const key = isoYmd(start);
-    const startMin = start.getHours() * 60 + start.getMinutes();
-    // If the appointment crosses midnight we clip the end at the day
-    // boundary so the block stays visible on its starting day.
-    const sameDay = isoYmd(end) === key;
-    const endMin = sameDay
-      ? end.getHours() * 60 + end.getMinutes()
-      : 24 * 60;
+    let key: string;
+    let startMin: number;
+    let endMin: number;
+
+    const startWall = parseIsoWallClock(appt.starts_at);
+    const endWall = parseIsoWallClock(appt.ends_at);
+
+    if (startWall && endWall) {
+      key = startWall.ymd;
+      startMin = startWall.minuteOfDay;
+      const sameDay = endWall.ymd === key;
+      endMin = sameDay ? endWall.minuteOfDay : 24 * 60;
+    } else {
+      const start = new Date(appt.starts_at);
+      const end = new Date(appt.ends_at);
+      if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) continue;
+
+      key = isoYmd(start);
+      startMin = start.getHours() * 60 + start.getMinutes();
+      const sameDay = isoYmd(end) === key;
+      endMin = sameDay ? end.getHours() * 60 + end.getMinutes() : 24 * 60;
+    }
+
+    if (endMin <= startMin) continue;
 
     const block: BookingBlock = {
       id: appt.id,

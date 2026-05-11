@@ -4,7 +4,7 @@ import type { CSSProperties } from "react";
 
 import { cn } from "@ozilcuts/ui";
 import { BARBER_WEEKDAY_LABELS } from "@ozilcuts/types";
-import type { BookingBlock, CalendarDensity, WeekDaySchedule } from "@/lib/calendar-week";
+import type { CalendarDensity, WeekDaySchedule } from "@/lib/calendar-week";
 import {
   CALENDAR_GRID_END_MIN,
   CALENDAR_GRID_SPAN_MIN,
@@ -13,6 +13,7 @@ import {
   formatShortWeekday,
   formatYmd,
   isSameYmd,
+  placeBookings,
   timeToMinutes,
 } from "@/lib/calendar-week";
 import { appointmentScheduleBlockClassName } from "@/lib/appointment-schedule-block";
@@ -56,45 +57,6 @@ function blockLayout(
 
 function nowMinutes(d: Date): number {
   return d.getHours() * 60 + d.getMinutes();
-}
-
-type PlacedBooking = {
-  booking: BookingBlock;
-  column: number;
-};
-
-/**
- * Greedy column assignment for overlapping bookings (operational day view).
- */
-function placeBookings(bookings: BookingBlock[]): {
-  placed: PlacedBooking[];
-  columnCount: number;
-} {
-  if (bookings.length === 0) {
-    return { placed: [], columnCount: 1 };
-  }
-
-  const sorted = [...bookings].sort(
-    (a, b) => a.startMin - b.startMin || a.endMin - b.endMin,
-  );
-
-  const columnEnds: number[] = [];
-  const placed: PlacedBooking[] = [];
-
-  for (const booking of sorted) {
-    let col = 0;
-    while (col < columnEnds.length && columnEnds[col]! > booking.startMin) {
-      col++;
-    }
-    if (col === columnEnds.length) {
-      columnEnds.push(booking.endMin);
-    } else {
-      columnEnds[col] = booking.endMin;
-    }
-    placed.push({ booking, column: col });
-  }
-
-  return { placed, columnCount: Math.max(1, columnEnds.length) };
 }
 
 export type DayTimelineCalendarProps = {

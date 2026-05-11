@@ -1,6 +1,7 @@
 "use client";
 
 import type { CSSProperties } from "react";
+import { useMemo } from "react";
 
 import { cn } from "@ozilcuts/ui";
 import { BARBER_WEEKDAY_LABELS } from "@ozilcuts/types";
@@ -12,6 +13,7 @@ import {
   formatMonthDay,
   formatShortWeekday,
   isSameYmd,
+  placeBookings,
   timeToMinutes,
 } from "@/lib/calendar-week";
 import { appointmentScheduleBlockClassName } from "@/lib/appointment-schedule-block";
@@ -50,6 +52,18 @@ function blockStyle(
   return {
     top: `${topPct}%`,
     height: `${Math.max(heightPct, 2)}%`,
+  };
+}
+
+/** Horizontal lane when multiple bookings overlap (same as day timeline). */
+function bookingLaneStyle(
+  column: number,
+  columnCount: number,
+): Pick<CSSProperties, "left" | "width"> {
+  const pad = 6;
+  return {
+    left: `calc(${pad}px + ((100% - ${pad * 2}px) * ${column}) / ${columnCount})`,
+    width: `calc((100% - ${pad * 2}px) / ${columnCount})`,
   };
 }
 
@@ -96,6 +110,11 @@ function DayColumn({
   const showNowLine =
     isToday && nowMin >= GRID_START_MIN && nowMin <= GRID_END_MIN;
   const nowTopPct = ((nowMin - GRID_START_MIN) / GRID_SPAN) * 100;
+
+  const { placed: placedBookings, columnCount } = useMemo(
+    () => placeBookings(day.bookings),
+    [day.bookings],
+  );
 
   return (
     <button
@@ -153,7 +172,7 @@ function DayColumn({
       >
         {/* Subtle quarter-hour rhythm (theme-safe); omit if it fights contrast */}
         <div
-          className="pointer-events-none absolute inset-0 opacity-[0.22] dark:opacity-[0.12]"
+          className="pointer-events-none absolute inset-0 z-[1] opacity-[0.22] dark:opacity-[0.12]"
           aria-hidden
           style={{
             backgroundImage:
@@ -172,7 +191,7 @@ function DayColumn({
           return (
             <div
               key={`${w.starts_at}-${w.ends_at}`}
-              className="absolute inset-x-1.5 overflow-hidden rounded-md border-l-[3px] border-l-primary/55 bg-background/65 pl-2 pr-1 pt-1 shadow-sm dark:border-l-primary/50 dark:bg-background/40 sm:inset-x-2"
+              className="absolute inset-x-1.5 z-[2] overflow-hidden rounded-md border-l-[3px] border-l-primary/55 bg-background/65 pl-2 pr-1 pt-1 shadow-sm dark:border-l-primary/50 dark:bg-background/40 sm:inset-x-2"
               style={blockStyle(clipped.start, clipped.end)}
             >
               <span
@@ -185,7 +204,7 @@ function DayColumn({
           );
         })}
 
-        {day.bookings.map((b) => {
+        {placedBookings.map(({ booking: b, column }) => {
           const clipped = clipWindow(b.startMin, b.endMin);
           if (!clipped) {
             return null;
@@ -197,12 +216,15 @@ function DayColumn({
               onClick={(e) => e.stopPropagation()}
               aria-label={`${b.label}, ${formatShortWeekday(day.date)} ${formatMonthDay(day.date)}`}
               className={cn(
-                "absolute inset-x-1.5 z-10 flex items-start overflow-hidden sm:inset-x-2",
+                "absolute z-[15] flex items-start overflow-hidden px-0.5",
                 appointmentScheduleBlockClassName(b.status, "week"),
               )}
-              style={blockStyle(clipped.start, clipped.end, {
-                minHeightPct: 9,
-              })}
+              style={{
+                ...blockStyle(clipped.start, clipped.end, {
+                  minHeightPct: columnCount > 1 ? 5 : 7,
+                }),
+                ...bookingLaneStyle(column, columnCount),
+              }}
             >
               <span className="line-clamp-2 leading-snug">{b.label}</span>
             </Link>
@@ -212,7 +234,7 @@ function DayColumn({
         {showNowLine ? (
           <div
             aria-hidden
-            className="pointer-events-none absolute inset-x-0 z-20 flex items-center"
+            className="pointer-events-none absolute inset-x-0 z-[25] flex items-center"
             style={{ top: `${nowTopPct}%` }}
           >
             <span className="-ml-px inline-block size-2 rounded-full bg-primary shadow-[0_0_0_2px] shadow-background ring-1 ring-primary/40" />
@@ -255,8 +277,9 @@ export function WeekAvailabilityCalendar({
         </div>
       </div>
       <p className="mt-3 text-pretty text-center text-[11px] leading-relaxed text-muted-foreground lg:text-left">
-        Same scale as the day view: 6:00a–10:00p. Tinted columns are shop hours;
-        cards are appointments (tap).
+        Same 6:00a–10:00p scale as the day view. Wide bands match published shop
+        hours; appointment cards sit on that timeline (side-by-side when they
+        overlap).
       </p>
     </section>
   );
