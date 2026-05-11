@@ -80,6 +80,34 @@ class BarberManagementTest extends TestCase
         $this->assertTrue(Hash::check('password123', $user->password));
     }
 
+    public function test_new_barber_inherits_shop_default_hours(): void
+    {
+        $admin = User::factory()->admin()->create([
+            'shop_default_hours' => [
+                ['weekday' => 3, 'starts_at' => '11:00', 'ends_at' => '15:00'],
+            ],
+        ]);
+
+        $this->withToken($admin->createToken('t')->plainTextToken)
+            ->postJson('/api/v1/manage/barbers', [
+                'name' => 'Inherited Barber',
+                'email' => 'inherits-hours@example.com',
+                'password' => 'password123',
+                'password_confirmation' => 'password123',
+            ])
+            ->assertCreated();
+
+        $barber = User::query()->where('email', 'inherits-hours@example.com')->first();
+        $this->assertNotNull($barber);
+        $profile = $barber->barberProfile;
+        $this->assertNotNull($profile);
+
+        $this->assertDatabaseHas('barber_availability_windows', [
+            'barber_profile_id' => $profile->id,
+            'weekday' => 3,
+        ]);
+    }
+
     public function test_barber_can_update_own_profile_fields_not_publish_flag(): void
     {
         $barber = User::factory()->barber()->create();

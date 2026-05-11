@@ -5,6 +5,7 @@ namespace App\Services\Barbers;
 use App\Models\BarberProfile;
 use App\Models\Role;
 use App\Models\User;
+use App\Services\Availability\BarberAvailabilityService;
 use Illuminate\Support\Arr;
 use RuntimeException;
 
@@ -13,7 +14,7 @@ final class BarberManagementService
     /**
      * @param  array{name: string, email: string, password: string, title?: string|null, bio?: string|null, years_experience?: int|null, is_published?: bool}  $data
      */
-    public function createBarber(array $data): BarberProfile
+    public function createBarber(array $data, User $admin): BarberProfile
     {
         $roleId = Role::query()->where('slug', Role::SLUG_BARBER)->value('id');
         if ($roleId === null) {
@@ -27,13 +28,20 @@ final class BarberManagementService
             'role_id' => $roleId,
         ]);
 
-        return BarberProfile::query()->create([
+        $profile = BarberProfile::query()->create([
             'user_id' => $user->id,
             'title' => $data['title'] ?? null,
             'bio' => $data['bio'] ?? null,
             'years_experience' => $data['years_experience'] ?? null,
             'is_published' => $data['is_published'] ?? true,
         ])->load('user');
+
+        $defaults = $admin->shop_default_hours;
+        if (is_array($defaults) && $defaults !== []) {
+            app(BarberAvailabilityService::class)->replace($profile, $defaults);
+        }
+
+        return $profile->fresh()->load('user');
     }
 
     /**

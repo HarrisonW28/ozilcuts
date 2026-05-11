@@ -12,7 +12,7 @@ final class BarberManageStoreController extends Controller
 {
     public function __invoke(StoreBarberRequest $request, BarberManagementService $barbers): JsonResponse
     {
-        $profile = $barbers->createBarber($request->validated());
+        $profile = $barbers->createBarber($request->validated(), $request->user());
 
         return response()->json(
             (new BarberManageResource($profile))->toArray($request),

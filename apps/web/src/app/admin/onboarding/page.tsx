@@ -1,7 +1,14 @@
 "use client";
 
+import { ShopDefaultHoursFields } from "@/components/shop-default-hours-fields";
 import { SiteHeader } from "@/components/site-header";
 import { getStoredAuthToken } from "@/lib/auth-token";
+import {
+  defaultShopHoursWeekdays,
+  flattenShopHoursWeekdaysToPayload,
+  shopHoursHaveBookableWindows,
+  weekdaysFromShopAdminPayload,
+} from "@/lib/shop-default-hours";
 import { useSessionProfile } from "@/lib/use-session-profile";
 import {
   ApiError,
@@ -32,7 +39,7 @@ import { useCallback, useEffect, useState } from "react";
 const STEP_LABELS = [
   "Shop details",
   "Add barbers",
-  "Business hours",
+  "Barber hours",
   "Add services",
   "Payments",
   "Go live",
@@ -64,6 +71,9 @@ export default function AdminOnboardingPage() {
   const [cashOnly, setCashOnly] = useState(true);
   const [depositsEnabled, setDepositsEnabled] = useState(true);
   const [tapToPayLater, setTapToPayLater] = useState(true);
+  const [shopHoursWeekdays, setShopHoursWeekdays] = useState(
+    defaultShopHoursWeekdays,
+  );
   const [barberTotal, setBarberTotal] = useState<number | null>(null);
   const [serviceTotal, setServiceTotal] = useState<number | null>(null);
   const [hoursReady, setHoursReady] = useState<boolean | null>(null);
@@ -123,8 +133,12 @@ export default function AdminOnboardingPage() {
     if (profile.user.role.slug !== "admin") return;
     const sa = profile.user.shop_admin;
     if (!sa) return;
-    const s = Math.min(Math.max(sa.onboarding_step, 1), TOTAL_STEPS);
-    setStep(s);
+    if (sa.onboarding_completed_at) {
+      setStep(1);
+    } else {
+      const s = Math.min(Math.max(sa.onboarding_step, 1), TOTAL_STEPS);
+      setStep(s);
+    }
     setShopName(
       sa.shop_display_name?.trim() !== ""
         ? (sa.shop_display_name ?? "")
@@ -133,6 +147,7 @@ export default function AdminOnboardingPage() {
     setCashOnly(sa.shop_pays_cash_only);
     setDepositsEnabled(sa.shop_deposits_enabled);
     setTapToPayLater(sa.shop_tap_to_pay_later);
+    setShopHoursWeekdays(weekdaysFromShopAdminPayload(sa.shop_default_hours));
   }, [profile]);
 
   useEffect(() => {
@@ -153,9 +168,12 @@ export default function AdminOnboardingPage() {
     setBusy(true);
     setStepError(null);
     try {
+      const skipStepInPayload =
+        profile.kind === "ready" &&
+        Boolean(profile.user.shop_admin?.onboarding_completed_at);
       const user = await patchShopOnboarding(token, {
         ...body,
-        onboarding_step: nextStep,
+        ...(skipStepInPayload ? {} : { onboarding_step: nextStep }),
       });
       replaceProfile(user);
       setStep(nextStep);
@@ -172,6 +190,13 @@ export default function AdminOnboardingPage() {
 
   async function goBack() {
     if (step <= 1 || busy) return;
+    const skipStepInPayload =
+      profile.kind === "ready" &&
+      Boolean(profile.user.shop_admin?.onboarding_completed_at);
+    if (skipStepInPayload) {
+      setStep((s) => Math.max(1, s - 1));
+      return;
+    }
     const token = getStoredAuthToken();
     if (!token) return;
     setBusy(true);
@@ -374,13 +399,13 @@ export default function AdminOnboardingPage() {
               <CardTitle className="text-lg">{STEP_LABELS[step - 1]}</CardTitle>
               <CardDescription className="text-pretty">
                 {step === 1
-                  ? "This is how clients will refer to your business in Ozilcuts."
+                  ? "Your shop name and default weekly hours—new barbers start from these until you override per chair."
                   : null}
                 {step === 2
                   ? "Create barber accounts so clients can pick a chair and book online."
                   : null}
                 {step === 3
-                  ? "Each barber needs at least one weekly window before you can take bookings."
+                  ? "Defaults from step one apply to new chairs; here you confirm every barber has at least one window (override split shifts or days as needed)."
                   : null}
                 {step === 4
                   ? "Start from our suggested menu or add your own in the catalog later."
@@ -395,30 +420,36 @@ export default function AdminOnboardingPage() {
             </CardHeader>
             <CardContent className="space-y-6 pt-2">
               {step === 1 ? (
-                <div className="space-y-2">
-                  <label
-                    htmlFor="shop-display-name"
-                    className="text-sm font-medium leading-none"
-                  >
-                    Shop name
-                  </label>
-                  <input
-                    id="shop-display-name"
-                    name="shop_display_name"
-                    autoComplete="organization"
-                    className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-base shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:text-sm"
-                    value={shopName}
-                    onChange={(e) => setShopName(e.target.value)}
-                    placeholder="e.g. Northside Barbers"
-                    aria-describedby="shop-name-hint"
+                <div className="space-y-6">
+                  <div className="space-y-2">
+                    <label
+                      htmlFor="shop-display-name"
+                      className="text-sm font-medium leading-none"
+                    >
+                      Shop name
+                    </label>
+                    <input
+                      id="shop-display-name"
+                      name="shop_display_name"
+                      autoComplete="organization"
+                      className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-base shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:text-sm"
+                      value={shopName}
+                      onChange={(e) => setShopName(e.target.value)}
+                      placeholder="e.g. Northside Barbers"
+                      aria-describedby="shop-name-hint"
+                    />
+                    <p
+                      id="shop-name-hint"
+                      className="text-xs text-muted-foreground"
+                    >
+                      Use the name on your storefront or Instagram—clients
+                      recognize it.
+                    </p>
+                  </div>
+                  <ShopDefaultHoursFields
+                    value={shopHoursWeekdays}
+                    onChange={setShopHoursWeekdays}
                   />
-                  <p
-                    id="shop-name-hint"
-                    className="text-xs text-muted-foreground"
-                  >
-                    Use the name on your storefront or Instagram—clients
-                    recognize it.
-                  </p>
                 </div>
               ) : null}
 
@@ -472,9 +503,13 @@ export default function AdminOnboardingPage() {
                     </p>
                   ) : null}
                   <p className="text-sm text-muted-foreground leading-relaxed">
-                    Open a barber&apos;s <span className="font-medium text-foreground">Hours</span> from{" "}
-                    <span className="font-medium text-foreground">Team</span>, or use the shortcuts below.{" "}
-                    Everyone on the roster needs at least one open interval.
+                    Open a barber&apos;s{" "}
+                    <span className="font-medium text-foreground">Hours</span>{" "}
+                    from{" "}
+                    <span className="font-medium text-foreground">Team</span>, or
+                    use the shortcuts below. Everyone on the roster needs at
+                    least one bookable interval—you can differ from the shop
+                    template anytime.
                   </p>
                   <div className="flex flex-wrap gap-2">
                     <Link
@@ -621,9 +656,9 @@ export default function AdminOnboardingPage() {
               {step === 6 ? (
                 <div className="space-y-3 text-sm text-muted-foreground leading-relaxed">
                   <p className="text-pretty">
-                    Nice work. Your shop name, team, bookable hours, services,
-                    and payment defaults are in place. Open the catalog or
-                    reports any time from the header.
+                    Nice work. Your shop name, default hours, team, per-chair
+                    availability, services, and payment defaults are in place.
+                    Open the catalog or reports any time from the header.
                   </p>
                 </div>
               ) : null}
@@ -649,7 +684,11 @@ export default function AdminOnboardingPage() {
                     className="min-h-11 w-full sm:w-auto"
                     disabled={
                       busy ||
-                      (step === 1 && shopName.trim().length < 2) ||
+                      (step === 1 &&
+                        (shopName.trim().length < 2 ||
+                          !shopHoursHaveBookableWindows(
+                            shopHoursWeekdays,
+                          ))) ||
                       (step === 2 &&
                         (barberTotal === null || barberTotal < 1)) ||
                       (step === 3 && hoursReady !== true) ||
@@ -659,7 +698,13 @@ export default function AdminOnboardingPage() {
                     onClick={() => {
                       if (step === 1) {
                         void persist(
-                          { shop_display_name: shopName.trim() },
+                          {
+                            shop_display_name: shopName.trim(),
+                            shop_default_hours:
+                              flattenShopHoursWeekdaysToPayload(
+                                shopHoursWeekdays,
+                              ),
+                          },
                           2,
                         );
                       } else if (step === 2) {

@@ -344,6 +344,8 @@ export type ShopAdminState = {
   shop_pays_cash_only: boolean;
   shop_deposits_enabled: boolean;
   shop_tap_to_pay_later: boolean;
+  /** Shop-wide template; new barbers start with these hours until edited per chair. */
+  shop_default_hours: BarberAvailabilityPayload | null;
 };
 
 export type PatchShopOnboardingInput = {
@@ -353,6 +355,8 @@ export type PatchShopOnboardingInput = {
   shop_deposits_enabled?: boolean;
   shop_tap_to_pay_later?: boolean;
   complete?: boolean;
+  /** Flat rows; same shape as replace barber availability `windows`. */
+  shop_default_hours?: BarberAvailabilityWindowInput[] | null;
 };
 
 export type ServiceStarterPackResponse = {

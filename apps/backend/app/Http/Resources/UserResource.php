@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use App\Models\User;
+use App\Services\Availability\BarberAvailabilityService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -29,6 +30,13 @@ class UserResource extends JsonResource
         ];
 
         if ($this->isAdmin()) {
+            $shopHours = null;
+            if (is_array($this->shop_default_hours)) {
+                $shopHours = [
+                    'weekdays' => app(BarberAvailabilityService::class)->groupedFromFlatWindows($this->shop_default_hours),
+                ];
+            }
+
             $base['shop_admin'] = [
                 'shop_display_name' => $this->shop_display_name,
                 'onboarding_step' => (int) $this->onboarding_step,
@@ -36,6 +44,7 @@ class UserResource extends JsonResource
                 'shop_pays_cash_only' => (bool) $this->shop_pays_cash_only,
                 'shop_deposits_enabled' => (bool) $this->shop_deposits_enabled,
                 'shop_tap_to_pay_later' => (bool) $this->shop_tap_to_pay_later,
+                'shop_default_hours' => $shopHours,
             ];
         }
 

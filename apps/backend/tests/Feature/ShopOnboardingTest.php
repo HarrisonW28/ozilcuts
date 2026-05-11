@@ -72,6 +72,28 @@ class ShopOnboardingTest extends TestCase
         $this->assertSame(6, (int) $admin->onboarding_step);
     }
 
+    public function test_admin_can_save_shop_default_hours(): void
+    {
+        $admin = User::factory()->admin()->create([
+            'shop_default_hours' => null,
+        ]);
+
+        $this->withToken($admin->createToken('t')->plainTextToken)
+            ->patchJson('/api/v1/manage/shop-onboarding', [
+                'shop_default_hours' => [
+                    ['weekday' => 1, 'starts_at' => '10:00', 'ends_at' => '18:00'],
+                    ['weekday' => 2, 'starts_at' => '10:00', 'ends_at' => '18:00'],
+                ],
+            ])
+            ->assertOk()
+            ->assertJsonPath('shop_admin.shop_default_hours.weekdays.0.weekday', 1)
+            ->assertJsonPath('shop_admin.shop_default_hours.weekdays.0.windows.0.starts_at', '10:00');
+
+        $admin->refresh();
+        $this->assertIsArray($admin->shop_default_hours);
+        $this->assertCount(2, $admin->shop_default_hours);
+    }
+
     public function test_starter_pack_creates_services_and_skips_existing_slugs(): void
     {
         $admin = User::factory()->admin()->create();
@@ -116,6 +138,7 @@ class ShopOnboardingTest extends TestCase
                     'shop_pays_cash_only',
                     'shop_deposits_enabled',
                     'shop_tap_to_pay_later',
+                    'shop_default_hours',
                 ],
             ]);
     }

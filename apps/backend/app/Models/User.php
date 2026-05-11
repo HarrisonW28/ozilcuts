@@ -35,6 +35,7 @@ class User extends Authenticatable
         'shop_pays_cash_only',
         'shop_deposits_enabled',
         'shop_tap_to_pay_later',
+        'shop_default_hours',
     ];
 
     /**
@@ -61,6 +62,7 @@ class User extends Authenticatable
             'shop_pays_cash_only' => 'boolean',
             'shop_deposits_enabled' => 'boolean',
             'shop_tap_to_pay_later' => 'boolean',
+            'shop_default_hours' => 'array',
         ];
     }
 
