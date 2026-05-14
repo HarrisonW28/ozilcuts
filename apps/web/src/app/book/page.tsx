@@ -7,6 +7,7 @@ import {
   TimeSlotChipsSkeleton,
 } from "@/components/load-empty";
 import { getStoredAuthToken } from "@/lib/auth-token";
+import { formatGbp } from "@/lib/format-gbp";
 import { useSessionProfile } from "@/lib/use-session-profile";
 import {
   ApiError,
@@ -41,13 +42,6 @@ import {
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
-
-function formatUsd(cents: number): string {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-  }).format(cents / 100);
-}
 
 function todayIso(): string {
   const d = new Date();
@@ -567,7 +561,7 @@ function BookingFlow() {
                                 </span>
                                 <span className="mt-1 text-sm tabular-nums text-muted-foreground">
                                   {s.duration_minutes} min ·{" "}
-                                  {formatUsd(s.price_cents)}
+                                  {formatGbp(s.price_cents)}
                                 </span>
                               </button>
                             );
@@ -752,13 +746,13 @@ function BookingFlow() {
                         <p className="mt-1.5 tabular-nums text-muted-foreground">
                           {formatIsoDate(date)} · {formatTimeFromIso(selectedSlot)}{" "}
                           · {selectedService.duration_minutes} min ·{" "}
-                          {formatUsd(selectedService.price_cents)}
+                          {formatGbp(selectedService.price_cents)}
                         </p>
                         {selectedService.deposit_cents > 0 && !isStaffBooker ? (
                           <p className="mt-2 text-muted-foreground">
                             Deposit due now{" "}
                             <span className="font-semibold text-foreground">
-                              {formatUsd(selectedService.deposit_cents)}
+                              {formatGbp(selectedService.deposit_cents)}
                             </span>
                           </p>
                         ) : null}
@@ -805,7 +799,7 @@ function BookingFlow() {
               >
                 <p className="mb-2 truncate text-center text-xs text-muted-foreground">
                   {selectedService.name} · {formatTimeFromIso(selectedSlot)} ·{" "}
-                  {formatUsd(selectedService.price_cents)}
+                  {formatGbp(selectedService.price_cents)}
                 </p>
                 <Button
                   type="submit"

@@ -24,7 +24,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(PaymentService::class, function ($app) {
             return new PaymentService(
                 gateway: $app->make(StripeGateway::class),
-                currency: (string) config('services.stripe.currency', 'usd'),
+                currency: (string) config('services.stripe.currency', 'gbp'),
             );
         });
     }

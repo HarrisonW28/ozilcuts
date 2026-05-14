@@ -2,6 +2,7 @@
 
 import { ContactLocationSection } from "@/components/contact-location-section";
 import { GoogleSignInButton } from "@/components/google-sign-in-button";
+import { formatGbp } from "@/lib/format-gbp";
 import { publicReviewQuotes } from "@/lib/public-site-copy";
 import {
   Button,
@@ -21,13 +22,6 @@ type HealthCopy = {
   showRetry: boolean;
   onRetry: () => void;
 };
-
-function formatUsd(cents: number): string {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-  }).format(cents / 100);
-}
 
 type PublicHomeViewProps = {
   heroTitle: string;
@@ -243,7 +237,7 @@ export function PublicHomeView({
                         <div>
                           <dt className="sr-only">Price</dt>
                           <dd className="text-lg font-semibold tabular-nums tracking-tight text-foreground">
-                            {formatUsd(svc.price_cents)}
+                            {formatGbp(svc.price_cents)}
                           </dd>
                         </div>
                       </dl>

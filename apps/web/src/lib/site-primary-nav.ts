@@ -57,7 +57,7 @@ export function getPrimaryNavSections(profile: ProfileState): PrimaryNavSection[
 }
 
 /**
- * Account dropdown / mobile drawer: Profile → Dashboard → Settings (role-specific).
+ * Account dropdown / mobile drawer: profile links, dashboard, then settings (no section headers).
  */
 export function getAccountMenuGroups(
   profile: ProfileState,
@@ -86,7 +86,6 @@ export function getAccountMenuGroups(
     });
     groups.push({
       id: "settings",
-      label: "Settings",
       links: [
         {
           href: "/dashboard/settings",
@@ -113,7 +112,6 @@ export function getAccountMenuGroups(
     });
     groups.push({
       id: "settings",
-      label: "Settings",
       links: [
         {
           href: "/dashboard/settings",
@@ -140,7 +138,6 @@ export function getAccountMenuGroups(
     });
     groups.push({
       id: "settings",
-      label: "Settings",
       links: [
         {
           href: "/dashboard/settings",

@@ -18,5 +18,5 @@ $start = $appointment->starts_at ? CarbonImmutable::parse((string) $appointment-
 @endif
 
 @if ((int) $appointment->deposit_cents > 0)
-**Deposit:** ${{ number_format($appointment->deposit_cents / 100, 2) }} ({{ str_replace('_', ' ', (string) $appointment->payment_status) }})
+**Deposit:** £{{ number_format($appointment->deposit_cents / 100, 2) }} ({{ str_replace('_', ' ', (string) $appointment->payment_status) }})
 @endif

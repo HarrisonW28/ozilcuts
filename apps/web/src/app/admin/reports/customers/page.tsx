@@ -2,6 +2,7 @@
 
 import { SiteHeader } from "@/components/site-header";
 import { getStoredAuthToken } from "@/lib/auth-token";
+import { formatGbp } from "@/lib/format-gbp";
 import { useSessionProfile } from "@/lib/use-session-profile";
 import {
   ApiError,
@@ -33,13 +34,6 @@ type LoadState =
   | { kind: "loading" }
   | { kind: "ok"; data: CustomerAnalyticsAggregate }
   | { kind: "error"; message: string };
-
-function formatUsd(cents: number): string {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-  }).format(cents / 100);
-}
 
 function formatLong(iso: string | null): string {
   if (!iso) return "—";
@@ -406,7 +400,7 @@ export default function AdminCustomersReportPage() {
                                     {row.customer_name}
                                   </td>
                                   <td className="py-2 pr-3">
-                                    {formatUsd(row.total_spent_cents)}
+                                    {formatGbp(row.total_spent_cents)}
                                   </td>
                                   <td className="py-2 pr-3">{row.visits}</td>
                                   <td className="py-2 pr-3 text-muted-foreground">
@@ -463,7 +457,7 @@ export default function AdminCustomersReportPage() {
                                   </td>
                                   <td className="py-2 pr-3">{row.visits}</td>
                                   <td className="py-2 pr-3">
-                                    {formatUsd(row.total_spent_cents)}
+                                    {formatGbp(row.total_spent_cents)}
                                   </td>
                                   <td className="py-2 pr-3 text-muted-foreground">
                                     {formatLong(row.last_visit_at)}

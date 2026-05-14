@@ -1,6 +1,7 @@
 "use client";
 
 import { getStoredAuthToken } from "@/lib/auth-token";
+import { formatGbp } from "@/lib/format-gbp";
 import {
   ApiError,
   ApiValidationError,
@@ -27,13 +28,6 @@ type ReportState =
   | { kind: "loading" }
   | { kind: "ok"; report: BarberAnalyticsReport }
   | { kind: "error"; message: string };
-
-function formatUsd(cents: number): string {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-  }).format(cents / 100);
-}
 
 function formatPct(value: number): string {
   return `${(value * 100).toFixed(1)}%`;
@@ -162,8 +156,8 @@ export function BarberAnalyticsView({
       },
       {
         label: "Booked revenue",
-        value: formatUsd(s.booked_cents),
-        hint: `Collected ${formatUsd(s.collected_cents)}`,
+        value: formatGbp(s.booked_cents),
+        hint: `Collected ${formatGbp(s.collected_cents)}`,
       },
       {
         label: "Utilization",
@@ -330,7 +324,7 @@ export function BarberAnalyticsView({
                           </td>
                           <td className="py-2 pr-3">{row.count}</td>
                           <td className="py-2 pr-3">
-                            {formatUsd(row.booked_cents)}
+                            {formatGbp(row.booked_cents)}
                           </td>
                         </tr>
                       ))}
@@ -375,7 +369,7 @@ export function BarberAnalyticsView({
                           </td>
                           <td className="py-2 pr-3">{row.visits}</td>
                           <td className="py-2 pr-3">
-                            {formatUsd(row.booked_cents)}
+                            {formatGbp(row.booked_cents)}
                           </td>
                         </tr>
                       ))}
@@ -432,10 +426,10 @@ export function BarberAnalyticsView({
                               {row.appointments_count}
                             </td>
                             <td className="py-2 pr-3">
-                              {formatUsd(row.booked_cents)}
+                              {formatGbp(row.booked_cents)}
                             </td>
                             <td className="py-2 pr-3">
-                              {formatUsd(row.collected_cents)}
+                              {formatGbp(row.collected_cents)}
                             </td>
                           </tr>
                         );

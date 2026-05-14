@@ -6,6 +6,7 @@ import {
   formatYmd,
   isSameYmd,
 } from "@/lib/calendar-week";
+import { formatGbp } from "@/lib/format-gbp";
 import type { AppointmentRecord } from "@ozilcuts/types";
 import {
   Button,
@@ -18,13 +19,6 @@ import {
 } from "@ozilcuts/ui";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-
-function formatUsd(cents: number): string {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-  }).format(cents / 100);
-}
 
 function formatTime(iso: string | null | undefined): string {
   if (!iso) return "—";
@@ -206,7 +200,7 @@ export function BarberDailyOverview({
               Booked
             </p>
             <p className="mt-1 text-lg font-semibold tabular-nums text-foreground sm:text-xl">
-              {formatUsd(totals.cents)}
+              {formatGbp(totals.cents)}
             </p>
           </div>
         </div>

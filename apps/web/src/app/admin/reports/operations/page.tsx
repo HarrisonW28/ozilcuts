@@ -2,6 +2,7 @@
 
 import { SiteHeader } from "@/components/site-header";
 import { getStoredAuthToken } from "@/lib/auth-token";
+import { formatGbp } from "@/lib/format-gbp";
 import { useSessionProfile } from "@/lib/use-session-profile";
 import {
   ApiError,
@@ -33,13 +34,6 @@ type LoadState =
   | { kind: "loading" }
   | { kind: "ok"; data: OperationalInsightsReport }
   | { kind: "error"; message: string };
-
-function formatUsd(cents: number): string {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-  }).format(cents / 100);
-}
 
 function formatPct(fraction: number): string {
   return `${(fraction * 100).toFixed(1)}%`;
@@ -318,10 +312,10 @@ export default function AdminOperationalInsightsPage() {
                     />
                     <KpiCard
                       label="Deposits collected today"
-                      value={formatUsd(
+                      value={formatGbp(
                         state.data.today.deposits_collected_cents,
                       )}
-                      hint={`${formatUsd(
+                      hint={`${formatGbp(
                         state.data.today.deposits_pending_cents,
                       )} pending`}
                     />
@@ -332,10 +326,10 @@ export default function AdminOperationalInsightsPage() {
                     />
                     <KpiCard
                       label="Deposits this week"
-                      value={formatUsd(
+                      value={formatGbp(
                         state.data.week.deposits_collected_cents,
                       )}
-                      hint={`${formatUsd(
+                      hint={`${formatGbp(
                         state.data.week.deposits_pending_cents,
                       )} pending in next 7 days`}
                     />

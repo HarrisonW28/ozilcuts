@@ -1,5 +1,6 @@
 "use client";
 
+import { formatGbp } from "@/lib/format-gbp";
 import type {
   AppointmentRecord,
   CustomerAnalyticsResponse,
@@ -14,13 +15,6 @@ import {
 } from "@ozilcuts/ui";
 import Link from "next/link";
 import { useMemo } from "react";
-
-function formatUsd(cents: number): string {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-  }).format(cents / 100);
-}
 
 function formatLong(iso: string | null): string {
   if (!iso) return "—";
@@ -105,8 +99,8 @@ export function CustomerVisitsView({ data, linkAppointments = false }: Props) {
     },
     {
       label: "Total spent",
-      value: formatUsd(s.total_spent_cents),
-      hint: `Booked ${formatUsd(s.total_booked_cents)}`,
+      value: formatGbp(s.total_spent_cents),
+      hint: `Booked ${formatGbp(s.total_booked_cents)}`,
     },
     {
       label: "Last visit",
@@ -244,7 +238,7 @@ export function CustomerVisitsView({ data, linkAppointments = false }: Props) {
                                     </span>
                                     {row.amount_paid_cents > 0 ? (
                                       <span className="text-sm font-medium tabular-nums text-foreground">
-                                        {formatUsd(row.amount_paid_cents)}
+                                        {formatGbp(row.amount_paid_cents)}
                                       </span>
                                     ) : (
                                       <span className="text-sm text-muted-foreground">

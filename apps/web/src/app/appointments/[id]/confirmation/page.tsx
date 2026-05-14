@@ -7,6 +7,7 @@ import { HaircutPhotosSection } from "@/components/haircut-photos-section";
 import { SiteHeader } from "@/components/site-header";
 import { StaffPosCheckoutCard } from "@/components/staff-pos-checkout-card";
 import { getStoredAuthToken } from "@/lib/auth-token";
+import { formatGbp } from "@/lib/format-gbp";
 import { useSessionProfile } from "@/lib/use-session-profile";
 import {
   ApiError,
@@ -43,13 +44,6 @@ type LoadState =
   | { kind: "loading" }
   | { kind: "ok"; appointment: AppointmentRecord }
   | { kind: "error"; message: string };
-
-function formatUsd(cents: number): string {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-  }).format(cents / 100);
-}
 
 function formatIsoDate(date: string): string {
   const [y, m, d] = date.split("-").map((s) => Number.parseInt(s, 10));
@@ -151,7 +145,7 @@ function PaymentBadge({
         tone,
       )}
     >
-      {label} · {formatUsd(depositCents)}
+      {label} · {formatGbp(depositCents)}
     </span>
   );
 }
@@ -475,7 +469,7 @@ export default function ConfirmationPage() {
                     <div>
                       <dt className="text-muted-foreground">Price</dt>
                       <dd className="font-medium">
-                        {formatUsd(appointment.service.price_cents)}
+                        {formatGbp(appointment.service.price_cents)}
                       </dd>
                     </div>
                   ) : null}
@@ -483,7 +477,7 @@ export default function ConfirmationPage() {
                     <div>
                       <dt className="text-muted-foreground">Deposit</dt>
                       <dd className="font-medium">
-                        {formatUsd(appointment.deposit_cents)}{" "}
+                        {formatGbp(appointment.deposit_cents)}{" "}
                         <span className="text-xs text-muted-foreground">
                           ({PAYMENT_LABELS[appointment.payment_status].label})
                         </span>
@@ -767,7 +761,7 @@ export default function ConfirmationPage() {
                 <DepositPayment
                   clientSecret={pending.client_secret}
                   publishableKey={pending.publishable_key}
-                  amountLabel={formatUsd(pending.deposit_cents)}
+                  amountLabel={formatGbp(pending.deposit_cents)}
                   onSucceeded={() => {
                     setPaymentDone(true);
                     void load();

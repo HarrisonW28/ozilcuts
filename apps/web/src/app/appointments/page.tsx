@@ -4,6 +4,7 @@ import { SiteHeader } from "@/components/site-header";
 import { AppointmentListSkeleton } from "@/components/load-empty";
 import { SwipeRevealActions } from "@/components/swipe-reveal-actions";
 import { getStoredAuthToken } from "@/lib/auth-token";
+import { formatGbp } from "@/lib/format-gbp";
 import { useMediaQuery } from "@/lib/use-media-query";
 import { useSessionProfile } from "@/lib/use-session-profile";
 import type { ProfileState } from "@/lib/use-session-profile";
@@ -144,13 +145,6 @@ function StatusBadge({ status }: { status: AppointmentRecord["status"] }) {
   );
 }
 
-function formatUsd(cents: number): string {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-  }).format(cents / 100);
-}
-
 const PAYMENT_LABELS: Record<AppointmentPaymentStatus, string> = {
   not_required: "No deposit",
   requires_payment: "Deposit due",
@@ -185,7 +179,7 @@ function PaymentBadge({
         styles,
       )}
     >
-      {PAYMENT_LABELS[status]} · {formatUsd(depositCents)}
+      {PAYMENT_LABELS[status]} · {formatGbp(depositCents)}
     </span>
   );
 }

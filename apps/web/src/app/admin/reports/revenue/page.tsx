@@ -2,6 +2,7 @@
 
 import { SiteHeader } from "@/components/site-header";
 import { getStoredAuthToken } from "@/lib/auth-token";
+import { formatGbp } from "@/lib/format-gbp";
 import { useSessionProfile } from "@/lib/use-session-profile";
 import {
   ApiError,
@@ -38,13 +39,6 @@ type ReportState =
   | { kind: "loading" }
   | { kind: "ok"; report: RevenueReport }
   | { kind: "error"; message: string };
-
-function formatUsd(cents: number): string {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-  }).format(cents / 100);
-}
 
 function isoToday(): string {
   const d = new Date();
@@ -178,10 +172,10 @@ export default function AdminRevenueReportPage() {
     const s = state.report.summary;
 
     return [
-      { label: "Booked", value: formatUsd(s.booked_cents), hint: `${s.booked_appointments} appts` },
-      { label: "Collected", value: formatUsd(s.collected_cents), hint: `${s.paid_appointments} paid` },
-      { label: "Refunded", value: formatUsd(s.refunded_cents), hint: "this period" },
-      { label: "Net collected", value: formatUsd(s.net_collected_cents), hint: "collected - refunded" },
+      { label: "Booked", value: formatGbp(s.booked_cents), hint: `${s.booked_appointments} appts` },
+      { label: "Collected", value: formatGbp(s.collected_cents), hint: `${s.paid_appointments} paid` },
+      { label: "Refunded", value: formatGbp(s.refunded_cents), hint: "this period" },
+      { label: "Net collected", value: formatGbp(s.net_collected_cents), hint: "collected - refunded" },
     ];
   }, [state]);
 
@@ -426,13 +420,13 @@ export default function AdminRevenueReportPage() {
                                     {row.barber_name}
                                   </td>
                                   <td className="py-2 pr-3">
-                                    {formatUsd(row.booked_cents)}
+                                    {formatGbp(row.booked_cents)}
                                   </td>
                                   <td className="py-2 pr-3 text-muted-foreground">
                                     {row.booked_appointments}
                                   </td>
                                   <td className="py-2 pr-3">
-                                    {formatUsd(row.collected_cents)}
+                                    {formatGbp(row.collected_cents)}
                                   </td>
                                 </tr>
                               ))}
@@ -477,13 +471,13 @@ export default function AdminRevenueReportPage() {
                                     {row.service_name}
                                   </td>
                                   <td className="py-2 pr-3">
-                                    {formatUsd(row.booked_cents)}
+                                    {formatGbp(row.booked_cents)}
                                   </td>
                                   <td className="py-2 pr-3 text-muted-foreground">
                                     {row.booked_appointments}
                                   </td>
                                   <td className="py-2 pr-3">
-                                    {formatUsd(row.collected_cents)}
+                                    {formatGbp(row.collected_cents)}
                                   </td>
                                 </tr>
                               ))}
@@ -541,13 +535,13 @@ export default function AdminRevenueReportPage() {
                                       )}
                                     </td>
                                     <td className="py-2 pr-3">
-                                      {formatUsd(row.booked_cents)}
+                                      {formatGbp(row.booked_cents)}
                                     </td>
                                     <td className="py-2 pr-3">
                                       {row.booked_appointments}
                                     </td>
                                     <td className="py-2 pr-3">
-                                      {formatUsd(row.collected_cents)}
+                                      {formatGbp(row.collected_cents)}
                                     </td>
                                   </tr>
                                 );

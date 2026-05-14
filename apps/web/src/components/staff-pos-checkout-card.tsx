@@ -1,5 +1,6 @@
 "use client";
 
+import { formatGbp } from "@/lib/format-gbp";
 import { ApiError, fetchPaymentConfig } from "@ozilcuts/api";
 import type { AppointmentRecord, PaymentConfig } from "@ozilcuts/types";
 import {
@@ -11,13 +12,6 @@ import {
   CardTitle,
 } from "@ozilcuts/ui";
 import { useCallback, useEffect, useState } from "react";
-
-function formatUsd(cents: number): string {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-  }).format(cents / 100);
-}
 
 type StaffPosCheckoutCardProps = {
   appointment: AppointmentRecord;
@@ -99,7 +93,7 @@ export function StaffPosCheckoutCard({
               Service price
             </dt>
             <dd className="text-base font-semibold tabular-nums">
-              {formatUsd(priceCents)}
+              {formatGbp(priceCents)}
             </dd>
           </div>
           <div className="rounded-lg border border-border/45 bg-background/40 px-3 py-2">
@@ -107,7 +101,7 @@ export function StaffPosCheckoutCard({
               Deposit
             </dt>
             <dd className="text-base font-semibold tabular-nums">
-              {depositCents > 0 ? formatUsd(depositCents) : "—"}
+              {depositCents > 0 ? formatGbp(depositCents) : "—"}
             </dd>
           </div>
           <div className="rounded-lg border border-border/45 bg-background/40 px-3 py-2">

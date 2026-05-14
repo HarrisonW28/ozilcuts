@@ -2,6 +2,7 @@
 
 import { SiteHeader } from "@/components/site-header";
 import { getStoredAuthToken } from "@/lib/auth-token";
+import { formatGbp } from "@/lib/format-gbp";
 import { useSessionProfile } from "@/lib/use-session-profile";
 import {
   ApiError,
@@ -31,13 +32,6 @@ type CompareState =
   | { kind: "loading" }
   | { kind: "ok"; data: BarberAnalyticsCompareResponse }
   | { kind: "error"; message: string };
-
-function formatUsd(cents: number): string {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-  }).format(cents / 100);
-}
 
 function formatPct(value: number): string {
   return `${(value * 100).toFixed(1)}%`;
@@ -321,10 +315,10 @@ export default function AdminBarberComparePage() {
                                 {row.barber_name}
                               </td>
                               <td className="py-2 pr-3">
-                                {formatUsd(row.booked_cents)}
+                                {formatGbp(row.booked_cents)}
                               </td>
                               <td className="py-2 pr-3">
-                                {formatUsd(row.collected_cents)}
+                                {formatGbp(row.collected_cents)}
                               </td>
                               <td className="py-2 pr-3">
                                 {row.appointments_total}

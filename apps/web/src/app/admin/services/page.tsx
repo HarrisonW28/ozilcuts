@@ -2,6 +2,11 @@
 
 import { SiteHeader } from "@/components/site-header";
 import { getStoredAuthToken } from "@/lib/auth-token";
+import {
+  formatGbp,
+  penceFromPoundsInput,
+  poundsInputFromPence,
+} from "@/lib/format-gbp";
 import { useSessionProfile } from "@/lib/use-session-profile";
 import {
   ApiError,
@@ -47,8 +52,8 @@ export default function AdminServicesPage() {
   const [cSlug, setCSlug] = useState("");
   const [cDescription, setCDescription] = useState("");
   const [cDuration, setCDuration] = useState("30");
-  const [cPriceCents, setCPriceCents] = useState("3500");
-  const [cDepositCents, setCDepositCents] = useState("0");
+  const [cPricePounds, setCPricePounds] = useState("35.00");
+  const [cDepositPounds, setCDepositPounds] = useState("0");
   const [cDepositPolicy, setCDepositPolicy] =
     useState<DepositPolicy>("always");
   const [cSort, setCSort] = useState("0");
@@ -64,8 +69,8 @@ export default function AdminServicesPage() {
   const [eSlug, setESlug] = useState("");
   const [eDescription, setEDescription] = useState("");
   const [eDuration, setEDuration] = useState("");
-  const [ePriceCents, setEPriceCents] = useState("");
-  const [eDepositCents, setEDepositCents] = useState("");
+  const [ePricePounds, setEPricePounds] = useState("");
+  const [eDepositPounds, setEDepositPounds] = useState("");
   const [eDepositPolicy, setEDepositPolicy] =
     useState<DepositPolicy>("always");
   const [eSort, setESort] = useState("");
@@ -112,8 +117,8 @@ export default function AdminServicesPage() {
     setCreateFieldErrors({});
     try {
       const duration = Number.parseInt(cDuration, 10);
-      const price = Number.parseInt(cPriceCents, 10);
-      const deposit = Number.parseInt(cDepositCents, 10);
+      const price = penceFromPoundsInput(cPricePounds);
+      const deposit = penceFromPoundsInput(cDepositPounds);
       const sort = Number.parseInt(cSort, 10);
       await createManagedService(token, {
         name: cName,
@@ -130,8 +135,8 @@ export default function AdminServicesPage() {
       setCSlug("");
       setCDescription("");
       setCDuration("30");
-      setCPriceCents("3500");
-      setCDepositCents("0");
+      setCPricePounds("35.00");
+      setCDepositPounds("0");
       setCDepositPolicy("always");
       setCSort("0");
       setCActive(true);
@@ -159,8 +164,8 @@ export default function AdminServicesPage() {
     setESlug(row.slug);
     setEDescription(row.description ?? "");
     setEDuration(String(row.duration_minutes));
-    setEPriceCents(String(row.price_cents));
-    setEDepositCents(String(row.deposit_cents));
+    setEPricePounds(poundsInputFromPence(row.price_cents));
+    setEDepositPounds(poundsInputFromPence(row.deposit_cents));
     setEDepositPolicy(row.deposit_policy);
     setESort(String(row.sort_order));
     setEActive(row.is_active);
@@ -179,8 +184,8 @@ export default function AdminServicesPage() {
     setEditError(null);
     try {
       const duration = Number.parseInt(eDuration, 10);
-      const price = Number.parseInt(ePriceCents, 10);
-      const deposit = Number.parseInt(eDepositCents, 10);
+      const price = penceFromPoundsInput(ePricePounds);
+      const deposit = penceFromPoundsInput(eDepositPounds);
       const sort = Number.parseInt(eSort, 10);
       await updateManagedService(token, serviceId, {
         name: eName,
@@ -335,22 +340,22 @@ export default function AdminServicesPage() {
                         />
                       </div>
                       <div className="flex flex-col gap-2">
-                        <Label htmlFor="c-svc-price">Price (cents)</Label>
+                        <Label htmlFor="c-svc-price">Price (£)</Label>
                         <Input
                           id="c-svc-price"
-                          inputMode="numeric"
-                          value={cPriceCents}
-                          onChange={(ev) => setCPriceCents(ev.target.value)}
+                          inputMode="decimal"
+                          value={cPricePounds}
+                          onChange={(ev) => setCPricePounds(ev.target.value)}
                           required
                         />
                       </div>
                       <div className="flex flex-col gap-2">
-                        <Label htmlFor="c-svc-deposit">Deposit (cents)</Label>
+                        <Label htmlFor="c-svc-deposit">Deposit (£)</Label>
                         <Input
                           id="c-svc-deposit"
-                          inputMode="numeric"
-                          value={cDepositCents}
-                          onChange={(ev) => setCDepositCents(ev.target.value)}
+                          inputMode="decimal"
+                          value={cDepositPounds}
+                          onChange={(ev) => setCDepositPounds(ev.target.value)}
                           aria-invalid={
                             createFieldErrors.deposit_cents ? true : undefined
                           }
@@ -513,27 +518,27 @@ export default function AdminServicesPage() {
                                   </div>
                                   <div className="flex flex-col gap-2">
                                     <Label htmlFor={`e-price-${row.id}`}>
-                                      Price (cents)
+                                      Price (£)
                                     </Label>
                                     <Input
                                       id={`e-price-${row.id}`}
-                                      inputMode="numeric"
-                                      value={ePriceCents}
+                                      inputMode="decimal"
+                                      value={ePricePounds}
                                       onChange={(ev) =>
-                                        setEPriceCents(ev.target.value)
+                                        setEPricePounds(ev.target.value)
                                       }
                                     />
                                   </div>
                                   <div className="flex flex-col gap-2">
                                     <Label htmlFor={`e-deposit-${row.id}`}>
-                                      Deposit (cents)
+                                      Deposit (£)
                                     </Label>
                                     <Input
                                       id={`e-deposit-${row.id}`}
-                                      inputMode="numeric"
-                                      value={eDepositCents}
+                                      inputMode="decimal"
+                                      value={eDepositPounds}
                                       onChange={(ev) =>
-                                        setEDepositCents(ev.target.value)
+                                        setEDepositPounds(ev.target.value)
                                       }
                                     />
                                   </div>
@@ -625,14 +630,14 @@ export default function AdminServicesPage() {
                                   <span className="font-medium text-foreground">
                                     Price:{" "}
                                   </span>
-                                  {row.price_cents}¢
+                                  {formatGbp(row.price_cents)}
                                 </p>
                                 <p className="text-sm text-muted-foreground">
                                   <span className="font-medium text-foreground">
                                     Deposit:{" "}
                                   </span>
                                   {row.deposit_cents > 0
-                                    ? `${row.deposit_cents}¢`
+                                    ? formatGbp(row.deposit_cents)
                                     : "None"}
                                   {row.deposit_cents > 0 ? (
                                     <span className="ml-2 text-xs">

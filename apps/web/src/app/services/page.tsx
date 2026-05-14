@@ -6,6 +6,7 @@ import {
   ozilcutsPageEnterInitial,
   ozilcutsPageEnterTransition,
 } from "@/lib/motion";
+import { formatGbp } from "@/lib/format-gbp";
 import { useSessionProfile } from "@/lib/use-session-profile";
 import { ApiError, fetchServices } from "@ozilcuts/api";
 import {
@@ -29,13 +30,6 @@ type ServicesState =
   | { kind: "loading" }
   | { kind: "ok"; items: ServiceSummary[] }
   | { kind: "error"; message: string };
-
-function formatUsd(cents: number): string {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-  }).format(cents / 100);
-}
 
 export default function ServicesPage() {
   const { profile, signOut } = useSessionProfile();
@@ -173,7 +167,7 @@ export default function ServicesPage() {
                             From
                           </dt>
                           <dd className="mt-1 text-2xl font-semibold tabular-nums tracking-tight text-foreground">
-                            {formatUsd(svc.price_cents)}
+                            {formatGbp(svc.price_cents)}
                           </dd>
                         </div>
                         {svc.deposit_cents > 0 ? (
@@ -184,7 +178,7 @@ export default function ServicesPage() {
                                 : "Deposit at booking"}
                             </dt>
                             <dd className="mt-1 font-medium text-foreground">
-                              {formatUsd(svc.deposit_cents)}
+                              {formatGbp(svc.deposit_cents)}
                               {svc.deposit_policy === "first_time_customer" ? (
                                 <span className="ml-2 text-xs font-normal text-muted-foreground">
                                   Returning guests skip this.

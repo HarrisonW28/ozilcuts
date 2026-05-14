@@ -49,7 +49,7 @@ return [
         'secret' => env('STRIPE_SECRET'),
         'publishable' => env('STRIPE_PUBLISHABLE_KEY'),
         'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
-        'currency' => env('STRIPE_CURRENCY', 'usd'),
+        'currency' => env('STRIPE_CURRENCY', 'gbp'),
         /*
          * Product flag for in-person tap / POS roadmap (public via /payments/config).
          * off — hide tap messaging; foundation — customer-device checkout + staff guidance;
