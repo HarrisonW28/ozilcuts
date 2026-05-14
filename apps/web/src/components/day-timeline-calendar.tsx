@@ -160,7 +160,7 @@ export function DayTimelineCalendar({
         className,
       )}
     >
-      <header className="border-b border-border/40 px-4 py-3.5 sm:px-5 sm:py-4">
+      <header className="border-b border-border/40 px-4 py-3.5 sm:px-5 sm:py-4 md:px-6 md:py-4">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <div>
             <p
@@ -194,7 +194,7 @@ export function DayTimelineCalendar({
 
       <div
         ref={scrollAreaRef}
-        className="flex max-h-[var(--tl-max)] overflow-y-auto overscroll-y-contain scroll-smooth"
+        className="flex max-h-[var(--tl-max)] overflow-y-auto overscroll-y-contain scroll-smooth pb-[max(0.75rem,env(safe-area-inset-bottom,0px))]"
         style={
           {
             "--tl-max": TIMELINE_MAX_HEIGHT,
@@ -305,7 +305,8 @@ export function DayTimelineCalendar({
                   href={b.href}
                   className={cn(
                     "absolute flex flex-col justify-start overflow-hidden",
-                    "min-h-[44px] touch-manipulation text-left",
+                    "min-h-12 touch-manipulation text-left sm:min-h-11",
+                    "focus-visible:z-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                     "active:opacity-[0.92]",
                     appointmentScheduleBlockClassName(b.status, "timeline"),
                     activeBookingId === b.id &&

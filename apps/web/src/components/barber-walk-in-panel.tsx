@@ -2,6 +2,10 @@
 
 import { getStoredAuthToken } from "@/lib/auth-token";
 import {
+  LiveDayServiceSelectSkeleton,
+  LiveDaySlotListSkeleton,
+} from "@/components/live-day-skeletons";
+import {
   ApiError,
   ApiValidationError,
   createWalkInAppointment,
@@ -16,9 +20,10 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  EmptyState,
   Label,
 } from "@ozilcuts/ui";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useId, useState } from "react";
 
 function formatSlotLabel(iso: string): string {
   const d = new Date(iso);
@@ -41,7 +46,10 @@ export function BarberWalkInPanel({
   focusedDateYmd,
   onBooked,
 }: BarberWalkInPanelProps) {
+  const formId = useId();
   const [services, setServices] = useState<ServiceSummary[]>([]);
+  const [servicesLoading, setServicesLoading] = useState(true);
+  const [servicesError, setServicesError] = useState<string | null>(null);
   const [serviceId, setServiceId] = useState<number | null>(null);
   const [slots, setSlots] = useState<string[]>([]);
   const [slotsLoading, setSlotsLoading] = useState(false);
@@ -53,6 +61,8 @@ export function BarberWalkInPanel({
 
   useEffect(() => {
     let cancelled = false;
+    setServicesLoading(true);
+    setServicesError(null);
     fetchServices()
       .then((data) => {
         if (cancelled) return;
@@ -62,6 +72,10 @@ export function BarberWalkInPanel({
       .catch(() => {
         if (cancelled) return;
         setServices([]);
+        setServicesError("Could not load services. Check your connection and try again.");
+      })
+      .finally(() => {
+        if (!cancelled) setServicesLoading(false);
       });
     return () => {
       cancelled = true;
@@ -139,39 +153,64 @@ export function BarberWalkInPanel({
     return null;
   }
 
+  const slotsRegionBusy = slotsLoading;
+  const formBusy = busy || servicesLoading || slotsLoading;
+
   return (
     <Card
       id="barber-walk-in"
-      className="scroll-mt-4 border-amber-500/30 bg-gradient-to-br from-amber-500/[0.07] to-transparent shadow-sm dark:border-amber-500/25 dark:from-amber-500/[0.09]"
+      className="scroll-mt-4 border-amber-500/30 bg-gradient-to-br from-amber-500/[0.07] to-transparent shadow-sm dark:border-amber-500/25 dark:from-amber-500/[0.09] pb-[max(1rem,env(safe-area-inset-bottom,0px))]"
     >
-      <CardHeader className="space-y-1 pb-2">
-        <CardTitle className="text-lg tracking-tight">Walk-in mode</CardTitle>
+      <CardHeader className="space-y-1 pb-3 sm:pb-4">
+        <CardTitle className="text-lg tracking-tight sm:text-xl">
+          Walk-in mode
+        </CardTitle>
         <CardDescription className="text-pretty leading-relaxed">
           Block your chair for someone at the door — no online deposit, settles
           at the front. Uses the day you have selected above.
         </CardDescription>
       </CardHeader>
-      <CardContent>
-        <form className="flex flex-col gap-4" onSubmit={onSubmit}>
+      <CardContent className="pt-0">
+        <form
+          id={formId}
+          className="flex flex-col gap-4 sm:gap-5"
+          onSubmit={onSubmit}
+          aria-busy={formBusy}
+        >
           <div className="space-y-2">
             <Label htmlFor="walk-in-service">Service</Label>
-            <select
-              id="walk-in-service"
-              className="flex min-h-11 w-full rounded-lg border border-input bg-background px-3 py-2 text-base shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:min-h-10 sm:text-sm"
-              value={serviceId ?? ""}
-              onChange={(ev) => {
-                const v = Number.parseInt(ev.target.value, 10);
-                setServiceId(Number.isFinite(v) ? v : null);
-              }}
-            >
-              {services.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.name} · {s.duration_minutes} min
-                </option>
-              ))}
-            </select>
+            {servicesLoading ? (
+              <LiveDayServiceSelectSkeleton />
+            ) : servicesError ? (
+              <p className="text-sm text-destructive" role="alert">
+                {servicesError}
+              </p>
+            ) : services.length === 0 ? (
+              <EmptyState
+                title="No bookable services"
+                description="Add services from the shop admin catalog before walk-ins can be booked here."
+              />
+            ) : (
+              <select
+                id="walk-in-service"
+                className="flex min-h-12 w-full rounded-lg border border-input bg-background px-3 py-2.5 text-base shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:min-h-11 sm:text-sm"
+                value={serviceId ?? ""}
+                onChange={(ev) => {
+                  const v = Number.parseInt(ev.target.value, 10);
+                  setServiceId(Number.isFinite(v) ? v : null);
+                }}
+              >
+                {services.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name} · {s.duration_minutes} min
+                  </option>
+                ))}
+              </select>
+            )}
           </div>
 
+          {!servicesLoading && services.length > 0 ? (
+            <>
           <div className="space-y-2">
             <Label htmlFor="walk-in-name">Guest first name (optional)</Label>
             <input
@@ -180,13 +219,17 @@ export function BarberWalkInPanel({
               autoComplete="name"
               placeholder="e.g. Alex"
               maxLength={120}
-              className="flex min-h-11 w-full rounded-lg border border-input bg-background px-3 py-2 text-base shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:min-h-10 sm:text-sm"
+              className="flex min-h-12 w-full rounded-lg border border-input bg-background px-3 py-2.5 text-base shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:min-h-11 sm:text-sm"
               value={walkInName}
               onChange={(e) => setWalkInName(e.target.value)}
             />
           </div>
 
-          <div className="space-y-2">
+          <div
+            className="space-y-2"
+            aria-busy={slotsRegionBusy}
+            aria-live="polite"
+          >
             <div className="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-[1fr_auto] sm:items-end">
               <Label htmlFor="walk-in-slot" className="mb-0">
                 Start time · {focusedDateYmd}
@@ -195,7 +238,7 @@ export function BarberWalkInPanel({
                 type="button"
                 variant="outline"
                 size="sm"
-                className="min-h-10 w-full touch-manipulation sm:w-auto"
+                className="min-h-12 w-full touch-manipulation sm:min-h-10 sm:w-auto"
                 disabled={slotsLoading || slots.length === 0}
                 onClick={pickFirstSlot}
               >
@@ -203,18 +246,19 @@ export function BarberWalkInPanel({
               </Button>
             </div>
             {slotsLoading ? (
-              <p className="text-sm text-muted-foreground" role="status">
-                Loading open times…
-              </p>
+              <div role="status" aria-label="Loading open times">
+                <p className="sr-only">Loading open times</p>
+                <LiveDaySlotListSkeleton rows={3} />
+              </div>
             ) : slots.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                No open slots this day for that service — pick another day or
-                adjust hours.
-              </p>
+              <EmptyState
+                title="No open slots"
+                description="Try another day, another service, or adjust your weekly hours so this day has availability."
+              />
             ) : (
               <select
                 id="walk-in-slot"
-                className="flex min-h-11 w-full rounded-lg border border-input bg-background px-3 py-2 text-base shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:min-h-10 sm:text-sm"
+                className="flex min-h-12 w-full rounded-lg border border-input bg-background px-3 py-2.5 text-base shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:min-h-11 sm:text-sm"
                 value={selectedSlot ?? ""}
                 onChange={(ev) =>
                   setSelectedSlot(ev.target.value === "" ? null : ev.target.value)
@@ -236,20 +280,28 @@ export function BarberWalkInPanel({
             </p>
           ) : null}
           {doneMsg ? (
-            <p className="text-sm text-emerald-700 dark:text-emerald-300" role="status">
+            <p
+              className="text-sm text-emerald-700 dark:text-emerald-300"
+              role="status"
+            >
               {doneMsg}
             </p>
           ) : null}
 
           <Button
             type="submit"
-            className="min-h-11 w-full touch-manipulation sm:w-auto sm:min-h-10"
+            className="min-h-12 w-full touch-manipulation sm:min-h-11 sm:w-auto"
             disabled={
-              busy || serviceId === null || selectedSlot === null || slotsLoading
+              busy ||
+              serviceId === null ||
+              selectedSlot === null ||
+              slotsLoading
             }
           >
             {busy ? "Saving…" : "Book walk-in"}
           </Button>
+            </>
+          ) : null}
         </form>
       </CardContent>
     </Card>

@@ -15,6 +15,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  EmptyState,
   cn,
 } from "@ozilcuts/ui";
 import Link from "next/link";
@@ -158,28 +159,28 @@ export function BarberDailyOverview({
   return (
     <section
       className={cn(
-        "rounded-xl border border-primary/20 bg-primary/[0.035] p-4 shadow-none dark:border-primary/15 dark:bg-primary/[0.05] sm:p-5",
+        "rounded-xl border border-primary/20 bg-primary/[0.035] p-4 shadow-none dark:border-primary/15 dark:bg-primary/[0.05] sm:p-5 md:p-6",
         className,
       )}
       aria-label={ariaLabel}
     >
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
-        <div className="min-w-0 space-y-1">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6 md:gap-8">
+        <div className="min-w-0 space-y-1.5">
           <h2 className="text-xs font-semibold uppercase tracking-wider text-primary">
             {viewIsToday ? "Today" : "That day"}
           </h2>
-          <p className="text-lg font-semibold tracking-tight text-foreground sm:text-xl">
+          <p className="text-lg font-semibold tracking-tight text-foreground sm:text-xl md:text-2xl">
             {headingDay}
           </p>
           <p className="text-sm text-muted-foreground">
             {totals.count === 0
-              ? "No bookings on this day."
+              ? "No bookings on this day — your chair is clear."
               : `${totals.count} booking${totals.count === 1 ? "" : "s"} on the books.`}
           </p>
         </div>
 
         <div className="grid w-full grid-cols-3 gap-2 sm:max-w-md sm:gap-3">
-          <div className="rounded-xl border border-border/45 bg-background/55 px-2 py-3 text-center sm:px-3">
+          <div className="flex min-h-[3.5rem] flex-col justify-center rounded-xl border border-border/45 bg-background/55 px-2 py-3 text-center sm:min-h-[4rem] sm:px-3 sm:py-3.5">
             <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
               Cuts
             </p>
@@ -187,7 +188,7 @@ export function BarberDailyOverview({
               {totals.count}
             </p>
           </div>
-          <div className="rounded-xl border border-border/45 bg-background/55 px-2 py-3 text-center sm:px-3">
+          <div className="flex min-h-[3.5rem] flex-col justify-center rounded-xl border border-border/45 bg-background/55 px-2 py-3 text-center sm:min-h-[4rem] sm:px-3 sm:py-3.5">
             <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
               Chair
             </p>
@@ -195,7 +196,7 @@ export function BarberDailyOverview({
               {formatDuration(totals.minutes)}
             </p>
           </div>
-          <div className="rounded-xl border border-border/45 bg-background/55 px-2 py-3 text-center sm:px-3">
+          <div className="flex min-h-[3.5rem] flex-col justify-center rounded-xl border border-border/45 bg-background/55 px-2 py-3 text-center sm:min-h-[4rem] sm:px-3 sm:py-3.5">
             <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
               Booked
             </p>
@@ -205,6 +206,20 @@ export function BarberDailyOverview({
           </div>
         </div>
       </div>
+
+      {totals.count === 0 ? (
+        <div className="mt-4 sm:mt-5">
+          <EmptyState
+            title="Nothing on the calendar"
+            description="Walk-ins still work below, or jump to another day if you are planning ahead."
+            action={
+              <Button asChild variant="outline" size="sm" className="min-h-11 touch-manipulation sm:min-h-10">
+                <Link href="/barber/hours">Adjust hours</Link>
+              </Button>
+            }
+          />
+        </div>
+      ) : null}
 
       {dayAppointments.length === 0 ? null : (
         <Card className="mt-4 border-border/40 bg-background/70 shadow-none dark:bg-background/50">
@@ -239,7 +254,7 @@ export function BarberDailyOverview({
               <Button
                 asChild
                 size="sm"
-                className="min-h-11 touch-manipulation sm:min-h-9"
+                className="min-h-12 touch-manipulation sm:min-h-10"
               >
                 <Link href={`/appointments/${inProgress.id}/confirmation`}>
                   Open booking
@@ -249,7 +264,7 @@ export function BarberDailyOverview({
                 asChild
                 variant="outline"
                 size="sm"
-                className="min-h-11 touch-manipulation sm:min-h-9"
+                className="min-h-12 touch-manipulation sm:min-h-10"
               >
                 <Link href="/appointments">All appointments</Link>
               </Button>
@@ -259,7 +274,7 @@ export function BarberDailyOverview({
               <Button
                 asChild
                 size="sm"
-                className="min-h-11 touch-manipulation sm:min-h-9"
+                className="min-h-12 touch-manipulation sm:min-h-10"
               >
                 <Link href={`/appointments/${spotlight.id}/confirmation`}>
                   Open booking
@@ -269,7 +284,7 @@ export function BarberDailyOverview({
                 asChild
                 variant="outline"
                 size="sm"
-                className="min-h-11 touch-manipulation sm:min-h-9"
+                className="min-h-12 touch-manipulation sm:min-h-10"
               >
                 <Link href="/appointments">All appointments</Link>
               </Button>

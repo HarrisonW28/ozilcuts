@@ -12,7 +12,7 @@ export function OperationalLoadingBlock({
   if (variant === "chair") {
     return (
       <div
-        className="space-y-5 rounded-2xl border border-border/50 bg-muted/10 p-5 sm:p-6"
+        className="space-y-5 rounded-2xl border border-border/50 bg-muted/10 p-5 pb-[max(1.25rem,env(safe-area-inset-bottom,0px)+0.75rem)] sm:p-6"
         role="status"
         aria-busy="true"
         aria-label={label}
@@ -50,7 +50,7 @@ export function OperationalLoadingBlock({
 
   return (
     <div
-      className="space-y-4 rounded-xl border border-border/50 bg-muted/15 p-5 sm:p-6"
+      className="space-y-4 rounded-xl border border-border/50 bg-muted/15 p-5 pb-[max(1.25rem,env(safe-area-inset-bottom,0px)+0.5rem)] sm:p-6"
       role="status"
       aria-busy="true"
       aria-label={label}

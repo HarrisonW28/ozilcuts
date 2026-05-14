@@ -40,6 +40,7 @@ import {
   CardHeader,
   CardTitle,
   ScreenTitle,
+  Skeleton,
   cn,
 } from "@ozilcuts/ui";
 import Link from "next/link";
@@ -236,7 +237,7 @@ export default function BarberCalendarPage() {
       <SiteHeader profile={profile} onSignOut={signOut} />
       <main
         id="main-content"
-        className="page-main"
+        className="page-main pb-[max(0.5rem,env(safe-area-inset-bottom,0px))]"
       >
         <div className="mx-auto w-full max-w-6xl page-stack">
           <ScreenTitle
@@ -246,15 +247,32 @@ export default function BarberCalendarPage() {
           />
 
           {profile.kind === "loading" || profile.kind === "none" ? (
-            <p className="text-sm text-muted-foreground" role="status">
-              Loading…
-            </p>
+            <div
+              className="space-y-3 rounded-xl border border-border/50 bg-muted/10 p-4 sm:p-5"
+              role="status"
+              aria-busy="true"
+              aria-label="Loading account"
+            >
+              <Skeleton className="h-4 w-40 rounded-md" />
+              <Skeleton className="h-10 w-full max-w-md rounded-lg" />
+              <Skeleton className="h-32 w-full rounded-xl sm:h-36" />
+            </div>
           ) : null}
 
           {profile.kind === "error" ? (
-            <p className="text-sm text-destructive" role="alert">
-              Session issue. Sign in again.
-            </p>
+            <Card className="border-destructive/35">
+              <CardHeader>
+                <CardTitle>Session issue</CardTitle>
+                <CardDescription>
+                  Sign in again to load your chair and appointments.
+                </CardDescription>
+              </CardHeader>
+              <CardFooter>
+                <Button asChild variant="outline" className="min-h-12 touch-manipulation sm:min-h-10">
+                  <Link href="/login">Sign in</Link>
+                </Button>
+              </CardFooter>
+            </Card>
           ) : null}
 
           {profile.kind === "ready" && !isBarber ? (
@@ -359,7 +377,7 @@ export default function BarberCalendarPage() {
                               onClick={() => setFocusedDate(d.date)}
                               aria-pressed={selected}
                               className={cn(
-                                "motion-interactive min-w-[4.5rem] shrink-0 snap-start rounded-xl border px-3 py-2.5 text-left transition-[background-color,box-shadow,border-color] duration-[var(--motion-duration-base)] ease-[var(--motion-ease-standard)] sm:min-w-[5.25rem]",
+                                "motion-interactive min-h-12 min-w-[4.75rem] shrink-0 snap-start rounded-xl border px-3 py-3 text-left transition-[background-color,box-shadow,border-color] duration-[var(--motion-duration-base)] ease-[var(--motion-ease-standard)] sm:min-h-[2.875rem] sm:min-w-[5.25rem] sm:py-2.5",
                                 "touch-manipulation motion-safe:active:scale-[0.98]",
                                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                                 selected
@@ -475,20 +493,24 @@ export default function BarberCalendarPage() {
                 />
               ) : null}
               {loadState === "error" ? (
-                <div className="flex flex-col gap-3 rounded-lg border border-destructive/40 p-4">
-                  <p className="text-sm text-destructive">
-                    {loadMessage ?? "Error"}
-                  </p>
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    size="sm"
-                    className="self-start"
-                    onClick={() => void load()}
-                  >
-                    Retry
-                  </Button>
-                </div>
+                <Card className="border-destructive/35">
+                  <CardHeader>
+                    <CardTitle>Could not load chair</CardTitle>
+                    <CardDescription className="text-destructive">
+                      {loadMessage ?? "Something went wrong."}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardFooter>
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      className="min-h-12 touch-manipulation sm:min-h-10"
+                      onClick={() => void load()}
+                    >
+                      Retry
+                    </Button>
+                  </CardFooter>
+                </Card>
               ) : null}
               {loadState === "ok" && focusedDaySchedule ? (
                 <>
