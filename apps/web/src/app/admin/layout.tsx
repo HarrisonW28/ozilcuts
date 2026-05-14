@@ -1,7 +1,7 @@
 "use client";
 
 import { AdminOnboardingGate } from "@/components/admin-onboarding-gate";
-import { QuickActionsLayer } from "@/components/quick-actions-layer";
+import { AppBottomNav } from "@/components/app-bottom-nav";
 import { useSessionProfile } from "@/lib/use-session-profile";
 import { cn } from "@ozilcuts/ui";
 import type { ReactNode } from "react";
@@ -19,12 +19,12 @@ export default function AdminSectionLayout({
     <AdminOnboardingGate>
       <div
         className={cn(
-          showDock &&
-            "pb-[calc(4.75rem+env(safe-area-inset-bottom,0px))] lg:pb-0",
+          "flex min-h-dvh flex-1 flex-col",
+          showDock && "app-shell-with-bottom-nav",
         )}
       >
         {children}
-        <QuickActionsLayer variant="admin" />
+        <AppBottomNav variant="admin" />
       </div>
     </AdminOnboardingGate>
   );

@@ -91,7 +91,7 @@ export function SiteHeader({ profile, onSignOut }: SiteHeaderProps) {
 
   return (
     <>
-      <header className="sticky top-0 z-50 border-b border-border/40 bg-background/90 shadow-[0_1px_0_0_oklch(0.2_0.04_264/0.04)] backdrop-blur-xl supports-[backdrop-filter]:bg-background/80 dark:border-border/35 dark:shadow-[0_1px_0_0_oklch(0_0_0/0.2)] dark:supports-[backdrop-filter]:bg-background/75">
+      <header className="sticky top-0 z-50 border-b border-border/40 bg-background/90 shadow-[0_1px_0_0_oklch(0.2_0.04_264/0.04)] backdrop-blur-2xl supports-[backdrop-filter]:bg-background/75 dark:border-border/35 dark:shadow-[0_1px_0_0_oklch(0_0_0/0.2)] dark:supports-[backdrop-filter]:bg-background/70">
         <div className="flex flex-wrap items-center justify-between gap-2 px-4 pt-[max(0.75rem,env(safe-area-inset-top,0px))] pb-3 sm:gap-3 sm:px-6 sm:pt-6 sm:pb-5 md:px-8">
           <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-4">
             <Link

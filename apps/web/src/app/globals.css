@@ -57,6 +57,11 @@
     --motion-duration-slow: 260ms;
     --motion-ease-standard: cubic-bezier(0.2, 0, 0, 1);
     --motion-ease-emphasized: cubic-bezier(0.2, 0, 0, 1.2);
+    /**
+     * Space reserved under main scroll when the native bottom tab bar is shown
+     * (barber + admin layouts &lg). Matches AppBottomNav float height + safe area.
+     */
+    --app-bottom-nav-pad: calc(5.75rem + env(safe-area-inset-bottom, 0px));
   }
 
   .dark {
@@ -117,6 +122,8 @@
     @apply font-sans;
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
+    min-height: 100%;
+    min-height: 100dvh;
     font-feature-settings:
       "cv02", "cv03", "cv04", "cv11";
     /* Anchor links & in-page focus land below sticky header + notch. */
@@ -140,9 +147,12 @@
   body {
     @apply bg-background text-foreground antialiased;
     caret-color: var(--primary);
+    min-height: 100%;
+    min-height: 100dvh;
     padding-left: env(safe-area-inset-left, 0px);
     padding-right: env(safe-area-inset-right, 0px);
     padding-bottom: env(safe-area-inset-bottom, 0px);
+    overscroll-behavior-y: contain;
   }
 
   ::selection {
@@ -153,8 +163,46 @@
 
 @layer components {
   /**
-   * Default app shell: gutters track SiteHeader (px-4 → sm:6 → md:8).
+   * Native shell: reserve space for floating bottom tab bar (AppBottomNav).
+   * Default page gutters still track SiteHeader (px-4 → sm:6 → md:8) via .page-main.
    */
+  .app-shell-with-bottom-nav {
+    padding-bottom: var(--app-bottom-nav-pad);
+  }
+
+  @media (min-width: 1024px) {
+    .app-shell-with-bottom-nav {
+      padding-bottom: 0;
+    }
+  }
+
+  /**
+   * Subtle route transition for barber/admin segment navigations — native app feel
+   * without full View Transitions API dependency.
+   */
+  .app-shell-route {
+    min-height: 0;
+    flex: 1 1 auto;
+  }
+
+  @keyframes ozilcuts-shell-route {
+    from {
+      opacity: 0.88;
+      transform: translate3d(0, 5px, 0);
+    }
+    to {
+      opacity: 1;
+      transform: translate3d(0, 0, 0);
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .app-shell-route {
+      animation: ozilcuts-shell-route var(--motion-duration-base)
+        var(--motion-ease-standard) both;
+    }
+  }
+
   .page-main {
     @apply flex flex-1 flex-col px-4 py-9 sm:px-6 sm:py-12 md:px-8 md:py-12 lg:py-14;
   }
@@ -270,6 +318,10 @@
     .motion-enter,
     .motion-popover,
     .motion-toast {
+      animation: none !important;
+    }
+
+    .app-shell-route {
       animation: none !important;
     }
   }

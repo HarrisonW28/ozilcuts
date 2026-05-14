@@ -237,7 +237,7 @@ export default function BarberCalendarPage() {
       <SiteHeader profile={profile} onSignOut={signOut} />
       <main
         id="main-content"
-        className="page-main pb-[max(0.5rem,env(safe-area-inset-bottom,0px))]"
+        className="page-main"
       >
         <div className="mx-auto w-full max-w-6xl page-stack">
           <ScreenTitle
