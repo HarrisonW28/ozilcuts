@@ -187,7 +187,7 @@ export function BarberWalkInPanel({
           </div>
 
           <div className="space-y-2">
-            <div className="flex flex-wrap items-end justify-between gap-2">
+            <div className="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-[1fr_auto] sm:items-end">
               <Label htmlFor="walk-in-slot" className="mb-0">
                 Start time · {focusedDateYmd}
               </Label>
@@ -195,7 +195,7 @@ export function BarberWalkInPanel({
                 type="button"
                 variant="outline"
                 size="sm"
-                className="min-h-10 touch-manipulation"
+                className="min-h-10 w-full touch-manipulation sm:w-auto"
                 disabled={slotsLoading || slots.length === 0}
                 onClick={pickFirstSlot}
               >

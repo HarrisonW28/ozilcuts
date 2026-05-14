@@ -3,6 +3,15 @@
 import { SiteHeader } from "@/components/site-header";
 import { getStoredAuthToken } from "@/lib/auth-token";
 import { formatGbp } from "@/lib/format-gbp";
+import {
+  reportFilterActionButtonClass,
+  reportFilterActionsClass,
+  reportFilterControlClass,
+  reportFilterFieldCellClass,
+  reportFilterPresetButtonClass,
+  reportFilterPresetsGridClass,
+  reportFilterThreeColGridClass,
+} from "@/lib/report-filter-classes";
 import { useSessionProfile } from "@/lib/use-session-profile";
 import {
   ApiError,
@@ -248,8 +257,8 @@ export default function AdminRevenueReportPage() {
                       void load();
                     }}
                   >
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                      <div className="flex flex-col gap-2">
+                    <div className={reportFilterThreeColGridClass}>
+                      <div className={reportFilterFieldCellClass}>
                         <Label htmlFor="rev-from">From</Label>
                         <input
                           id="rev-from"
@@ -257,11 +266,11 @@ export default function AdminRevenueReportPage() {
                           value={from}
                           max={to}
                           onChange={(ev) => setFrom(ev.target.value)}
-                          className="border-input bg-background text-foreground focus-visible:ring-ring/50 flex h-11 w-full rounded-lg border px-3 text-base shadow-sm outline-none focus-visible:ring-[3px] sm:h-10 sm:text-sm"
+                          className={reportFilterControlClass}
                           required
                         />
                       </div>
-                      <div className="flex flex-col gap-2">
+                      <div className={reportFilterFieldCellClass}>
                         <Label htmlFor="rev-to">To</Label>
                         <input
                           id="rev-to"
@@ -269,11 +278,11 @@ export default function AdminRevenueReportPage() {
                           value={to}
                           min={from}
                           onChange={(ev) => setTo(ev.target.value)}
-                          className="border-input bg-background text-foreground focus-visible:ring-ring/50 flex h-11 w-full rounded-lg border px-3 text-base shadow-sm outline-none focus-visible:ring-[3px] sm:h-10 sm:text-sm"
+                          className={reportFilterControlClass}
                           required
                         />
                       </div>
-                      <div className="flex flex-col gap-2">
+                      <div className={reportFilterFieldCellClass}>
                         <Label htmlFor="rev-granularity">Granularity</Label>
                         <select
                           id="rev-granularity"
@@ -283,7 +292,7 @@ export default function AdminRevenueReportPage() {
                               ev.target.value === "month" ? "month" : "day",
                             )
                           }
-                          className="border-input bg-background text-foreground focus-visible:ring-ring/50 flex h-11 w-full rounded-lg border px-3 text-base shadow-sm outline-none focus-visible:ring-[3px] sm:h-10 sm:text-sm"
+                          className={reportFilterControlClass}
                         >
                           <option value="day">Day</option>
                           <option value="month">Month</option>
@@ -291,7 +300,7 @@ export default function AdminRevenueReportPage() {
                       </div>
                     </div>
                     <div
-                      className="flex flex-wrap gap-2"
+                      className={reportFilterPresetsGridClass}
                       role="group"
                       aria-label="Date presets"
                     >
@@ -313,19 +322,24 @@ export default function AdminRevenueReportPage() {
                                 | "ytd",
                             )
                           }
-                          className="min-h-11 rounded-md border border-border bg-background px-3 text-sm text-foreground hover:bg-muted/60 sm:min-h-9"
+                          className={reportFilterPresetButtonClass}
                         >
                           {p.label}
                         </button>
                       ))}
                     </div>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <Button type="submit" disabled={state.kind === "loading"}>
+                    <div className={reportFilterActionsClass}>
+                      <Button
+                        type="submit"
+                        disabled={state.kind === "loading"}
+                        className={reportFilterActionButtonClass}
+                      >
                         {state.kind === "loading" ? "Loading…" : "Refresh"}
                       </Button>
                       <Button
                         type="button"
                         variant="outline"
+                        className={reportFilterActionButtonClass}
                         onClick={() => void onDownloadCsv()}
                         disabled={csvBusy || state.kind !== "ok"}
                       >
@@ -333,7 +347,7 @@ export default function AdminRevenueReportPage() {
                       </Button>
                       {csvError ? (
                         <span
-                          className="text-sm text-destructive"
+                          className="min-w-0 flex-1 basis-full text-sm break-words text-destructive sm:basis-auto"
                           role="alert"
                         >
                           {csvError}

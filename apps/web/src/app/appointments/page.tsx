@@ -422,13 +422,13 @@ export default function AppointmentsPage() {
           {profile.kind === "ready" ? (
             <>
               <div
-                className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between"
+                className="grid min-w-0 grid-cols-1 gap-4 lg:grid-cols-2 lg:items-end"
                 aria-label="Appointment filters"
               >
                 <div
                   role="radiogroup"
                   aria-label="Time range"
-                  className="flex flex-wrap gap-2"
+                  className="flex min-w-0 flex-wrap gap-2"
                 >
                   {RANGE_OPTIONS.map((opt) => {
                     const checked = range === opt.value;
@@ -455,7 +455,7 @@ export default function AppointmentsPage() {
                 <div
                   role="radiogroup"
                   aria-label="Status"
-                  className="flex flex-wrap gap-2"
+                  className="flex min-w-0 flex-wrap gap-2"
                 >
                   {STATUS_OPTIONS.map((opt) => {
                     const checked = status === opt.value;

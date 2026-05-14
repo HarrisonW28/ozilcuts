@@ -3,6 +3,15 @@
 import { getStoredAuthToken } from "@/lib/auth-token";
 import { formatGbp } from "@/lib/format-gbp";
 import {
+  reportFilterActionButtonClass,
+  reportFilterActionsClass,
+  reportFilterControlClass,
+  reportFilterFieldCellClass,
+  reportFilterPresetButtonClass,
+  reportFilterPresetsGridClass,
+  reportFilterTwoColGridClass,
+} from "@/lib/report-filter-classes";
+import {
   ApiError,
   ApiValidationError,
   fetchBarberAnalytics,
@@ -189,8 +198,8 @@ export function BarberAnalyticsView({
               void load();
             }}
           >
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div className="flex flex-col gap-2">
+            <div className={reportFilterTwoColGridClass}>
+              <div className={reportFilterFieldCellClass}>
                 <Label htmlFor="ba-from">From</Label>
                 <input
                   id="ba-from"
@@ -198,11 +207,11 @@ export function BarberAnalyticsView({
                   value={from}
                   max={to}
                   onChange={(ev) => setFrom(ev.target.value)}
-                  className="border-input bg-background text-foreground focus-visible:ring-ring/50 flex h-11 w-full rounded-lg border px-3 text-base shadow-sm outline-none focus-visible:ring-[3px] sm:h-10 sm:text-sm"
+                  className={reportFilterControlClass}
                   required
                 />
               </div>
-              <div className="flex flex-col gap-2">
+              <div className={reportFilterFieldCellClass}>
                 <Label htmlFor="ba-to">To</Label>
                 <input
                   id="ba-to"
@@ -210,13 +219,13 @@ export function BarberAnalyticsView({
                   value={to}
                   min={from}
                   onChange={(ev) => setTo(ev.target.value)}
-                  className="border-input bg-background text-foreground focus-visible:ring-ring/50 flex h-11 w-full rounded-lg border px-3 text-base shadow-sm outline-none focus-visible:ring-[3px] sm:h-10 sm:text-sm"
+                  className={reportFilterControlClass}
                   required
                 />
               </div>
             </div>
             <div
-              className="flex flex-wrap gap-2"
+              className={reportFilterPresetsGridClass}
               role="group"
               aria-label="Date presets"
             >
@@ -234,14 +243,18 @@ export function BarberAnalyticsView({
                       p.id as "this_month" | "last_30" | "last_90" | "ytd",
                     )
                   }
-                  className="min-h-11 rounded-md border border-border bg-background px-3 text-sm text-foreground hover:bg-muted/60 sm:min-h-9"
+                  className={reportFilterPresetButtonClass}
                 >
                   {p.label}
                 </button>
               ))}
             </div>
-            <div>
-              <Button type="submit" disabled={state.kind === "loading"}>
+            <div className={reportFilterActionsClass}>
+              <Button
+                type="submit"
+                disabled={state.kind === "loading"}
+                className={reportFilterActionButtonClass}
+              >
                 {state.kind === "loading" ? "Loading…" : "Refresh"}
               </Button>
             </div>

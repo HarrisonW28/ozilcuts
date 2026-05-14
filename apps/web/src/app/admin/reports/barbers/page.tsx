@@ -3,6 +3,15 @@
 import { SiteHeader } from "@/components/site-header";
 import { getStoredAuthToken } from "@/lib/auth-token";
 import { formatGbp } from "@/lib/format-gbp";
+import {
+  reportFilterActionButtonClass,
+  reportFilterActionsClass,
+  reportFilterControlClass,
+  reportFilterFieldCellClass,
+  reportFilterPresetButtonClass,
+  reportFilterPresetsGridClass,
+  reportFilterTwoColGridClass,
+} from "@/lib/report-filter-classes";
 import { useSessionProfile } from "@/lib/use-session-profile";
 import {
   ApiError,
@@ -185,8 +194,8 @@ export default function AdminBarberComparePage() {
                       void load();
                     }}
                   >
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                      <div className="flex flex-col gap-2">
+                    <div className={reportFilterTwoColGridClass}>
+                      <div className={reportFilterFieldCellClass}>
                         <Label htmlFor="bc-from">From</Label>
                         <input
                           id="bc-from"
@@ -194,11 +203,11 @@ export default function AdminBarberComparePage() {
                           value={from}
                           max={to}
                           onChange={(ev) => setFrom(ev.target.value)}
-                          className="border-input bg-background text-foreground focus-visible:ring-ring/50 flex h-11 w-full rounded-lg border px-3 text-base shadow-sm outline-none focus-visible:ring-[3px] sm:h-10 sm:text-sm"
+                          className={reportFilterControlClass}
                           required
                         />
                       </div>
-                      <div className="flex flex-col gap-2">
+                      <div className={reportFilterFieldCellClass}>
                         <Label htmlFor="bc-to">To</Label>
                         <input
                           id="bc-to"
@@ -206,13 +215,13 @@ export default function AdminBarberComparePage() {
                           value={to}
                           min={from}
                           onChange={(ev) => setTo(ev.target.value)}
-                          className="border-input bg-background text-foreground focus-visible:ring-ring/50 flex h-11 w-full rounded-lg border px-3 text-base shadow-sm outline-none focus-visible:ring-[3px] sm:h-10 sm:text-sm"
+                          className={reportFilterControlClass}
                           required
                         />
                       </div>
                     </div>
                     <div
-                      className="flex flex-wrap gap-2"
+                      className={reportFilterPresetsGridClass}
                       role="group"
                       aria-label="Date presets"
                     >
@@ -234,16 +243,17 @@ export default function AdminBarberComparePage() {
                                 | "ytd",
                             )
                           }
-                          className="min-h-11 rounded-md border border-border bg-background px-3 text-sm text-foreground hover:bg-muted/60 sm:min-h-9"
+                          className={reportFilterPresetButtonClass}
                         >
                           {p.label}
                         </button>
                       ))}
                     </div>
-                    <div>
+                    <div className={reportFilterActionsClass}>
                       <Button
                         type="submit"
                         disabled={state.kind === "loading"}
+                        className={reportFilterActionButtonClass}
                       >
                         {state.kind === "loading" ? "Loading…" : "Refresh"}
                       </Button>

@@ -20,6 +20,7 @@ import {
   parseYmdToDate,
   startOfWeekSunday,
 } from "@/lib/calendar-week";
+import { reportFilterControlClass } from "@/lib/report-filter-classes";
 import { useSessionProfile } from "@/lib/use-session-profile";
 import {
   ApiError,
@@ -404,9 +405,9 @@ export default function BarberCalendarPage() {
                     </Button>
                   </div>
 
-                  <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
-                    <label className="flex min-h-11 items-center gap-2 text-sm text-muted-foreground">
-                      <span className="shrink-0">Jump to</span>
+                  <div className="grid min-w-0 grid-cols-1 gap-3 md:grid-cols-2 md:items-center">
+                    <label className="flex min-w-0 flex-col gap-2 text-sm text-muted-foreground sm:flex-row sm:items-center sm:gap-3">
+                      <span className="shrink-0 whitespace-nowrap">Jump to</span>
                       <input
                         type="date"
                         value={formatYmd(focusedDate)}
@@ -416,12 +417,15 @@ export default function BarberCalendarPage() {
                           setFocusedDate(next);
                           setWeekStart(startOfWeekSunday(next));
                         }}
-                        className="motion-interactive min-h-11 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:min-h-10 sm:w-auto"
+                        className={cn(
+                          reportFilterControlClass,
+                          "motion-interactive",
+                        )}
                         aria-label="Jump to date"
                       />
                     </label>
                     <div
-                      className="flex flex-wrap items-center gap-2"
+                      className="flex min-w-0 flex-wrap items-center gap-2"
                       role="group"
                       aria-label="Calendar density"
                     >

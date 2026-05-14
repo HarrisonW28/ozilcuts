@@ -8,6 +8,7 @@ import {
 } from "@/components/load-empty";
 import { getStoredAuthToken } from "@/lib/auth-token";
 import { formatGbp } from "@/lib/format-gbp";
+import { reportFilterControlClass } from "@/lib/report-filter-classes";
 import { useSessionProfile } from "@/lib/use-session-profile";
 import {
   ApiError,
@@ -623,7 +624,7 @@ function BookingFlow() {
                       )}
                     </div>
 
-                    <div className="flex flex-col gap-2">
+                    <div className="flex min-w-0 flex-col gap-2">
                       <Label
                         htmlFor="b-date"
                         className="text-xs font-semibold uppercase tracking-wide text-muted-foreground"
@@ -634,7 +635,10 @@ function BookingFlow() {
                         id="b-date"
                         type="date"
                         min={todayIso()}
-                        className="border-input bg-background text-foreground focus-visible:ring-ring/50 flex h-12 w-full max-w-full rounded-xl border px-3 text-base shadow-xs outline-none focus-visible:ring-[3px] sm:h-11 sm:text-sm"
+                        className={cn(
+                          reportFilterControlClass,
+                          "h-12 rounded-xl shadow-xs sm:h-11",
+                        )}
                         value={date}
                         onChange={(ev) => {
                           setDate(ev.target.value);
@@ -679,7 +683,7 @@ function BookingFlow() {
                         <div
                           role="radiogroup"
                           aria-labelledby="book-step-time"
-                          className="grid grid-cols-3 gap-2 sm:grid-cols-4"
+                          className="grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-4"
                         >
                           {slots.slots.map((slot) => {
                             const checked = selectedSlot === slot;

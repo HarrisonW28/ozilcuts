@@ -2,6 +2,7 @@
 
 import { SiteHeader } from "@/components/site-header";
 import { getStoredAuthToken } from "@/lib/auth-token";
+import { reportFilterControlClass } from "@/lib/report-filter-classes";
 import { useSessionProfile } from "@/lib/use-session-profile";
 import {
   ApiError,
@@ -267,14 +268,14 @@ export default function ReschedulePage() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <form className="flex flex-col gap-4" onSubmit={onSubmit}>
-                  <div className="flex flex-col gap-2">
+                <form className="flex min-w-0 flex-col gap-4" onSubmit={onSubmit}>
+                  <div className="flex min-w-0 flex-col gap-2">
                     <Label htmlFor="r-date">New date</Label>
                     <input
                       id="r-date"
                       type="date"
                       min={todayIso()}
-                      className="border-input bg-background text-foreground focus-visible:ring-ring/50 flex h-11 w-full rounded-lg border px-3 text-base shadow-sm outline-none focus-visible:ring-[3px] sm:h-10 sm:text-sm"
+                      className={reportFilterControlClass}
                       value={date}
                       onChange={(ev) => setDate(ev.target.value)}
                       required
@@ -310,7 +311,7 @@ export default function ReschedulePage() {
                       <div
                         role="radiogroup"
                         aria-label="Available times"
-                        className="flex flex-wrap gap-2"
+                        className="grid min-w-0 grid-cols-2 gap-2 sm:flex sm:flex-wrap"
                       >
                         {slots.slots.map((slot) => {
                           const checked = selectedSlot === slot;
