@@ -2,6 +2,18 @@
 
 import { ContactLocationSection } from "@/components/contact-location-section";
 import { GoogleSignInButton } from "@/components/google-sign-in-button";
+import {
+  HomeAmbientVideoPanel,
+  HomeCinematicHero,
+  HomeMotionSection,
+  HomeVideoPlaybackProvider,
+} from "@/components/home";
+import {
+  GallerySyncBanner,
+  InstagramSection,
+  SocialLinksStrip,
+  SocialProofBand,
+} from "@/components/social";
 import { formatGbp } from "@/lib/format-gbp";
 import { publicReviewQuotes } from "@/lib/public-site-copy";
 import {
@@ -10,6 +22,7 @@ import {
   CardContent,
   CardFooter,
   CardHeader,
+  Skeleton,
   cn,
 } from "@ozilcuts/ui";
 import type { BarberProfilePublic, ServiceSummary } from "@ozilcuts/types";
@@ -34,7 +47,15 @@ type PublicHomeViewProps = {
   health: HealthCopy;
 };
 
-export function PublicHomeView({
+export function PublicHomeView(props: PublicHomeViewProps) {
+  return (
+    <HomeVideoPlaybackProvider>
+      <PublicHomeViewInner {...props} />
+    </HomeVideoPlaybackProvider>
+  );
+}
+
+function PublicHomeViewInner({
   heroTitle,
   heroDescription,
   profileGuest,
@@ -51,20 +72,7 @@ export function PublicHomeView({
         className="motion-enter scroll-mt-28"
         aria-labelledby="home-hero-heading"
       >
-        <div className="relative isolate overflow-hidden rounded-[2rem] border border-border/45 bg-card shadow-sm ring-1 ring-border/20 dark:border-border/55 dark:bg-card/90 dark:ring-border/25">
-          <div
-            className="pointer-events-none absolute inset-0 -z-20 bg-gradient-to-br from-muted/75 via-background to-primary/[0.07] dark:from-muted/35 dark:via-background dark:to-primary/[0.11]"
-            aria-hidden
-          />
-          <div
-            className="pointer-events-none absolute -right-[20%] top-0 -z-10 h-[min(100%,28rem)] w-[min(100%,32rem)] rounded-[50%] bg-gradient-to-bl from-primary/22 via-primary/5 to-transparent opacity-90 blur-3xl dark:from-primary/[0.28] dark:via-primary/[0.08]"
-            aria-hidden
-          />
-          <div
-            className="pointer-events-none absolute -left-16 bottom-0 -z-10 h-48 w-[120%] bg-gradient-to-t from-background via-background/45 to-transparent dark:from-background dark:via-background/60 sm:h-56"
-            aria-hidden
-          />
-
+        <HomeCinematicHero>
           <div className="grid gap-8 px-5 py-11 sm:gap-10 sm:px-9 sm:py-14 md:grid-cols-[minmax(0,1fr)_minmax(11.5rem,14rem)] md:items-end md:gap-12 md:px-11 md:py-16 lg:grid-cols-[minmax(0,1fr)_minmax(13rem,16rem)] lg:gap-16 lg:px-14 lg:pb-20 lg:pt-[4.25rem]">
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-muted-foreground">
@@ -120,7 +128,7 @@ export function PublicHomeView({
               ) : null}
             </div>
           </div>
-        </div>
+        </HomeCinematicHero>
         {profileGuest ? (
           <div className="mt-8 max-w-md border-t border-border/40 pt-8 dark:border-border/35">
             <GoogleSignInButton />
@@ -129,7 +137,7 @@ export function PublicHomeView({
       </section>
 
       {/* Quick booking — high-conversion band */}
-      <section
+      <HomeMotionSection
         id="quick-book"
         className="scroll-mt-28"
         aria-labelledby="quick-book-heading"
@@ -168,9 +176,9 @@ export function PublicHomeView({
             </div>
           </div>
         </div>
-      </section>
+      </HomeMotionSection>
 
-      <section
+      <HomeMotionSection
         id="featured-services"
         className="scroll-mt-28 border-t border-border/35 pt-16 dark:border-border/25 md:pt-20"
         aria-labelledby="home-services-heading"
@@ -200,9 +208,15 @@ export function PublicHomeView({
             ? Array.from({ length: 3 }).map((_, i) => (
                 <li
                   key={`svc-sk-${i}`}
-                  className="h-36 animate-pulse rounded-2xl border border-border/40 bg-muted/25 dark:bg-muted/20"
+                  className="flex min-h-36 flex-col gap-3 rounded-2xl border border-border/45 bg-card/35 p-4 ring-1 ring-border/30 motion-safe:transition-[border-color,box-shadow] dark:bg-card/25"
                 >
                   <span className="sr-only">Loading service</span>
+                  <Skeleton className="h-5 w-[min(100%,14rem)] rounded-md" />
+                  <div className="flex flex-wrap gap-4">
+                    <Skeleton className="h-4 w-16 rounded-md" />
+                    <Skeleton className="h-5 w-20 rounded-md" />
+                  </div>
+                  <Skeleton className="mt-auto h-10 w-full rounded-lg" />
                 </li>
               ))
             : null}
@@ -254,9 +268,9 @@ export function PublicHomeView({
               ))
             : null}
         </ul>
-      </section>
+      </HomeMotionSection>
 
-      <section
+      <HomeMotionSection
         id="team"
         className="scroll-mt-28 border-t border-border/35 pt-16 dark:border-border/25 md:pt-20"
         aria-labelledby="home-team-heading"
@@ -286,9 +300,19 @@ export function PublicHomeView({
             ? Array.from({ length: 3 }).map((_, i) => (
                 <li
                   key={`bar-sk-${i}`}
-                  className="h-64 animate-pulse rounded-2xl border border-border/40 bg-muted/25 dark:bg-muted/20"
+                  className="flex min-h-64 flex-col gap-3 rounded-2xl border border-border/45 bg-card/35 p-4 ring-1 ring-border/30 motion-safe:transition-[border-color,box-shadow] dark:bg-card/25"
                 >
                   <span className="sr-only">Loading barber</span>
+                  <div className="flex gap-3">
+                    <Skeleton className="size-16 shrink-0 rounded-2xl sm:size-20" />
+                    <div className="min-w-0 flex-1 space-y-2">
+                      <Skeleton className="h-5 w-[min(100%,12rem)] rounded-md" />
+                      <Skeleton className="h-3 w-full max-w-xs rounded-md" />
+                      <Skeleton className="h-3 w-24 rounded-md" />
+                    </div>
+                  </div>
+                  <Skeleton className="h-16 w-full flex-1 rounded-xl" />
+                  <Skeleton className="h-9 w-28 rounded-md" />
                 </li>
               ))
             : null}
@@ -339,9 +363,9 @@ export function PublicHomeView({
               ))
             : null}
         </ul>
-      </section>
+      </HomeMotionSection>
 
-      <section
+      <HomeMotionSection
         id="gallery"
         className="scroll-mt-28 border-t border-border/35 pt-16 dark:border-border/25 md:pt-20"
         aria-labelledby="home-gallery-heading"
@@ -363,6 +387,17 @@ export function PublicHomeView({
           </Button>
         </div>
         <div className="mt-8 grid grid-cols-2 gap-3 sm:mt-10 sm:grid-cols-4 sm:gap-4 md:gap-5">
+          <div
+            className={cn(
+              "motion-enter relative aspect-[3/4] overflow-hidden rounded-2xl ring-1 ring-border/50 transition-[transform,box-shadow] motion-safe:duration-300",
+              "hover:ring-primary/35 motion-safe:hover:scale-[1.02] motion-safe:active:scale-[0.99]",
+            )}
+          >
+            <HomeAmbientVideoPanel className="h-full w-full min-h-[8rem]" />
+            <span className="pointer-events-none absolute inset-x-3 bottom-3 z-10 text-[10px] font-medium uppercase tracking-wider text-foreground/55">
+              Ambient loop
+            </span>
+          </div>
           {[
             "from-muted/55 to-muted/20 dark:from-muted/35 dark:to-muted/10",
             "from-primary/[0.07] to-muted/25 dark:from-primary/[0.12] dark:to-muted/15",
@@ -383,13 +418,22 @@ export function PublicHomeView({
             </div>
           ))}
         </div>
-      </section>
+        <GallerySyncBanner className="mt-8 sm:mt-10" context="home" />
+      </HomeMotionSection>
 
-      <section
+      <HomeMotionSection
+        id="social"
+        className="scroll-mt-28 border-t border-border/35 pt-16 dark:border-border/25 md:pt-20"
+      >
+        <InstagramSection />
+      </HomeMotionSection>
+
+      <HomeMotionSection
         id="reviews"
         className="scroll-mt-28 border-t border-border/35 pt-16 dark:border-border/25 md:pt-20"
         aria-labelledby="home-reviews-heading"
       >
+        <SocialProofBand className="mb-10 md:mb-12" />
         <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
           Reviews
         </p>
@@ -413,11 +457,14 @@ export function PublicHomeView({
             </li>
           ))}
         </ul>
-      </section>
+      </HomeMotionSection>
 
-      <ContactLocationSection />
+      <HomeMotionSection className="scroll-mt-16 md:scroll-mt-20">
+        <ContactLocationSection />
+      </HomeMotionSection>
 
       <footer className="border-t border-border/45 pt-8 md:pt-10">
+        <SocialLinksStrip className="mb-6" />
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <p
             className="max-w-xl text-xs leading-relaxed text-muted-foreground"

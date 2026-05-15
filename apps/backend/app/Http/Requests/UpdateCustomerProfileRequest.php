@@ -37,6 +37,7 @@ class UpdateCustomerProfileRequest extends FormRequest
             'preferences' => ['sometimes', 'nullable', 'string', 'max:5000'],
             'marketing_opt_in' => ['sometimes', 'boolean'],
             'retention_paused' => ['sometimes', 'boolean'],
+            'arrival_location_opt_in' => ['sometimes', 'boolean'],
         ];
     }
 }

@@ -45,6 +45,16 @@ return [
         'redirect' => env('GOOGLE_REDIRECT_URI'),
     ],
 
+    /*
+    | Optional OpenAI for staff-only appointment summaries (see
+    | AppointmentCustomerAiSummaryService). When unset, summaries use rules.
+    */
+    'openai' => [
+        'api_key' => env('OPENAI_API_KEY'),
+        'base_url' => env('OPENAI_BASE_URL', 'https://api.openai.com/v1'),
+        'model' => env('OPENAI_SUMMARY_MODEL', 'gpt-4o-mini'),
+    ],
+
     'stripe' => [
         'secret' => env('STRIPE_SECRET'),
         'publishable' => env('STRIPE_PUBLISHABLE_KEY'),

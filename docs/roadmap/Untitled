@@ -1,0 +1,16 @@
+Read /docs/roadmap/sprint-native-app-shell-ux.md.
+
+Implement Sprint 19.1 only.
+
+Rebuild app shell for native mobile feel:
+- bottom navigation
+- smooth transitions
+- sticky headers
+- safe-area support
+- gesture-friendly layouts
+- improved viewport handling
+- reduce browser feel
+
+Inspect existing navigation/layout architecture first.
+
+Stop when complete.

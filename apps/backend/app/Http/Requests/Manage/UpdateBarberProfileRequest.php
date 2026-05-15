@@ -37,6 +37,12 @@ class UpdateBarberProfileRequest extends FormRequest
             'is_published' => [
                 Rule::when($this->user() !== null && $this->user()->isAdmin(), ['sometimes', 'boolean'], ['prohibited']),
             ],
+            'shop_latitude' => [
+                Rule::when($this->user() !== null && $this->user()->isAdmin(), ['sometimes', 'nullable', 'numeric', 'between:-90,90'], ['prohibited']),
+            ],
+            'shop_longitude' => [
+                Rule::when($this->user() !== null && $this->user()->isAdmin(), ['sometimes', 'nullable', 'numeric', 'between:-180,180'], ['prohibited']),
+            ],
         ];
     }
 }

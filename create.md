@@ -1,20 +1,59 @@
 # Ozilcuts — functional system document
 
-**Audience:** GPT and humans planning features, sprints, and tradeoffs.  
-**Scope:** What the product does today, how pieces connect, known limits, and how to use `docs/roadmap/` alongside this file.  
-**Companion docs:** [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) (stack overview), [`docs/deployment/vercel-frontend-plesk-backend.md`](docs/deployment/vercel-frontend-plesk-backend.md) (hosting split).
+**Audience:** External GPTs, internal tools, and humans who need **accurate codebase context** without loading the whole monorepo.  
+**Scope:** What the product does today, how pieces connect, known limits, where to look in code, and how to combine this file with `docs/roadmap/` for planning.  
+**Companion docs:** [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md), [`docs/CODING_STANDARDS.md`](docs/CODING_STANDARDS.md), [`docs/deployment/vercel-frontend-plesk-backend.md`](docs/deployment/vercel-frontend-plesk-backend.md), [`docs/QA_CHECKLIST.md`](docs/QA_CHECKLIST.md), [`docs/CURSOR_RULES.md`](docs/CURSOR_RULES.md).
 
 ---
 
-## 1. Product snapshot
+## 0. Quick orientation for LLMs
+
+**What this file is:** A **stable narrative + index**. It is not a line-by-line spec; always open **primary sources** (routes, types, controllers) when implementing.
+
+**What to attach in an external GPT chat (recommended bundle):**
+
+1. This file: **`create.md`** (repo root).
+2. For API behaviour: **`apps/backend/routes/api/v1.php`** (or the specific controller under `apps/backend/app/Http/Controllers/Api/V1/`).
+3. For request/response shapes: **`packages/types/src/index.ts`** (large; prefer grep or a narrowed excerpt).
+4. For web calls: **`packages/api/src/<domain>.ts`** matching the feature (e.g. `booking.ts`, `manageServices.ts`).
+5. For UI: **`apps/web/src/app/.../page.tsx`** or **`apps/web/src/components/...`** as relevant.
+6. For planned work: one or more **`docs/roadmap/sprint-*.md`** files.
+
+**Suggested discovery order (minimizes wrong assumptions):**
+
+1. Confirm route exists and method → `apps/backend/routes/api/v1.php`.
+2. Open the single-action controller → trace to FormRequest / Policy / Service.
+3. Mirror types in `packages/types` and client in `packages/api`.
+4. Find Next page or component under `apps/web/src/app` or `apps/web/src/components`.
+
+**Non-goals:** Do not infer multi-tenant org models, payment edge cases, or authorization solely from the Next layer; **Laravel policies and controller checks are authoritative**.
+
+---
+
+## 1. Repository map (monorepo)
+
+| Path | Role |
+|------|------|
+| `apps/web/` | Next.js 15 App Router UI; `@/` → `apps/web/src/` |
+| `apps/backend/` | Laravel 12 API; routes in `routes/api/v1.php` |
+| `packages/types/` | Shared TypeScript types (`@ozilcuts/types`) |
+| `packages/api/` | Typed fetch helpers (`@ozilcuts/api`), `getApiBaseUrl()` in `packages/api/src/base.ts` |
+| `packages/ui/` | Shared UI primitives (`@ozilcuts/ui`), Tailwind + components |
+| `docs/roadmap/` | Sprint intent docs (filename themes, not delivery status) |
+
+**Web path alias:** `apps/web/tsconfig.json` maps `@/*` → `./src/*`.
+
+---
+
+## 2. Product snapshot
 
 **Ozilcuts** is a **shop-scoped** barbershop operations product: customers book services with specific barbers; barbers run their day on a calendar; admins configure the catalog, chairs, hours, and reporting. The live client is primarily a **Next.js web app** (PWA-oriented); roadmap work includes **React Native** and deeper mobile/POS flows that are not necessarily shipped in the web app yet.
 
-**Currency:** Amounts are stored as **integer minor units (pence)** in fields historically named `*_cents`. The UI formats **GBP** (`en-GB`). Stripe defaults are aligned to **`gbp`** in backend config (override with `STRIPE_CURRENCY` in `.env`).
+**Currency:** Amounts are stored as **integer minor units (pence)** in fields historically named `*_cents`. The UI formats **GBP** (`en-GB`). Shared helpers live under `apps/web/src/lib/format-gbp.ts`. Stripe defaults align to **`gbp`** in backend config (override with `STRIPE_CURRENCY` in `.env`).
 
 ---
 
-## 2. Technical architecture (condensed)
+## 3. Technical architecture (condensed)
 
 | Layer | Technology |
 |--------|------------|
@@ -24,7 +63,7 @@
 
 **Principles:** API-first; backend owns business logic; mobile-first UX.
 
-**Auth:** Bearer token (Sanctum). Public reads for catalog (services, barbers, slots). Writes almost always require `auth:sanctum`.
+**Auth:** Bearer token (Sanctum). Public reads for catalog (services, barbers, slots). Writes almost always require `auth:sanctum`. The web stores the token client-side and sends it on API calls (see `apps/web/src/lib/auth-token.ts` and API client usage).
 
 **Important paths:**
 
@@ -35,7 +74,37 @@
 
 ---
 
-## 3. Roles
+## 4. Conventions that confuse GPTs (read once)
+
+| Topic | Convention |
+|--------|---------------|
+| Money fields | JSON/DB: `price_cents`, `deposit_cents`, etc. **Semantics:** pence (minor GBP units). |
+| API base URL | `getApiBaseUrl()` — browser uses `NEXT_PUBLIC_API_URL` (see `apps/web/.env.example`); SSR/build may differ (`next.config.ts` also references `BACKEND_URL`). |
+| API prefix | All JSON API routes under **`/api/v1/`**. |
+| Versioning | Prefer changing behaviour in Laravel + types together; keep `packages/api` callers aligned. |
+| UI role checks | `useSessionProfile()` exposes `role.slug`; **never** treat as security boundary. |
+| Report / filter UI | Reuse `apps/web/src/lib/report-filter-classes.ts` for date grids on small screens. |
+
+---
+
+## 5. “Where do I look?” index
+
+| If you need… | Start here |
+|----------------|-------------|
+| Every HTTP route | `apps/backend/routes/api/v1.php` |
+| Who can call a route | Controller + Laravel Policy (see `apps/backend/app/Policies/` if present) |
+| Business logic | `apps/backend/app/Services/` (service-layer pattern per `docs/CODING_STANDARDS.md`) |
+| DTO / validation | Form requests under `apps/backend/app/Http/Requests/` (when used) |
+| TS types for API | `packages/types/src/index.ts` |
+| Browser fetch wrapper | `packages/api/src/<feature>.ts` + `packages/api/src/index.ts` exports |
+| Next page for a URL | `apps/web/src/app/**/page.tsx` |
+| Global nav / account menu | `apps/web/src/lib/site-primary-nav.ts` |
+| Stripe / payment config | `apps/backend/config/services.php`, `PaymentService`, `AppointmentPaymentIntentController` |
+| Emails (deposit line, etc.) | `apps/backend/resources/views/emails/` |
+
+---
+
+## 6. Roles
 
 | Role slug | Typical user | Primary surfaces |
 |-----------|----------------|------------------|
@@ -47,7 +116,7 @@
 
 ---
 
-## 4. Core domain (conceptual)
+## 7. Core domain (conceptual)
 
 - **Shop** — implicit tenant; admin onboarding and templates (e.g. default availability) are shop-level.
 - **User** — auth identity; can be customer, barber, or admin.
@@ -62,9 +131,9 @@
 
 ---
 
-## 5. Feature catalogue (as implemented in web + API)
+## 8. Feature catalogue (as implemented in web + API)
 
-### 5.1 Public / pre-auth
+### 8.1 Public / pre-auth
 
 - Home, services list, barber directory, barber detail + **portfolio** gallery.
 - **Book** flow: pick service → barber (optional constraints) → date → slot → submit (auth required for final booking).
@@ -72,7 +141,7 @@
 - Health: `GET /api/v1/health`.
 - Signed, throttled URLs: calendar `.ics`, hair profile photos, haircut photos.
 
-### 5.2 Customer
+### 8.2 Customer
 
 - **Appointments:** list with filters (upcoming/past/all, status), cancel, reschedule, link to confirmation.
 - **Confirmation:** details, deposit pay (Stripe Elements), calendar link, rebook hints, haircut memory entrypoints, staff POS helper card when applicable.
@@ -83,7 +152,7 @@
 - **Notifications:** list + unread count + mark read (poll-driven UX in app).
 - **Rebooking nudges:** next-visit suggestion on home/booking; snooze API for nudges.
 
-### 5.3 Barber
+### 8.3 Barber
 
 - **Dashboard:** hub links into calendar, hours, analytics, profile.
 - **Calendar:** day/workflow view (week-style availability UI varies by page).
@@ -91,7 +160,7 @@
 - **Analytics:** personal KPIs and tables (booked vs collected, etc.).
 - **Profile:** self-service barber-facing profile.
 
-### 5.4 Admin
+### 8.4 Admin
 
 - **Onboarding:** shop setup wizard; `shop_admin.onboarding_completed_at` gates “incomplete setup” messaging on admin home.
 - **Services CRUD:** create/edit/delete, starter pack, **GBP** pound inputs for price/deposit.
@@ -105,7 +174,7 @@
   - Retention (preview/audience-oriented; see code for exact semantics)  
 - **Profile** — admin’s own user profile surface.
 
-### 5.5 Cross-role / staff workflows
+### 8.5 Cross-role / staff workflows
 
 - **Book on behalf:** booking API accepts optional `customer_user_id` for admin/barber flows; staff lookup supports discovery.
 - **Walk-in:** `POST /appointments/walk-in` (throttled) for front-desk style creation.
@@ -115,7 +184,7 @@
 
 ---
 
-## 6. How features interlink
+## 9. How features interlink
 
 ```mermaid
 flowchart LR
@@ -170,7 +239,7 @@ flowchart LR
 
 ---
 
-## 7. User stories & flows (planning-oriented)
+## 10. User stories & flows (planning-oriented)
 
 ### Customer
 
@@ -210,7 +279,7 @@ flowchart LR
 
 ---
 
-## 8. API surface (grouped)
+## 11. API surface (grouped)
 
 All under **`/api/v1/`** unless noted. Throttling middleware varies per route (see `routes/api/v1.php`).
 
@@ -230,20 +299,20 @@ All under **`/api/v1/`** unless noted. Throttling middleware varies per route (s
 
 ---
 
-## 9. Known limitations & assumptions
+## 12. Known limitations & assumptions
 
 - **Single-shop mental model** in much of the UX; multi-tenant SaaS patterns (org switcher, per-tenant billing) are not described in code at a glance—treat as **one business per deployment** unless you find otherwise.
 - **Web-first:** roadmap includes native app and advanced POS; do not assume parity with RN or tap-to-pay unless those sprints are done.
 - **Field naming:** `*_cents` persists in JSON and DB; it is **pence** for GBP—downstream docs and GPT prompts should say “minor units / pence” to avoid migration confusion.
 - **Rate limits:** many endpoints are throttled; bulk importers or aggressive polling need design.
-- **Signed media URLs:** sharing and CDN behavior must respect Laravel signing and expiry.
+- **Signed media URLs:** sharing and CDN behaviour must respect Laravel signing and expiry.
 - **Authorization nuance:** always verify server-side rules when adding a feature; UI role checks are not sufficient.
 
 ---
 
-## 10. Using this doc with `docs/roadmap/` for sprints
+## 13. Using this doc with `docs/roadmap/` for sprints
 
-The canonical roadmap folder is **`docs/roadmap/`** (not `roadmapo`—use this path in prompts).
+The canonical roadmap folder is **`docs/roadmap/`**.
 
 - Each file is a **sprint-sized** intent document, e.g. `sprint-4-3-payments-deposits.md`, `sprint-15-4-walk-in-mode.md`, `sprint-12-2-haircut-memory-system.md`.
 - When planning with GPT, supply: **(1)** this `create.md`, **(2)** the specific sprint markdown(s), **(3)** any ticket/Linear context.
@@ -251,6 +320,17 @@ The canonical roadmap folder is **`docs/roadmap/`** (not `roadmapo`—use this p
 **Suggested GPT prompt pattern**
 
 > You are planning the next sprint for Ozilcuts. Read `create.md` for current behaviour and limits. Read `docs/roadmap/sprint-X-Y-*.md` for the intended delta. Propose tasks grouped by backend vs web vs types, note API changes and migrations, and flag conflicts with existing flows in `create.md`.
+
+**Paste-ready variants (copy and fill placeholders)**
+
+**A — Implement a feature (code)**  
+> Repo: Ozilcuts monorepo. Attached: `create.md`, `apps/backend/routes/api/v1.php`, `[Controller].php`, `packages/types` excerpts, `packages/api/src/[file].ts`, `[Next page or component].tsx`. Task: [describe]. Constraints: preserve GBP minor units in `*_cents` fields; enforce authorization in Laravel; keep `@ozilcuts/types` and `@ozilcuts/api` in sync. List open questions before coding.
+
+**B — Explain behaviour**  
+> Attached: `create.md` and `[specific files]`. Explain end-to-end flow for [user action], including API calls and error cases. Cite file paths and function/route names.
+
+**C — Sprint / roadmap**  
+> Attached: `create.md` and `docs/roadmap/[sprint].md`. Produce a task list with dependencies, risks, and files likely touched. Mark items that need DB migration or Stripe dashboard changes.
 
 **Roadmap theme map (from filenames — not status tracking)**
 
@@ -276,12 +356,20 @@ There are **many** sprint files; use **glob search** in-repo when listing: `docs
 
 ---
 
-## 11. Appendix — web routes (App Router)
+## 14. Quality gates (before merging risky changes)
+
+- **Types:** `pnpm exec tsc --noEmit` in `apps/web` (and packages if touched).
+- **Backend:** run targeted PHPUnit tests under `apps/backend/tests/` when behaviour changes (e.g. payments, appointments).
+- **Manual:** see [`docs/QA_CHECKLIST.md`](docs/QA_CHECKLIST.md) for release-style checks.
+
+---
+
+## 15. Appendix — web routes (App Router)
 
 High-signal pages (non-exhaustive): `/`, `/book`, `/services`, `/barbers`, `/barbers/[id]`, `/barbers/[id]/portfolio`, `/appointments`, `/appointments/[id]/confirmation`, `/appointments/[id]/reschedule`, `/profile`, `/profile/hair`, `/profile/visits`, `/profile/notifications`, `/dashboard`, `/dashboard/settings`, `/notifications`, `/offline`, `/barber`, `/barber/calendar`, `/barber/hours`, `/barber/analytics`, `/barber/profile`, `/admin`, `/admin/onboarding`, `/admin/services`, `/admin/barbers`, `/admin/barbers/[id]/hours`, `/admin/barbers/[id]/analytics`, `/admin/customers/[id]/analytics`, `/admin/reports/revenue`, `/admin/reports/barbers`, `/admin/reports/customers`, `/admin/reports/operations`, `/admin/reports/retention`, auth under `(auth)/login`, `(auth)/register`, `(auth)/callback`.
 
 ---
 
-## 12. Revision discipline
+## 16. Revision discipline
 
-When shipping material behaviour changes, update **this file** in the same PR if the change affects: roles, booking/payments, reports, or cross-feature dependencies—so sprint planning stays honest.
+When shipping material behaviour changes, update **this file** in the same PR if the change affects: roles, booking/payments, reports, cross-feature dependencies, or **any “where to look” / convention** that would mislead a future GPT. If the change is purely visual, a short note under the relevant feature bullet is enough.

@@ -1,6 +1,7 @@
 "use client";
 
 import { SiteHeader } from "@/components/site-header";
+import { PageSessionSkeleton } from "@/components/loading";
 import { getStoredAuthToken } from "@/lib/auth-token";
 import { formatGbp } from "@/lib/format-gbp";
 import {
@@ -12,6 +13,10 @@ import {
   reportFilterPresetsGridClass,
   reportFilterTwoColGridClass,
 } from "@/lib/report-filter-classes";
+import {
+  OperationalAiInsightsSection,
+  OperationalAiInsightsSkeleton,
+} from "@/components/operational-ai-insights";
 import { useSessionProfile } from "@/lib/use-session-profile";
 import {
   ApiError,
@@ -158,9 +163,7 @@ export default function AdminOperationalInsightsPage() {
           />
 
           {profile.kind === "loading" || profile.kind === "none" ? (
-            <p className="text-sm text-muted-foreground" role="status">
-              Loading…
-            </p>
+            <PageSessionSkeleton statusLabel="Loading" />
           ) : null}
 
           {profile.kind === "none" ? (
@@ -271,10 +274,10 @@ export default function AdminOperationalInsightsPage() {
                     <div className={reportFilterActionsClass}>
                       <Button
                         type="submit"
-                        disabled={state.kind === "loading"}
+                        pending={state.kind === "loading"}
                         className={reportFilterActionButtonClass}
                       >
-                        {state.kind === "loading" ? "Loading…" : "Refresh"}
+                        Refresh
                       </Button>
                     </div>
                   </form>
@@ -292,6 +295,9 @@ export default function AdminOperationalInsightsPage() {
                       <KpiCardSkeleton key={i} />
                     ))}
                   </section>
+                  <div className="mt-5 md:mt-6">
+                    <OperationalAiInsightsSkeleton />
+                  </div>
                   <Card
                     aria-hidden
                     className="dashboard-surface mt-5 md:mt-6"
@@ -304,9 +310,26 @@ export default function AdminOperationalInsightsPage() {
                 </div>
               ) : null}
               {state.kind === "error" ? (
-                <p className="text-sm text-destructive" role="alert">
-                  {state.message}
-                </p>
+                <Card role="alert" className="border-destructive/30 bg-destructive/[0.04]">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base">
+                      Couldn&apos;t load operations
+                    </CardTitle>
+                    <CardDescription>{state.message}</CardDescription>
+                  </CardHeader>
+                  <CardFooter className="pt-0">
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      className="min-h-11 touch-manipulation"
+                      onClick={() => {
+                        void load();
+                      }}
+                    >
+                      Try again
+                    </Button>
+                  </CardFooter>
+                </Card>
               ) : null}
 
               {state.kind === "ok" ? (
@@ -344,6 +367,12 @@ export default function AdminOperationalInsightsPage() {
                       )} pending in next 7 days`}
                     />
                   </section>
+
+                  <div className="mt-5 md:mt-6">
+                    <OperationalAiInsightsSection
+                      insights={state.data.ai_insights}
+                    />
+                  </div>
 
                   <section aria-label="Peak times">
                     <Card size="sm" className="dashboard-surface">

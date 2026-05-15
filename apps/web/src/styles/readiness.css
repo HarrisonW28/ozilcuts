@@ -1,0 +1,45 @@
+/**
+ * Barber chair prep (Sprint 22.4) — fast operational context.
+ */
+
+@layer components {
+  .readiness-panel {
+    @apply border-primary/20 bg-primary/[0.02] shadow-none dark:border-primary/15 dark:bg-primary/[0.04];
+  }
+
+  .readiness-scan-grid {
+    @apply grid gap-4 sm:grid-cols-2 sm:gap-5;
+  }
+
+  .readiness-summary-digest {
+    @apply rounded-xl border border-violet-500/20 bg-violet-500/[0.04] px-3.5 py-3 dark:border-violet-400/15 dark:bg-violet-500/[0.06];
+  }
+
+  .readiness-loyalty-strip {
+    @apply flex gap-2 overflow-x-auto pb-0.5 [-webkit-overflow-scrolling:touch] [scrollbar-width:thin];
+  }
+
+  .readiness-loyalty-chip {
+    @apply inline-flex min-h-10 shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-micro font-semibold uppercase tracking-widecaps;
+  }
+
+  .readiness-section-block {
+    @apply space-y-2 rounded-xl border border-border/40 bg-background/50 p-3 dark:bg-background/35;
+  }
+
+  .readiness-thumb-strip {
+    @apply -mx-0.5 flex gap-2 overflow-x-auto pb-0.5 pt-0.5 [scrollbar-width:thin] sm:flex-wrap sm:overflow-visible;
+  }
+
+  .readiness-thumb {
+    @apply motion-interactive shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring;
+  }
+
+  .readiness-thumb-img {
+    @apply size-[4.25rem] rounded-lg border border-border/50 object-cover sm:size-[4.75rem];
+  }
+
+  .readiness-note-row {
+    @apply block min-h-11 rounded-lg p-2 transition-colors hover:bg-muted/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring;
+  }
+}

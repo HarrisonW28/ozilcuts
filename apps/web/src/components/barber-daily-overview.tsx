@@ -1,5 +1,7 @@
 "use client";
 
+import { OperationalStatusChip } from "@/components/operational-status-chip";
+import { ShopLiveStatusBanner } from "@/components/shop-live-status-banner";
 import {
   formatMonthDay,
   formatShortWeekday,
@@ -7,6 +9,13 @@ import {
   isSameYmd,
 } from "@/lib/calendar-week";
 import { formatGbp } from "@/lib/format-gbp";
+import {
+  buildLiveShopSummary,
+  deriveOperationalStatus,
+  findServingAppointment,
+  minutesUntilStart,
+  sortTodayConfirmedQueue,
+} from "@/lib/shop-live-status";
 import type { AppointmentRecord } from "@ozilcuts/types";
 import {
   Button,
@@ -49,6 +58,16 @@ function appointmentEndMs(a: AppointmentRecord): number | null {
   if (Number.isNaN(start)) return null;
   const durMin = a.service?.duration_minutes ?? 0;
   return start + durMin * 60_000;
+}
+
+function minutesRemainingInVisit(
+  a: AppointmentRecord,
+  nowMs: number,
+): number | null {
+  const end = appointmentEndMs(a);
+  if (end === null) return null;
+  const left = Math.ceil((end - nowMs) / 60_000);
+  return left > 0 ? left : null;
 }
 
 export type BarberDailyOverviewProps = {
@@ -110,6 +129,16 @@ export function BarberDailyOverview({
     return list;
   }, [appointments, ymd]);
 
+  const dayQueue = useMemo(
+    () => sortTodayConfirmedQueue(appointments, ymd),
+    [appointments, ymd],
+  );
+
+  const liveSummary = useMemo(
+    () => buildLiveShopSummary(dayQueue, nowMs),
+    [dayQueue, nowMs],
+  );
+
   const totals = useMemo(() => {
     let minutes = 0;
     let cents = 0;
@@ -121,28 +150,20 @@ export function BarberDailyOverview({
   }, [dayAppointments]);
 
   const inProgress = useMemo(() => {
-    if (!viewIsToday || dayAppointments.length === 0) return null;
-    for (const a of dayAppointments) {
-      if (!a.starts_at) continue;
-      const start = new Date(a.starts_at).getTime();
-      if (Number.isNaN(start)) continue;
-      const end = appointmentEndMs(a);
-      if (end === null) continue;
-      if (nowMs >= start && nowMs < end) return a;
-    }
-    return null;
-  }, [dayAppointments, nowMs, viewIsToday]);
+    if (!viewIsToday || dayQueue.length === 0) return null;
+    return findServingAppointment(dayQueue, nowMs);
+  }, [dayQueue, nowMs, viewIsToday]);
 
   const spotlight = useMemo(() => {
-    if (dayAppointments.length === 0) return null;
+    if (dayQueue.length === 0) return null;
     if (viewIsToday) {
-      const upcoming = dayAppointments.find(
+      const upcoming = dayQueue.find(
         (a) => a.starts_at && new Date(a.starts_at).getTime() > nowMs,
       );
       return upcoming ?? null;
     }
-    return dayAppointments[0] ?? null;
-  }, [dayAppointments, viewIsToday, nowMs]);
+    return dayQueue[0] ?? null;
+  }, [dayQueue, viewIsToday, nowMs]);
 
   const doneForToday =
     viewIsToday &&
@@ -155,6 +176,26 @@ export function BarberDailyOverview({
 
   const headingDay = `${formatShortWeekday(day)}, ${formatMonthDay(day)}`;
   const ariaLabel = `Daily overview for ${headingDay}`;
+
+  const chairMinutesLeft =
+    inProgress != null ? minutesRemainingInVisit(inProgress, nowMs) : null;
+
+  const spotlightWaitMinutes =
+    !doneForToday && !inProgress && spotlight && viewIsToday
+      ? minutesUntilStart(spotlight, nowMs)
+      : null;
+
+  const spotlightIsBehind =
+    !doneForToday &&
+    !inProgress &&
+    spotlight != null &&
+    viewIsToday &&
+    deriveOperationalStatus(spotlight, nowMs) === "behind_schedule";
+
+  const thenStartsInMinutes =
+    inProgress && spotlight && viewIsToday
+      ? minutesUntilStart(spotlight, nowMs)
+      : null;
 
   return (
     <section
@@ -207,6 +248,10 @@ export function BarberDailyOverview({
         </div>
       </div>
 
+      {viewIsToday && dayQueue.length > 0 ? (
+        <ShopLiveStatusBanner summary={liveSummary} className="mt-4" />
+      ) : null}
+
       {totals.count === 0 ? (
         <div className="mt-4 sm:mt-5">
           <EmptyState
@@ -221,18 +266,30 @@ export function BarberDailyOverview({
         </div>
       ) : null}
 
-      {dayAppointments.length === 0 ? null : (
+      {dayQueue.length === 0 ? null : (
         <Card className="mt-4 border-border/40 bg-background/70 shadow-none dark:bg-background/50">
           <CardHeader className="pb-2">
-            <CardTitle className="text-base">
-              {doneForToday
-                ? "You're through today's queue"
-                : inProgress
-                  ? "In the chair"
-                  : viewIsToday
-                    ? "Next up"
-                    : "First up"}
-            </CardTitle>
+            <div className="flex flex-wrap items-center gap-2">
+              <CardTitle className="text-base">
+                {doneForToday
+                  ? "You're through today's queue"
+                  : inProgress
+                    ? "Right now"
+                    : viewIsToday
+                      ? "Next up"
+                      : "First up"}
+              </CardTitle>
+              {!doneForToday && inProgress ? (
+                <OperationalStatusChip
+                  status={deriveOperationalStatus(inProgress, nowMs)}
+                />
+              ) : null}
+              {!doneForToday && !inProgress && spotlight ? (
+                <OperationalStatusChip
+                  status={deriveOperationalStatus(spotlight, nowMs)}
+                />
+              ) : null}
+            </div>
             <CardDescription>
               {doneForToday
                 ? "Great work — no more upcoming cuts today."
@@ -242,11 +299,43 @@ export function BarberDailyOverview({
                     ? `${formatTime(spotlight.starts_at)} · ${spotlight.service?.name ?? "Service"}${spotlight.customer?.name ? ` · ${spotlight.customer.name}` : ""}`
                     : "First slot of the day."}
             </CardDescription>
-            {inProgress && spotlight ? (
+            {chairMinutesLeft != null ? (
               <p className="pt-1 text-sm text-muted-foreground">
-                Next ·{" "}
-                {`${formatTime(spotlight.starts_at)} · ${spotlight.service?.name ?? "Service"}${spotlight.customer?.name ? ` · ${spotlight.customer.name}` : ""}`}
+                About {chairMinutesLeft} min left in this visit.
               </p>
+            ) : null}
+            {!doneForToday && !inProgress && spotlight && viewIsToday ? (
+              <>
+                {spotlightWaitMinutes != null ? (
+                  <p className="pt-1 text-sm text-muted-foreground">
+                    Starts in about {spotlightWaitMinutes} min.
+                  </p>
+                ) : null}
+                {spotlightIsBehind ? (
+                  <p className="pt-1 text-sm text-amber-900/90 dark:text-amber-100/90">
+                    This visit is behind schedule — guests in the lounge are
+                    still covered by your queue view above.
+                  </p>
+                ) : null}
+              </>
+            ) : null}
+            {inProgress && spotlight ? (
+              <div className="space-y-1 pt-2">
+                <p className="text-sm font-medium text-foreground">Then</p>
+                <p className="text-sm text-muted-foreground">
+                  {`${formatTime(spotlight.starts_at)} · ${spotlight.service?.name ?? "Service"}${spotlight.customer?.name ? ` · ${spotlight.customer.name}` : ""}`}
+                  {viewIsToday && thenStartsInMinutes != null ? (
+                    <> · starts in about {thenStartsInMinutes} min</>
+                  ) : viewIsToday ? (
+                    <> · up next</>
+                  ) : null}
+                </p>
+                <OperationalStatusChip
+                  status={deriveOperationalStatus(spotlight, nowMs)}
+                  compact
+                  className="mt-1"
+                />
+              </div>
             ) : null}
           </CardHeader>
           {inProgress ? (

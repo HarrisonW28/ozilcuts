@@ -1,6 +1,12 @@
 "use client";
 
-import { Skeleton, cn } from "@ozilcuts/ui";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  Skeleton,
+  cn,
+} from "@ozilcuts/ui";
 
 type ListSkeletonProps = {
   className?: string;
@@ -97,6 +103,80 @@ export function NotificationListSkeleton({
   );
 }
 
+/** Customer quick-rebook card while cadence + profile load. */
+export function BookQuickRepeatCardSkeleton({
+  className,
+}: {
+  className?: string;
+}) {
+  return (
+    <Card
+      aria-busy="true"
+      aria-label="Loading quick rebook suggestions"
+      className={cn(
+        "border-primary/25 bg-primary/[0.03] shadow-sm dark:border-primary/20 dark:bg-primary/[0.05]",
+        className,
+      )}
+    >
+      <CardHeader className="pb-2">
+        <Skeleton className="h-5 w-36 max-w-full rounded-md" />
+        <Skeleton className="mt-2 h-4 w-full max-w-md rounded-md" />
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <div className="dashboard-surface motion-card rounded-xl border border-border/40 p-3">
+          <Skeleton className="h-4 w-40 rounded-md" />
+          <Skeleton className="mt-3 h-3 w-full rounded-md" />
+          <Skeleton className="mt-2 h-3 max-w-sm rounded-md" />
+          <Skeleton className="mt-4 h-10 w-36 rounded-md" />
+        </div>
+        <p className="text-xs text-muted-foreground" role="status">
+          Looking for your usual cut…
+        </p>
+      </CardContent>
+    </Card>
+  );
+}
+
+/** Appointment confirmation hero while the booking record loads. */
+export function BookingConfirmationCardSkeleton({
+  className,
+}: {
+  className?: string;
+}) {
+  return (
+    <div
+      className={cn(
+        "space-y-4 rounded-2xl border border-border/50 bg-card/45 p-6 ring-1 ring-border/45",
+        className,
+      )}
+      role="status"
+      aria-busy="true"
+      aria-label="Loading booking"
+    >
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="space-y-3">
+          <Skeleton className="h-7 w-48 max-w-full rounded-lg" />
+          <Skeleton className="h-4 w-72 max-w-full rounded-md" />
+        </div>
+        <div className="flex gap-2">
+          <Skeleton className="h-7 w-24 rounded-full" />
+          <Skeleton className="h-7 w-28 rounded-full" />
+        </div>
+      </div>
+      <div className="grid gap-3 pt-2 sm:grid-cols-2">
+        <Skeleton className="h-12 rounded-xl" />
+        <Skeleton className="h-12 rounded-xl" />
+        <Skeleton className="h-12 rounded-xl" />
+        <Skeleton className="h-12 rounded-xl" />
+      </div>
+      <div className="flex flex-wrap gap-2 pt-2">
+        <Skeleton className="h-10 w-28 rounded-lg" />
+        <Skeleton className="h-10 w-32 rounded-lg" />
+      </div>
+    </div>
+  );
+}
+
 /** Shimmers the service, barber, and date fields on the booking form. */
 export function BookCatalogFormSkeleton({ className }: { className?: string }) {
   return (
@@ -125,6 +205,99 @@ export function BookCatalogFormSkeleton({ className }: { className?: string }) {
         <Skeleton className="h-3 w-14" />
         <Skeleton className="h-12 w-full rounded-xl" />
         <Skeleton className="h-4 w-40" />
+      </div>
+    </div>
+  );
+}
+
+/** Profile / settings form while customer or barber profile loads. */
+export function ProfileFormCardSkeleton({
+  className,
+  statusLabel = "Loading profile",
+}: ListSkeletonProps) {
+  return (
+    <Card
+      className={className}
+      aria-busy="true"
+      aria-label={statusLabel}
+    >
+      <CardHeader className="space-y-2">
+        <Skeleton className="h-5 w-40" />
+        <Skeleton className="h-4 w-full max-w-sm" />
+      </CardHeader>
+      <CardContent className="space-y-5">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-2">
+            <Skeleton className="h-3 w-16" />
+            <Skeleton className="h-11 w-full rounded-lg" />
+          </div>
+          <div className="space-y-2">
+            <Skeleton className="h-3 w-14" />
+            <Skeleton className="h-11 w-full rounded-lg" />
+          </div>
+        </div>
+        <div className="space-y-2">
+          <Skeleton className="h-3 w-28" />
+          <Skeleton className="h-24 w-full rounded-lg" />
+        </div>
+        <div className="flex flex-wrap gap-2 pt-1">
+          <Skeleton className="h-11 w-28 rounded-lg" />
+          <Skeleton className="h-11 w-24 rounded-lg" />
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+/** Customer `/home` shell while session resolves or redirects. */
+export function CustomerHomeSkeleton({ className }: { className?: string }) {
+  return (
+    <div
+      className={cn(
+        "mx-auto w-full max-w-lg space-y-9 sm:max-w-2xl md:space-y-10 lg:max-w-3xl",
+        className,
+      )}
+      aria-busy="true"
+      aria-label="Loading home"
+    >
+      <div className="space-y-3">
+        <Skeleton className="h-3 w-20 rounded-md" />
+        <Skeleton className="h-9 w-48 max-w-full rounded-lg" />
+        <Skeleton className="h-4 w-full max-w-md rounded-md" />
+      </div>
+      <Skeleton className="h-52 w-full rounded-2xl" />
+      <Skeleton className="h-36 w-full rounded-2xl" />
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <Skeleton className="h-36 rounded-xl" />
+        <Skeleton className="h-36 rounded-xl" />
+      </div>
+      <div className="flex gap-3 overflow-hidden">
+        <Skeleton className="h-44 w-[8.5rem] shrink-0 rounded-2xl" />
+        <Skeleton className="h-36 w-[7.25rem] shrink-0 rounded-xl" />
+        <Skeleton className="h-36 w-[7.25rem] shrink-0 rounded-xl" />
+      </div>
+      <Skeleton className="h-40 w-full rounded-2xl" />
+    </div>
+  );
+}
+
+
+/** Check-in flow hero while appointment loads. */
+export function CheckInPageSkeleton({ className }: { className?: string }) {
+  return (
+    <div
+      className={cn("mx-auto w-full max-w-lg page-stack", className)}
+      aria-busy="true"
+      aria-label="Loading check-in"
+    >
+      <div className="space-y-3">
+        <Skeleton className="h-8 w-48 max-w-full rounded-lg" />
+        <Skeleton className="h-4 w-full max-w-md rounded-md" />
+      </div>
+      <Skeleton className="h-48 w-full rounded-2xl" />
+      <div className="flex flex-wrap gap-2">
+        <Skeleton className="h-11 flex-1 rounded-lg" />
+        <Skeleton className="h-11 w-32 rounded-lg" />
       </div>
     </div>
   );

@@ -23,6 +23,7 @@ class CustomerProfileResource extends JsonResource
             'preferences' => $this->preferences,
             'marketing_opt_in' => $this->marketing_opt_in,
             'retention_paused' => (bool) $this->retention_paused,
+            'arrival_location_opt_in' => (bool) $this->arrival_location_opt_in,
             'updated_at' => $this->updated_at?->toIso8601String(),
             'user' => $this->whenLoaded('user', fn () => [
                 'id' => $this->user->id,

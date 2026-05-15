@@ -1,15 +1,19 @@
 import type {
+  AppointmentArrivalProximityResponse,
   AppointmentCalendarLink,
   AppointmentListFilters,
   AppointmentPendingPayment,
+  AppointmentQueueIntelligenceResponse,
   AppointmentRecord,
   BarberSlotsPayload,
+  BarberSmartSlotHintsPayload,
   CreateAppointmentInput,
   CreateAppointmentResponse,
   CreateWalkInAppointmentInput,
   LaravelValidationPayload,
   Paginated,
   RescheduleAppointmentInput,
+  UpdateAppointmentArrivalInput,
 } from "@ozilcuts/types";
 
 import { ApiError, ApiValidationError } from "./auth";
@@ -54,6 +58,34 @@ export async function fetchBarberSlots(
   }
 
   return res.json() as Promise<BarberSlotsPayload>;
+}
+
+export async function fetchBarberSmartSlotHints(
+  barberUserId: number,
+  serviceId: number,
+  /** YYYY-MM-DD */
+  date: string,
+  token?: string | null,
+): Promise<BarberSmartSlotHintsPayload> {
+  const url = new URL(
+    `${getApiBaseUrl()}/api/v1/barbers/${barberUserId}/smart-slot-hints`,
+  );
+  url.searchParams.set("service_id", String(serviceId));
+  url.searchParams.set("date", date);
+  const headers: HeadersInit = { Accept: "application/json" };
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+  const res = await fetch(url.toString(), {
+    headers,
+    cache: "no-store",
+  });
+  if (!res.ok) {
+    const payload = await res.json().catch(() => ({}));
+    throw new ApiError("Failed to load slot hints", res.status, payload);
+  }
+
+  return res.json() as Promise<BarberSmartSlotHintsPayload>;
 }
 
 export async function createWalkInAppointment(
@@ -158,6 +190,25 @@ export async function fetchAppointment(
   return res.json() as Promise<AppointmentRecord>;
 }
 
+export async function fetchAppointmentQueueIntelligence(
+  token: string,
+  appointmentId: number,
+): Promise<AppointmentQueueIntelligenceResponse> {
+  const res = await fetch(
+    `${getApiBaseUrl()}/api/v1/appointments/${appointmentId}/queue-intelligence`,
+    {
+      headers: authJsonHeaders(token),
+      cache: "no-store",
+    },
+  );
+  if (!res.ok) {
+    const payload = await res.json().catch(() => ({}));
+    throw new ApiError("Failed to load queue insight", res.status, payload);
+  }
+
+  return res.json() as Promise<AppointmentQueueIntelligenceResponse>;
+}
+
 export async function cancelAppointment(
   token: string,
   appointmentId: number,
@@ -206,6 +257,75 @@ export async function rescheduleAppointment(
   }
 
   return payload as AppointmentRecord;
+}
+
+export async function updateAppointmentArrival(
+  token: string,
+  appointmentId: number,
+  body: UpdateAppointmentArrivalInput,
+): Promise<AppointmentRecord> {
+  const res = await fetch(
+    `${getApiBaseUrl()}/api/v1/appointments/${appointmentId}/arrival`,
+    {
+      method: "PATCH",
+      headers: authJsonHeaders(token),
+      body: JSON.stringify(body),
+    },
+  );
+  const payload = (await res.json().catch(() => ({}))) as
+    | AppointmentRecord
+    | LaravelValidationPayload;
+  if (!res.ok) {
+    if (res.status === 422) {
+      throw new ApiValidationError(
+        res.status,
+        payload as LaravelValidationPayload,
+      );
+    }
+    throw new ApiError("Failed to update arrival", res.status, payload);
+  }
+
+  return payload as AppointmentRecord;
+}
+
+export type PostAppointmentArrivalProximityInput = {
+  lat: number;
+  lng: number;
+};
+
+export async function postAppointmentArrivalProximity(
+  token: string,
+  appointmentId: number,
+  body: PostAppointmentArrivalProximityInput,
+): Promise<AppointmentArrivalProximityResponse> {
+  const res = await fetch(
+    `${getApiBaseUrl()}/api/v1/appointments/${appointmentId}/arrival-proximity`,
+    {
+      method: "POST",
+      headers: authJsonHeaders(token),
+      body: JSON.stringify(body),
+    },
+  );
+  const payload = (await res.json().catch(() => ({}))) as
+    | AppointmentArrivalProximityResponse
+    | LaravelValidationPayload;
+
+  if (!res.ok) {
+    if (res.status === 422) {
+      throw new ApiValidationError(
+        res.status,
+        payload as LaravelValidationPayload,
+      );
+    }
+    const body = payload as LaravelValidationPayload;
+    const message =
+      typeof body.message === "string"
+        ? body.message
+        : "Arrival proximity request failed";
+    throw new ApiError(message, res.status, payload);
+  }
+
+  return payload as AppointmentArrivalProximityResponse;
 }
 
 export async function fetchAppointmentCalendarLink(

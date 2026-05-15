@@ -1,7 +1,6 @@
 "use client";
 
 import { AccountSubnav } from "@/components/account-subnav";
-import { SiteHeader } from "@/components/site-header";
 import { getStoredAuthToken } from "@/lib/auth-token";
 import { useSessionProfile } from "@/lib/use-session-profile";
 import {
@@ -239,12 +238,7 @@ export default function HairProfilePage() {
   const photoCount = profile?.photos.length ?? 0;
 
   return (
-    <div className="flex min-h-dvh flex-1 flex-col">
-      <SiteHeader profile={session} onSignOut={signOut} />
-      <main
-        id="main-content"
-        className="page-main"
-      >
+    <main id="main-content" className="page-main app-shell-scroll flex-1">
         <div className="mx-auto w-full max-w-3xl page-stack">
           <div className="flex flex-col gap-6">
             <ScreenTitle
@@ -520,7 +514,7 @@ export default function HairProfilePage() {
                     ) : null}
 
                     <div className="flex flex-wrap gap-2">
-                      <Button type="submit" disabled={busy}>
+                      <Button type="submit" pending={busy}>
                         {busy ? "Saving…" : "Save hair profile"}
                       </Button>
                       <Button
@@ -642,7 +636,6 @@ export default function HairProfilePage() {
             </Link>
           </p>
         </div>
-      </main>
-    </div>
+    </main>
   );
 }

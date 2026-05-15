@@ -1,0 +1,38 @@
+/**
+ * Live shop status (Sprint 21.2)
+ * Calm operational visibility — queue, chair, wait estimates.
+ */
+
+@layer components {
+  .operational-live-panel {
+    @apply rounded-2xl border border-border/45 bg-gradient-to-b from-muted/20 via-background to-muted/10 shadow-xs dark:border-border/40 dark:from-muted/12 dark:via-background dark:to-muted/8;
+  }
+
+  .operational-chair-indicator {
+    @apply inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-caption font-medium;
+  }
+
+  .operational-chair-indicator--active {
+    @apply border-emerald-500/35 bg-emerald-500/10 text-emerald-950 dark:text-emerald-100;
+  }
+
+  .operational-chair-indicator--open {
+    @apply border-border/55 bg-muted/25 text-muted-foreground;
+  }
+
+  .operational-chair-pulse {
+    @apply size-2 shrink-0 rounded-full bg-emerald-500 motion-safe:animate-pulse dark:bg-emerald-400;
+  }
+
+  .operational-queue-strip {
+    @apply grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3;
+  }
+
+  .operational-queue-metric {
+    @apply rounded-xl border border-border/45 bg-background/70 px-3 py-2.5 dark:bg-background/45;
+  }
+
+  .operational-running-late-notice {
+    @apply rounded-xl border border-amber-500/25 bg-amber-500/[0.06] px-4 py-3 text-sm leading-relaxed text-amber-950/90 dark:border-amber-500/20 dark:bg-amber-500/[0.08] dark:text-amber-100/90;
+  }
+}

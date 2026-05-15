@@ -48,10 +48,20 @@ export function getPrimaryNavSections(profile: ProfileState): PrimaryNavSection[
     return sections;
   }
 
-  sections.push({
-    id: "appointments",
-    links: [{ href: "/appointments", label: "My appointments" }],
-  });
+  if (profile.user.role.slug === "customer") {
+    sections.push({
+      id: "studio",
+      links: [
+        { href: "/home", label: "Home" },
+        { href: "/appointments", label: "Appointments" },
+      ],
+    });
+  } else {
+    sections.push({
+      id: "appointments",
+      links: [{ href: "/appointments", label: "My appointments" }],
+    });
+  }
 
   return sections;
 }
@@ -81,7 +91,7 @@ export function getAccountMenuGroups(
     groups.push({
       id: "dashboard",
       links: [
-        { href: "/dashboard", label: "Dashboard", icon: "layout-dashboard" },
+        { href: "/home", label: "Home", icon: "layout-dashboard" },
       ],
     });
     groups.push({

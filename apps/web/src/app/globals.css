@@ -1,3 +1,16 @@
+@import "../styles/ozilcuts-brand-tokens.css";
+@import "../styles/content-photography.css";
+@import "../styles/home-video.css";
+@import "../styles/social-content.css";
+@import "../styles/check-in.css";
+@import "../styles/operational-live.css";
+@import "../styles/recognition.css";
+@import "../styles/notifications.css";
+@import "../styles/geofence-arrival.css";
+@import "../styles/queue-intelligence.css";
+@import "../styles/readiness.css";
+@import "../styles/presence.css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -57,6 +70,7 @@
     --motion-duration-slow: 260ms;
     --motion-ease-standard: cubic-bezier(0.2, 0, 0, 1);
     --motion-ease-emphasized: cubic-bezier(0.2, 0, 0, 1.2);
+    --motion-spring-out: cubic-bezier(0.22, 1, 0.36, 1);
     /**
      * Space reserved under main scroll when the native bottom tab bar is shown
      * (barber + admin layouts &lg). Matches AppBottomNav float height + safe area.
@@ -146,13 +160,19 @@
 
   body {
     @apply bg-background text-foreground antialiased;
+    text-rendering: geometricPrecision;
     caret-color: var(--primary);
     min-height: 100%;
     min-height: 100dvh;
     padding-left: env(safe-area-inset-left, 0px);
     padding-right: env(safe-area-inset-right, 0px);
+    overscroll-behavior-y: none;
+    overflow-x: clip;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  body:not(:has(.app-shell-viewport)) {
     padding-bottom: env(safe-area-inset-bottom, 0px);
-    overscroll-behavior-y: contain;
   }
 
   ::selection {
@@ -162,6 +182,15 @@
 }
 
 @layer components {
+  /**
+   * Native shell viewport — full dynamic height, no rubber-band chrome bleed.
+   */
+  .app-shell-viewport {
+    min-height: 100dvh;
+    min-height: -webkit-fill-available;
+    touch-action: manipulation;
+  }
+
   /**
    * Native shell: reserve space for floating bottom tab bar (AppBottomNav).
    * Default page gutters still track SiteHeader (px-4 → sm:6 → md:8) via .page-main.
@@ -174,6 +203,28 @@
     .app-shell-with-bottom-nav {
       padding-bottom: 0;
     }
+  }
+
+  /** Scrollable main column inside the shell — gesture-friendly overscroll. */
+  .app-shell-scroll {
+    min-height: 0;
+    flex: 1 1 auto;
+    overflow-y: auto;
+    overflow-x: clip;
+    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /** Compact shell header height token for scroll offsets. */
+  .app-shell-header {
+    --app-shell-header-pad: max(
+      3.25rem,
+      calc(2.75rem + env(safe-area-inset-top, 0px))
+    );
+  }
+
+  #main-content.app-shell-scroll {
+    scroll-margin-top: var(--app-shell-header-pad, 4.75rem);
   }
 
   /**
@@ -226,11 +277,137 @@
     border: 1px solid var(--border);
   }
 
-  #main-content {
+  .customer-home-hero {
+    background: linear-gradient(
+      165deg,
+      color-mix(in oklab, var(--primary) 10%, var(--card)) 0%,
+      var(--card) 42%
+    );
+  }
+
+  .dark .customer-home-hero {
+    background: linear-gradient(
+      165deg,
+      color-mix(in oklab, var(--primary) 14%, var(--card)) 0%,
+      var(--card) 48%
+    );
+  }
+
+  .barber-operational-now {
+    background: linear-gradient(
+      160deg,
+      color-mix(in oklab, var(--primary) 8%, var(--card)) 0%,
+      var(--card) 50%
+    );
+  }
+
+  .dark .barber-operational-now {
+    background: linear-gradient(
+      160deg,
+      color-mix(in oklab, var(--primary) 12%, var(--card)) 0%,
+      var(--card) 55%
+    );
+  }
+
+  #main-content:not(.app-shell-scroll) {
     scroll-margin-top: max(
       4.75rem,
       calc(3.25rem + env(safe-area-inset-top, 0px))
     );
+  }
+
+  .app-root {
+    touch-action: manipulation;
+  }
+
+  .app-shell-bottom-nav {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  /* —— Brand identity utilities (Sprint 20.1) —— */
+
+  .brand-eyebrow {
+    font-size: var(--text-caption);
+    font-weight: var(--font-weight-ui);
+    letter-spacing: var(--tracking-caps);
+    line-height: var(--leading-snug);
+    text-transform: uppercase;
+    color: var(--muted-foreground);
+  }
+
+  .brand-section-label {
+    font-size: var(--text-micro);
+    font-weight: var(--font-weight-ui);
+    letter-spacing: var(--tracking-caps-tight);
+    line-height: var(--leading-snug);
+    text-transform: uppercase;
+    color: var(--muted-foreground);
+  }
+
+  .brand-pressable {
+    transition:
+      transform var(--motion-duration-fast) var(--motion-spring-press),
+      box-shadow var(--motion-duration-base) var(--motion-ease-standard),
+      border-color var(--motion-duration-base) var(--motion-ease-standard),
+      background-color var(--motion-duration-base) var(--motion-ease-standard);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .brand-pressable:active {
+      transform: scale(var(--motion-scale-press));
+    }
+
+    .brand-pressable:hover {
+      box-shadow: var(--elevation-2);
+    }
+  }
+
+  .brand-gradient-hero {
+    background: linear-gradient(
+      165deg,
+      color-mix(in oklch, var(--primary) 10%, var(--card)) 0%,
+      var(--card) 45%
+    );
+  }
+
+  .dark .brand-gradient-hero {
+    background: linear-gradient(
+      165deg,
+      color-mix(in oklch, var(--primary) 14%, var(--card)) 0%,
+      color-mix(in oklch, var(--brand-accent) 6%, var(--card)) 55%
+    );
+  }
+
+  .brand-accent-chip {
+    border: 1px solid color-mix(in oklch, var(--brand-accent) 40%, transparent);
+    background: var(--brand-accent-muted);
+    color: var(--foreground);
+  }
+
+  .brand-icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: var(--space-touch);
+    min-width: var(--space-touch);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--foreground);
+    transition:
+      background-color var(--motion-duration-fast) var(--motion-ease-standard),
+      border-color var(--motion-duration-fast) var(--motion-ease-standard),
+      transform var(--motion-duration-fast) var(--motion-spring-press);
+  }
+
+  .brand-icon-btn:hover {
+    background: var(--muted);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .brand-icon-btn:active {
+      transform: scale(var(--motion-scale-press));
+    }
   }
 }
 
@@ -260,7 +437,7 @@
   @keyframes ozilcuts-toast {
     from {
       opacity: 0;
-      transform: translate3d(0, 6px, 0) scale(0.99);
+      transform: translate3d(12px, 12px, 0) scale(0.97);
     }
     to {
       opacity: 1;
@@ -268,9 +445,38 @@
     }
   }
 
+  @keyframes ozilcuts-notification-row {
+    from {
+      opacity: 0;
+      transform: translate3d(0, 8px, 0);
+    }
+    to {
+      opacity: 1;
+      transform: translate3d(0, 0, 0);
+    }
+  }
+
   .motion-enter {
     animation: ozilcuts-fade-up var(--motion-duration-slow)
       var(--motion-ease-standard) both;
+  }
+
+  /** Loaded async content — pairs with skeleton → content crossfade. */
+  .motion-content-in {
+    animation: ozilcuts-fade-up var(--motion-duration-base)
+      var(--motion-ease-standard) both;
+  }
+
+  /** Subtle dim while optimistic or soft-refresh updates are in flight. */
+  .optimistic-pending {
+    opacity: 0.72;
+    transition: opacity var(--motion-duration-base) var(--motion-ease-standard);
+  }
+
+  /** Row/card flagged as optimistically updated. */
+  .optimistic-row-pending {
+    opacity: 0.65;
+    transition: opacity var(--motion-duration-fast) var(--motion-ease-standard);
   }
 
   .motion-popover {
@@ -282,6 +488,11 @@
   .motion-toast {
     animation: ozilcuts-toast var(--motion-duration-slow)
       var(--motion-ease-emphasized) both;
+  }
+
+  .motion-notification-row {
+    animation: ozilcuts-notification-row var(--motion-duration-slow)
+      var(--motion-ease-standard) both;
   }
 
   .motion-card {
@@ -297,6 +508,10 @@
       transform, opacity;
     transition-duration: var(--motion-duration-fast);
     transition-timing-function: var(--motion-ease-standard);
+  }
+
+  .ease-brand-spring {
+    transition-timing-function: var(--motion-spring-out);
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -316,9 +531,16 @@
     }
 
     .motion-enter,
+    .motion-content-in,
     .motion-popover,
-    .motion-toast {
+    .motion-toast,
+    .motion-notification-row {
       animation: none !important;
+    }
+
+    .optimistic-pending,
+    .optimistic-row-pending {
+      opacity: 1 !important;
     }
 
     .app-shell-route {

@@ -1,5 +1,6 @@
 "use client";
 
+import { SocialLinksStrip } from "@/components/social";
 import { publicShopHoursLines, publicStudioLocationCopy } from "@/lib/public-site-copy";
 import { Button } from "@ozilcuts/ui";
 import { Clock, MapPin } from "lucide-react";
@@ -28,6 +29,7 @@ export function ContactLocationSection() {
               Everything you need lands in your inbox after you book—no guessing
               at the curb.
             </p>
+            <SocialLinksStrip className="mt-6" variant="compact" />
           </header>
 
           <div className="flex gap-4 rounded-2xl border border-border/50 bg-card/70 p-5 shadow-xs dark:bg-card/45">

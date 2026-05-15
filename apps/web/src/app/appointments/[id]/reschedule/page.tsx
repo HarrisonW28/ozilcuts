@@ -1,6 +1,7 @@
 "use client";
 
 import { SiteHeader } from "@/components/site-header";
+import { useShellPageChrome } from "@/lib/use-shell-page-chrome";
 import { getStoredAuthToken } from "@/lib/auth-token";
 import { reportFilterControlClass } from "@/lib/report-filter-classes";
 import { useSessionProfile } from "@/lib/use-session-profile";
@@ -202,13 +203,14 @@ export default function ReschedulePage() {
 
   const isReady = profile.kind === "ready";
 
+  const { useCompactShellHeader } = useShellPageChrome();
+
   return (
-    <div className="flex min-h-dvh flex-1 flex-col">
-      <SiteHeader profile={profile} onSignOut={signOut} />
-      <main
-        id="main-content"
-        className="page-main"
-      >
+    <>
+      {!useCompactShellHeader ? (
+        <SiteHeader profile={profile} onSignOut={signOut} />
+      ) : null}
+      <main id="main-content" className="page-main app-shell-scroll flex-1">
         <div className="mx-auto w-full max-w-2xl page-stack">
           <ScreenTitle
             eyebrow={OZILCUTS_APP_NAME}
@@ -373,6 +375,6 @@ export default function ReschedulePage() {
           </p>
         </div>
       </main>
-    </div>
+    </>
   );
 }

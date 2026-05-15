@@ -385,4 +385,110 @@ final class CustomerAnalyticsService
 
         return $buckets;
     }
+
+    /**
+     * @return list<array{service_id: int, service_name: string, count: int}>
+     */
+    public function favoriteServicesForCustomer(User $customer, int $limit = self::TOP_LIMIT): array
+    {
+        $rows = Appointment::query()
+            ->where('customer_user_id', $customer->id)
+            ->where('status', Appointment::STATUS_CONFIRMED)
+            ->join('services', 'services.id', '=', 'appointments.service_id')
+            ->groupBy('appointments.service_id', 'services.name')
+            ->selectRaw('appointments.service_id as service_id, services.name as service_name, COUNT(*) as cnt')
+            ->orderByDesc('cnt')
+            ->orderBy('services.name')
+            ->limit($limit)
+            ->get();
+
+        $out = [];
+        foreach ($rows as $row) {
+            $out[] = [
+                'service_id' => (int) $row->service_id,
+                'service_name' => (string) $row->service_name,
+                'count' => (int) $row->cnt,
+            ];
+        }
+
+        return $out;
+    }
+
+    public function visitsWithBarberCount(int $customerUserId, int $barberUserId): int
+    {
+        return (int) Appointment::query()
+            ->where('customer_user_id', $customerUserId)
+            ->where('barber_user_id', $barberUserId)
+            ->where('status', Appointment::STATUS_CONFIRMED)
+            ->count();
+    }
+
+    /**
+     * @param  array<string, mixed>  $summary
+     */
+    public function recognitionTierFor(array $summary): string
+    {
+        $total = (int) ($summary['total_visits'] ?? 0);
+        $spent = (int) ($summary['total_spent_cents'] ?? 0);
+
+        if ($total <= 1) {
+            return 'first_visit';
+        }
+        if ($total >= 15 || $spent >= 800_00) {
+            return 'vip';
+        }
+        if ($total >= 6) {
+            return 'regular';
+        }
+
+        return 'returning';
+    }
+
+    /**
+     * Structured haircut preferences for staff recognition (no photos).
+     *
+     * @return array<string, string|null>|null
+     */
+    public function hairPreferencesSnapshotFor(User $customer): ?array
+    {
+        $profile = $customer->hairProfile;
+        if ($profile === null) {
+            return null;
+        }
+
+        $snapshot = [
+            'hair_type' => $profile->hair_type,
+            'hair_thickness' => $profile->hair_thickness,
+            'hair_length' => $profile->hair_length,
+            'scalp_condition' => $profile->scalp_condition,
+            'preferred_clipper_guard' => $profile->preferred_clipper_guard,
+            'allergies' => $profile->allergies,
+            'styling_notes' => $profile->styling_notes,
+        ];
+
+        foreach ($snapshot as $value) {
+            if (is_string($value) && trim($value) !== '') {
+                return $snapshot;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Recent bookings for staff context (newest first), optionally excluding one row.
+     *
+     * @return \Illuminate\Database\Eloquent\Collection<int, Appointment>
+     */
+    public function historyPreviewForCustomer(User $customer, ?int $excludeAppointmentId, int $limit = 5)
+    {
+        $q = Appointment::query()
+            ->with(['service', 'barber'])
+            ->where('customer_user_id', $customer->id);
+        if ($excludeAppointmentId !== null) {
+            $q->where('id', '!=', $excludeAppointmentId);
+        }
+
+        return $q->orderByDesc('starts_at')->limit($limit)->get();
+    }
 }

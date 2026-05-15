@@ -26,6 +26,12 @@ class BarberManageResource extends JsonResource
                 'id' => $this->user->id,
                 'name' => $this->user->name,
                 'email' => $this->user->email,
+                'shop_latitude' => $this->user->shop_latitude !== null
+                    ? (float) $this->user->shop_latitude
+                    : null,
+                'shop_longitude' => $this->user->shop_longitude !== null
+                    ? (float) $this->user->shop_longitude
+                    : null,
             ],
             'updated_at' => $this->updated_at?->toIso8601String(),
         ];

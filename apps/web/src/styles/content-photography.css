@@ -1,0 +1,51 @@
+/**
+ * Content & photography direction (Sprint 20.2)
+ * Premium gallery, before/after, and storytelling surfaces.
+ */
+
+@layer components {
+  .content-gallery-masonry {
+    @apply grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-6 md:gap-7;
+  }
+
+  .content-gallery-masonry > li {
+    @apply min-w-0;
+  }
+
+  .content-photo-badge {
+    @apply pointer-events-none absolute left-2 top-2 z-10 rounded-full border px-2 py-0.5 text-micro font-semibold uppercase tracking-widecaps backdrop-blur-sm;
+  }
+
+  .content-before-after-frame {
+    @apply overflow-hidden rounded-2xl ring-1 ring-border/50 dark:ring-border/40;
+  }
+
+  .content-preview-strip {
+    @apply -mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-1 [scrollbar-width:thin] sm:mx-0 sm:gap-4 sm:px-0;
+  }
+
+  .content-preview-strip > * {
+    @apply snap-start shrink-0 w-[min(11.5rem,42vw)] sm:w-48;
+  }
+
+  .content-lightbox-dialog {
+    @apply fixed left-1/2 top-1/2 z-[100] w-[min(100vw-1rem,52rem)] max-w-[calc(100vw-1rem)] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-2xl border border-border bg-card p-0 shadow-elev-4 open:flex open:max-h-[min(94dvh,56rem)] open:flex-col;
+  }
+
+  .content-lightbox-dialog::backdrop {
+    background: color-mix(in oklch, var(--background) 75%, transparent);
+    backdrop-filter: blur(2px);
+  }
+
+  .dark .content-lightbox-dialog::backdrop {
+    background: color-mix(in oklch, var(--background) 88%, transparent);
+  }
+
+  .content-trust-gradient {
+    background: linear-gradient(
+      180deg,
+      color-mix(in oklch, var(--card) 0%, transparent) 0%,
+      var(--card) 100%
+    );
+  }
+}

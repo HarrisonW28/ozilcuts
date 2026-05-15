@@ -1,0 +1,15 @@
+---
+description: Atomic Git commits after sprint work
+alwaysApply: true
+---
+
+# Sprint wrap-up: atomic commits
+
+When the user asks to commit work that completed a **roadmap sprint** (or similar scoped delivery), prefer **atomic commits** over one monolithic commit:
+
+- **Split by concern** when it stays reviewable: e.g. backend vs `packages/types` / `packages/api` vs web UI, or one commit per major feature slice within the sprint.
+- **Each commit** should tell one story (pass tests for that slice where practical).
+- Still follow the user’s **Git Safety Protocol** (no hook skips, no destructive git, amend rules, HEREDOC messages, etc.).
+- If scope is genuinely inseparable, a single commit is fine—default bias is **small, logical steps**.
+
+If sprint work is done but they have not asked to commit yet, you may **briefly remind** them that atomic post-sprint commits are preferred when they’re ready to record the work.

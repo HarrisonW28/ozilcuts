@@ -1,0 +1,46 @@
+/**
+ * Social & content integration (Sprint 20.4)
+ * Lightweight link-out tiles — no third-party embeds.
+ */
+
+@layer components {
+  .social-links-strip {
+    @apply flex flex-wrap items-center gap-2 sm:gap-3;
+  }
+
+  .social-link-pill {
+    @apply inline-flex min-h-11 items-center gap-2 rounded-full border border-border/55 bg-card/80 px-4 py-2 text-sm font-medium text-foreground shadow-xs backdrop-blur-sm transition-[border-color,background-color,box-shadow] motion-safe:duration-200 motion-safe:ease-brand hover:border-primary/35 hover:bg-card hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background dark:border-border/45 dark:bg-card/50;
+  }
+
+  .social-instagram-grid {
+    @apply -mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-1 [scrollbar-width:thin] sm:mx-0 sm:grid sm:snap-none sm:grid-cols-2 sm:gap-4 sm:overflow-visible sm:px-0 md:grid-cols-4 md:gap-5;
+  }
+
+  .social-instagram-grid > * {
+    @apply snap-start shrink-0 w-[min(11.5rem,44vw)] sm:w-auto sm:shrink;
+  }
+
+  .social-highlight-tile {
+    @apply group relative flex aspect-[4/5] flex-col justify-end overflow-hidden rounded-2xl ring-1 ring-border/50 transition-[transform,box-shadow] motion-safe:duration-300 motion-safe:hover:scale-[1.02] motion-safe:active:scale-[0.99] hover:ring-primary/35 dark:ring-border/40;
+  }
+
+  .social-highlight-gradient {
+    @apply absolute inset-0 bg-gradient-to-br from-muted/70 via-muted/25 to-primary/[0.12] dark:from-muted/45 dark:via-muted/20 dark:to-primary/[0.14];
+  }
+
+  .social-gallery-sync {
+    @apply rounded-2xl border border-border/50 bg-gradient-to-br from-card via-card to-primary/[0.04] p-5 shadow-xs dark:border-border/40 dark:from-card/90 dark:to-primary/[0.07] sm:p-6;
+  }
+
+  .social-proof-band {
+    @apply rounded-2xl border border-border/45 bg-muted/[0.12] px-5 py-6 dark:bg-muted/[0.08] sm:px-8 sm:py-8;
+  }
+
+  .social-share-card {
+    @apply overflow-hidden rounded-2xl border border-border/55 bg-card shadow-sm ring-1 ring-border/25 dark:border-border/45 dark:bg-card/90 dark:ring-border/30;
+  }
+
+  .social-share-card-preview {
+    @apply relative aspect-[5/4] w-full overflow-hidden bg-gradient-to-br from-muted/50 via-muted/20 to-primary/[0.1] dark:from-muted/35 dark:to-primary/[0.12];
+  }
+}

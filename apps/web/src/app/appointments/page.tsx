@@ -1,8 +1,18 @@
 "use client";
 
 import { SiteHeader } from "@/components/site-header";
-import { AppointmentListSkeleton } from "@/components/load-empty";
+import {
+  buildBookFromAppointmentRow,
+  buildBookFromRebookHint,
+} from "@/lib/booking-url";
+import { useShellPageChrome } from "@/lib/use-shell-page-chrome";
+import {
+  AppointmentListSkeleton,
+  PageSessionSkeleton,
+} from "@/components/loading";
+import { useOptimisticAction } from "@/lib/use-optimistic-action";
 import { SwipeRevealActions } from "@/components/swipe-reveal-actions";
+import { arrivalStateLabel } from "@/lib/appointment-arrival";
 import { getStoredAuthToken } from "@/lib/auth-token";
 import { formatGbp } from "@/lib/format-gbp";
 import { useMediaQuery } from "@/lib/use-media-query";
@@ -83,24 +93,6 @@ function formatIsoDate(date: string): string {
     month: "short",
     day: "numeric",
   });
-}
-
-function buildBookAgainFromRowHref(row: AppointmentRecord): string | null {
-  if (!row.service || !row.barber) return null;
-  const params = new URLSearchParams({
-    service: String(row.service.id),
-    barber: String(row.barber.id),
-  });
-  return `/book?${params.toString()}`;
-}
-
-function buildBookAgainFromHintHref(hint: RebookSuggestion): string {
-  const params = new URLSearchParams({
-    service: String(hint.service_id),
-    barber: String(hint.barber_user_id),
-    date: hint.suggested_date,
-  });
-  return `/book?${params.toString()}`;
 }
 
 function isPast(iso: string | null): boolean {
@@ -188,6 +180,8 @@ export default function AppointmentsPage() {
   const { profile, signOut } = useSessionProfile();
   const isMaxMd = useMediaQuery("(max-width: 767px)");
   const [state, setState] = useState<ListState>({ kind: "idle" });
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const optimistic = useOptimisticAction();
   const [page, setPage] = useState(1);
   const [range, setRange] = useState<AppointmentRangeFilter>("upcoming");
   const [status, setStatus] = useState<AppointmentStatusFilter>("confirmed");
@@ -214,7 +208,11 @@ export default function AppointmentsPage() {
 
         return;
       }
-      setState({ kind: "loading" });
+      setState((prev) => {
+        if (prev.kind === "ok") return prev;
+        return { kind: "loading" };
+      });
+      setIsRefreshing(true);
       try {
         const data = await fetchMyAppointments(token, {
           page: p,
@@ -229,7 +227,9 @@ export default function AppointmentsPage() {
             : e instanceof Error
               ? e.message
               : "Failed to load appointments.";
-        setState({ kind: "error", message });
+        setState((prev) => (prev.kind === "ok" ? prev : { kind: "error", message }));
+      } finally {
+        setIsRefreshing(false);
       }
     },
     [],
@@ -282,19 +282,40 @@ export default function AppointmentsPage() {
     if (!ok) return;
     const token = getStoredAuthToken();
     if (!token) return;
-    setActionBusyId(row.id);
     setActionError(null);
-    try {
-      await cancelAppointment(token, row.id);
-      await load(page, range, status);
-    } catch (err) {
+
+    const snapshot = state;
+    const succeeded = await optimistic.execute({
+      busyId: row.id,
+      apply: () => {
+        setActionBusyId(row.id);
+        setState((prev) => {
+          if (prev.kind !== "ok") return prev;
+          return {
+            kind: "ok",
+            page: {
+              ...prev.page,
+              data: prev.page.data.map((r) =>
+                r.id === row.id ? { ...r, status: "cancelled" as const } : r,
+              ),
+            },
+          };
+        });
+      },
+      revert: () => {
+        setState(snapshot);
+      },
+      action: async () => {
+        await cancelAppointment(token, row.id);
+        await load(page, range, status);
+      },
+    });
+
+    setActionBusyId(null);
+    if (!succeeded) {
       setActionError(
-        err instanceof ApiError
-          ? err.message
-          : "Could not cancel. Please try again.",
+        "Could not cancel. Please try again.",
       );
-    } finally {
-      setActionBusyId(null);
     }
   }
 
@@ -342,13 +363,14 @@ export default function AppointmentsPage() {
     }
   }
 
+  const { useCompactShellHeader } = useShellPageChrome();
+
   return (
-    <div className="flex min-h-dvh flex-1 flex-col">
-      <SiteHeader profile={profile} onSignOut={signOut} />
-      <main
-        id="main-content"
-        className="page-main"
-      >
+    <>
+      {!useCompactShellHeader ? (
+        <SiteHeader profile={profile} onSignOut={signOut} />
+      ) : null}
+      <main id="main-content" className="page-main app-shell-scroll flex-1">
         <div className="mx-auto w-full max-w-3xl page-stack">
           <ScreenTitle
             eyebrow={OZILCUTS_APP_NAME}
@@ -357,9 +379,10 @@ export default function AppointmentsPage() {
           />
 
           {profile.kind === "loading" || profile.kind === "none" ? (
-            <p className="text-sm text-muted-foreground" role="status">
-              Loading…
-            </p>
+            <PageSessionSkeleton
+              className="max-w-3xl"
+              statusLabel="Loading appointments"
+            />
           ) : null}
 
           {profile.kind === "none" ? (
@@ -402,7 +425,7 @@ export default function AppointmentsPage() {
                   size="sm"
                   className="min-h-11 touch-manipulation sm:min-h-9"
                 >
-                  <Link href={buildBookAgainFromHintHref(nextVisit)}>
+                  <Link href={buildBookFromRebookHint(nextVisit)}>
                     Book it
                   </Link>
                 </Button>
@@ -516,7 +539,13 @@ export default function AppointmentsPage() {
                 />
               ) : null}
               {state.kind === "ok" && state.page.data.length > 0 ? (
-                <ul className="flex flex-col gap-4">
+                <ul
+                  className={cn(
+                    "motion-content-in flex flex-col gap-4",
+                    isRefreshing && "optimistic-pending",
+                  )}
+                  aria-busy={isRefreshing || undefined}
+                >
                   {state.page.data.map((row) => {
                     const past = isPast(row.starts_at);
                     const canMutate =
@@ -547,7 +576,7 @@ export default function AppointmentsPage() {
                       isCustomer &&
                       row.status === "confirmed" &&
                       past
-                        ? buildBookAgainFromRowHref(row)
+                        ? buildBookFromAppointmentRow(row)
                         : null;
 
                     const swipeEnabled =
@@ -575,6 +604,14 @@ export default function AppointmentsPage() {
                               </div>
                               <div className="flex flex-wrap items-center gap-2">
                                 <StatusBadge status={row.status} />
+                                {row.status === "confirmed" ? (
+                                  <span
+                                    className="inline-flex items-center rounded-full border border-border/55 bg-muted/25 px-2 py-0.5 text-xs font-medium text-muted-foreground dark:border-border/45 dark:bg-muted/20"
+                                    title="Visit progress"
+                                  >
+                                    {arrivalStateLabel(row.arrival_state)}
+                                  </span>
+                                ) : null}
                                 <PaymentBadge
                                   status={row.payment_status}
                                   depositCents={row.deposit_cents}
@@ -621,6 +658,20 @@ export default function AppointmentsPage() {
                                 View
                               </Link>
                             </Button>
+                            {row.status === "confirmed" && !past ? (
+                              <Button
+                                asChild
+                                size="sm"
+                                variant="secondary"
+                                className="min-h-11 touch-manipulation sm:min-h-9"
+                              >
+                                <Link
+                                  href={`/appointments/${row.id}/check-in`}
+                                >
+                                  Check-in
+                                </Link>
+                              </Button>
+                            ) : null}
                             {canMutate ? (
                               <>
                                 <Button
@@ -743,6 +794,20 @@ export default function AppointmentsPage() {
                                   View
                                 </Link>
                               </Button>
+                              {row.status === "confirmed" && !past ? (
+                                <Button
+                                  asChild
+                                  variant="secondary"
+                                  size="sm"
+                                  className="min-h-12 flex-1 rounded-none border-0 border-b border-border/50 px-1 text-xs font-medium leading-tight"
+                                >
+                                  <Link
+                                    href={`/appointments/${row.id}/check-in`}
+                                  >
+                                    Check-in
+                                  </Link>
+                                </Button>
+                              ) : null}
                               {canMutate ? (
                                 <Button
                                   asChild
@@ -846,6 +911,6 @@ export default function AppointmentsPage() {
           </p>
         </div>
       </main>
-    </div>
+    </>
   );
 }

@@ -68,6 +68,8 @@ export type BarberManageRow = {
     id: number;
     name: string;
     email: string;
+    shop_latitude: number | null;
+    shop_longitude: number | null;
   };
   updated_at: string | null;
 };
@@ -146,6 +148,9 @@ export type UpdateBarberProfileInput = {
   bio?: string | null;
   years_experience?: number | null;
   is_published?: boolean;
+  /** Admin-only: shop coordinates for geofenced arrival (WGS84). */
+  shop_latitude?: number | null;
+  shop_longitude?: number | null;
 };
 
 export type CustomerProfile = {
@@ -156,6 +161,11 @@ export type CustomerProfile = {
   marketing_opt_in: boolean;
   /** When true, automated retention nudges are suppressed (rebook + inactivity). */
   retention_paused: boolean;
+  /**
+   * When true, the app may send coarse location pings during the check-in window
+   * so you and your barber get a gentle nearby alert (no continuous tracking).
+   */
+  arrival_location_opt_in: boolean;
   updated_at: string | null;
   user?: {
     id: number;
@@ -174,6 +184,7 @@ export type UpdateCustomerProfileInput = {
   preferences?: string | null;
   marketing_opt_in?: boolean;
   retention_paused?: boolean;
+  arrival_location_opt_in?: boolean;
 };
 
 export const HAIR_TYPE_OPTIONS = [
@@ -391,7 +402,51 @@ export type BarberSlotsPayload = {
   slots: string[];
 };
 
+export type BarberSmartSlotPreferredWindow = {
+  hour_start: number;
+  hour_end: number;
+  weight: number;
+  label: string;
+};
+
+export type BarberSmartSlotAffinity = {
+  score: number;
+  label: string;
+  visits_pair: number;
+  visits_with_barber: number;
+};
+
+export type BarberSmartSlotRepeatBooking = {
+  predicted_next_date: string;
+  sample_size: number;
+};
+
+export type BarberSmartSlotCancellationMatch = {
+  recent_cancellations_on_day: number;
+  hint: string | null;
+};
+
+/** Smart booking hints for `/book` (optional Bearer for personalization). */
+export type BarberSmartSlotHintsPayload = {
+  date: string;
+  service_id: number;
+  barber_user_id: number;
+  personalized: boolean;
+  preferred_time_windows: BarberSmartSlotPreferredWindow[];
+  affinity: BarberSmartSlotAffinity | null;
+  repeat_booking: BarberSmartSlotRepeatBooking | null;
+  cancellation_match: BarberSmartSlotCancellationMatch;
+};
+
 export type AppointmentStatus = "confirmed" | "cancelled";
+
+export const APPOINTMENT_ARRIVAL_STATES = [
+  "expected",
+  "arrived",
+  "waiting",
+  "in_chair",
+] as const;
+export type AppointmentArrivalState = (typeof APPOINTMENT_ARRIVAL_STATES)[number];
 
 export type AppointmentPaymentStatus =
   | "not_required"
@@ -404,6 +459,9 @@ export type AppointmentPaymentStatus =
 export type AppointmentRecord = {
   id: number;
   status: AppointmentStatus;
+  arrival_state: AppointmentArrivalState;
+  /** Set when a geofenced proximity ping notified staff (ISO 8601). */
+  arrival_nearby_barber_notified_at?: string | null;
   starts_at: string | null;
   ends_at: string | null;
   notes: string | null;
@@ -423,12 +481,101 @@ export type AppointmentRecord = {
   barber?: {
     id: number;
     name: string;
+    shop_latitude?: number | null;
+    shop_longitude?: number | null;
   };
   customer?: {
     id: number;
     name: string;
     email: string;
   };
+};
+
+export type AppointmentThreadSenderRole =
+  | "customer"
+  | "barber"
+  | "admin"
+  | "staff";
+
+export type AppointmentThreadMessageSender = {
+  id: number;
+  name: string;
+  role: AppointmentThreadSenderRole;
+};
+
+export type AppointmentThreadMessageKind = "note" | "operational" | "preset";
+
+export type AppointmentThreadMessage = {
+  id: number;
+  appointment_id: number;
+  kind: AppointmentThreadMessageKind;
+  operational_key: string | null;
+  /** Present when `kind` is `"preset"` (server echoes the chosen quick reply key). */
+  preset_key?: string | null;
+  body: string;
+  sender: AppointmentThreadMessageSender | null;
+  created_at: string | null;
+};
+
+export type AppointmentThreadClosedReason = "cancelled" | "ended";
+
+export type AppointmentThreadMeta = {
+  viewer_last_read_message_id: number | null;
+  unread_from_others: number;
+  can_send: boolean;
+  thread_closed_reason: AppointmentThreadClosedReason | null;
+  operational_keys: string[];
+  preset_keys: string[];
+  /** True when the booking is in the on-site arrival window (calm arrival chips are boosted). */
+  in_arrival_messaging_window: boolean;
+};
+
+export type AppointmentThreadPayload = {
+  messages: AppointmentThreadMessage[];
+  meta: AppointmentThreadMeta;
+};
+
+export type AppointmentAdjustmentSuggestion = {
+  starts_at: string;
+  label: string;
+  offset_minutes: number;
+};
+
+export type AppointmentAdjustmentSuggestionsPayload = {
+  current_starts_at: string | null;
+  suggestions: AppointmentAdjustmentSuggestion[];
+};
+
+export type AppointmentAdjustmentRequesterRole =
+  | "customer"
+  | "barber"
+  | "admin"
+  | "staff";
+
+export type AppointmentAdjustmentRequestStatus =
+  | "pending"
+  | "approved"
+  | "rejected"
+  | "withdrawn";
+
+export type AppointmentAdjustmentRequestRecord = {
+  id: number;
+  appointment_id: number;
+  status: AppointmentAdjustmentRequestStatus;
+  requested_starts_at: string | null;
+  current_starts_at: string | null;
+  requested_by: {
+    id: number;
+    name: string;
+    role: AppointmentAdjustmentRequesterRole;
+  } | null;
+  created_at: string | null;
+  can_respond: boolean;
+  can_withdraw: boolean;
+};
+
+export type AppointmentAdjustmentRequestPayload = {
+  request: AppointmentAdjustmentRequestRecord | null;
 };
 
 export type AppointmentPaymentMeta = {
@@ -498,6 +645,37 @@ export type RescheduleAppointmentInput = {
   starts_at: string;
 };
 
+export type UpdateAppointmentArrivalInput = {
+  arrival_state: AppointmentArrivalState;
+};
+
+/** Response from `POST /appointments/:id/arrival-proximity` (coarse ping, no position stored). */
+export type AppointmentArrivalProximityResponse = {
+  within_geofence: boolean;
+  distance_m: number | null;
+  approximate_eta_minutes: number | null;
+  customer_notified: boolean;
+  barber_notified: boolean;
+};
+
+/** `GET /appointments/:id/queue-intelligence` — calm same-day queue snapshot. */
+export type QueuePaceTone = "calm" | "behind";
+
+export type AppointmentQueueIntelligenceResponse = {
+  queue_date: string;
+  estimated_chair_minutes_ahead: number | null;
+  guests_ahead_in_arrival: number;
+  lounge_guests_other: number;
+  chair_in_use: boolean;
+  visits_behind_schedule: number;
+  headline: string;
+  /** True when this visit is first in the arrival queue for the chair. */
+  is_next_in_line: boolean;
+  pace_tone: QueuePaceTone;
+  /** ISO 8601 — when this snapshot was generated. */
+  updated_at: string;
+};
+
 export type AppointmentStatusFilter = "all" | "confirmed" | "cancelled";
 
 export type AppointmentRangeFilter = "all" | "upcoming" | "past";
@@ -563,6 +741,66 @@ export type CustomerVisitSummary = {
   visits_by_status: { confirmed: number; cancelled: number };
 };
 
+export type CustomerFavoriteServiceRow = {
+  service_id: number;
+  service_name: string;
+  count: number;
+};
+
+export type CustomerRecognitionTier =
+  | "first_visit"
+  | "returning"
+  | "regular"
+  | "vip";
+
+/** Hair profile fields for staff recognition (no photos). */
+export type CustomerHairPreferencesSnapshot = {
+  hair_type: HairType | null;
+  hair_thickness: HairThickness | null;
+  hair_length: HairLength | null;
+  scalp_condition: ScalpCondition | null;
+  preferred_clipper_guard: string | null;
+  allergies: string | null;
+  styling_notes: string | null;
+};
+
+/** Staff-only snapshot for barbers/admins on a booking. */
+export type AppointmentCustomerInsightsResponse =
+  | { linked_customer: false }
+  | {
+      linked_customer: true;
+      recognition_tier: CustomerRecognitionTier;
+      prefers_you: boolean;
+      summary: CustomerVisitSummary;
+      visits_with_this_barber: number;
+      favorite_services: CustomerFavoriteServiceRow[];
+      history_preview: AppointmentRecord[];
+      booking_preferences_note: string | null;
+      hair_preferences: CustomerHairPreferencesSnapshot | null;
+    };
+
+/** Staff-only AI/rules narrative for chair prep (same auth as customer insights). */
+export type AppointmentCustomerAiSummaryPrivacy = {
+  staff_only: string;
+  third_party: string | null;
+};
+
+export type AppointmentCustomerAiSummarySections = {
+  hair_preferences: string | null;
+  visit_summary: string | null;
+  notes_digest: string | null;
+  operational_signals: string | null;
+};
+
+export type AppointmentCustomerAiSummaryResponse = {
+  linked_customer: boolean;
+  source: "model" | "rules";
+  privacy: AppointmentCustomerAiSummaryPrivacy;
+  sections: AppointmentCustomerAiSummarySections;
+  /** ISO 8601 */
+  generated_at: string | null;
+};
+
 export type CustomerAnalyticsResponse = {
   summary: CustomerVisitSummary;
   history: AppointmentRecord[];
@@ -611,6 +849,30 @@ export type OperationsLeadTimeBucket = {
   count: number;
 };
 
+export type OperationalAiInsightConfidence = "low" | "medium" | "high";
+
+export type OperationalAiInsightCard = {
+  title: string;
+  summary: string;
+  actions: string[];
+  confidence: OperationalAiInsightConfidence;
+  /** Optional numeric breadcrumbs for the UI (counts, rates, indices). */
+  metrics?: Record<string, number | string>;
+};
+
+export type OperationalAiInsightsPayload = {
+  source: "model" | "rules";
+  generated_at: string;
+  privacy: {
+    staff_only: string;
+    third_party: string | null;
+  };
+  staffing: OperationalAiInsightCard;
+  busy_periods: OperationalAiInsightCard;
+  no_shows: OperationalAiInsightCard;
+  retention: OperationalAiInsightCard;
+};
+
 export type OperationalInsightsReport = {
   today: OperationsTodayBlock;
   week: OperationsWeekBlock;
@@ -619,6 +881,7 @@ export type OperationalInsightsReport = {
   peak_heatmap: OperationsHeatmapCell[];
   booking_lead_time: OperationsLeadTimeBucket[];
   cancellation_lead_time: OperationsLeadTimeBucket[];
+  ai_insights: OperationalAiInsightsPayload;
 };
 
 export type OperationalInsightsRangeFilters = {
@@ -655,9 +918,14 @@ export const NOTIFICATION_EVENTS = [
   "appointment.running_late",
   "appointment.rebook_suggested",
   "appointment.inactivity_nudge",
+  "appointment.arrival_nearby",
+  "appointment.visit_message",
   "staff.booking.created",
   "staff.booking.cancelled",
   "staff.booking.rescheduled",
+  "staff.arrival_nearby",
+  "staff.arrival_checked_in",
+  "staff.visit_message",
 ] as const;
 export type NotificationEvent = (typeof NOTIFICATION_EVENTS)[number];
 
@@ -677,12 +945,27 @@ export type NotificationData = {
   audience?: "admin" | "barber" | string | null;
   /** @see appointment.running_late */
   late_by_minutes?: number;
+  /** Geofenced arrival (bucketed distance, not exact). */
+  approximate_eta_minutes?: number;
+  distance_bucket_m?: number;
   headline?: string;
+  /** Scheduled reminder shape — day_before | hour_before | manual */
+  reminder_kind?: "day_before" | "hour_before" | "manual" | string;
   /** Retention nudge payload — present on rebook + inactivity events. */
   suggested_date?: string;
   interval_days?: number;
   service_id?: number;
   barber_user_id?: number;
+  /** Visit-thread push / inbox payload */
+  message_id?: number;
+  message_kind?: string;
+  message_preview?: string;
+  sender_name?: string | null;
+  /** standard | operational — operational presets one-taps stay visible slightly longer in toasts */
+  urgency?: "standard" | "operational" | string;
+  /** In-app route (relative), e.g. confirmation with thread focus */
+  deep_link?: string | null;
+  thread_group_key?: string | null;
   // Forward-compatible fallback for unknown payload keys.
   [extra: string]: unknown;
 };

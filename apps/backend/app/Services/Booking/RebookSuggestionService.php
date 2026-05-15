@@ -48,6 +48,36 @@ final class RebookSuggestionService
     }
 
     /**
+     * Next suggested calendar date for this customer + barber + service, or null
+     * when there is no confirmed history to extrapolate from.
+     */
+    public function suggestedDateForPair(User $customer, int $barberUserId, int $serviceId): ?string
+    {
+        $latest = Appointment::query()
+            ->where('customer_user_id', $customer->id)
+            ->where('barber_user_id', $barberUserId)
+            ->where('service_id', $serviceId)
+            ->where('status', Appointment::STATUS_CONFIRMED)
+            ->whereNotNull('starts_at')
+            ->where('starts_at', '<', CarbonImmutable::now())
+            ->orderByDesc('starts_at')
+            ->first();
+
+        if ($latest === null) {
+            return null;
+        }
+
+        $hint = $this->buildSuggestion(
+            customer: $customer,
+            barberUserId: $barberUserId,
+            serviceId: $serviceId,
+            sourceAppointment: $latest,
+        );
+
+        return $hint['suggested_date'];
+    }
+
+    /**
      * Build a suggestion for the customer's next visit, based on their most
      * recent confirmed past appointment. Returns null if they have none.
      *

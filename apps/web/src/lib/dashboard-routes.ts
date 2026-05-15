@@ -5,7 +5,7 @@ export function getRoleDashboardHref(profile: ProfileState): string | null {
   if (profile.kind !== "ready") return null;
   switch (profile.user.role.slug) {
     case "customer":
-      return "/appointments";
+      return "/home";
     case "barber":
       return "/barber";
     case "admin":

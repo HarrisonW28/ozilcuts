@@ -95,7 +95,8 @@ function PaymentForm({
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
         <Button
           type="submit"
-          disabled={busy || !stripe || !elements}
+          pending={busy}
+          disabled={!stripe || !elements}
           className="min-h-11 w-full touch-manipulation sm:w-auto sm:min-h-10"
         >
           {busy ? "Processing…" : `Pay ${amountLabel}`}

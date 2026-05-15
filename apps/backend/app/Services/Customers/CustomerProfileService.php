@@ -22,7 +22,7 @@ final class CustomerProfileService
     }
 
     /**
-     * @param  array{phone?: string|null, preferred_barber_user_id?: int|null, preferences?: string|null, marketing_opt_in?: bool, retention_paused?: bool}  $data
+     * @param  array{phone?: string|null, preferred_barber_user_id?: int|null, preferences?: string|null, marketing_opt_in?: bool, retention_paused?: bool, arrival_location_opt_in?: bool}  $data
      */
     public function update(CustomerProfile $profile, array $data): CustomerProfile
     {
@@ -32,6 +32,7 @@ final class CustomerProfileService
             'preferences',
             'marketing_opt_in',
             'retention_paused',
+            'arrival_location_opt_in',
         ])));
 
         return $profile->fresh(['user', 'preferredBarber']);

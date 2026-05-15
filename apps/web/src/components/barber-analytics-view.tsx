@@ -252,10 +252,10 @@ export function BarberAnalyticsView({
             <div className={reportFilterActionsClass}>
               <Button
                 type="submit"
-                disabled={state.kind === "loading"}
+                pending={state.kind === "loading"}
                 className={reportFilterActionButtonClass}
               >
-                {state.kind === "loading" ? "Loading…" : "Refresh"}
+                Refresh
               </Button>
             </div>
           </form>

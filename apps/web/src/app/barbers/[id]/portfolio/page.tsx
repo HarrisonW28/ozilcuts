@@ -1,16 +1,19 @@
 "use client";
 
-import { SiteHeader } from "@/components/site-header";
-import { useSessionProfile } from "@/lib/use-session-profile";
 import {
-  ApiError,
-  fetchBarber,
-  fetchBarberPortfolio,
-} from "@ozilcuts/api";
-import type {
-  BarberProfilePublic,
-  BarberPortfolioResponse,
-} from "@ozilcuts/types";
+  ContentSectionHeader,
+  PhotoLightbox,
+  PhotographyGallerySkeleton,
+  PhotographyMasonryGallery,
+  VisualStorySection,
+} from "@/components/content";
+import { GallerySyncBanner } from "@/components/social";
+import { SiteHeader } from "@/components/site-header";
+import { layoutPortfolioPhotos } from "@/lib/content-photography";
+import type { LightboxPayload } from "@/lib/content-photography";
+import { useSessionProfile } from "@/lib/use-session-profile";
+import { ApiError, fetchBarber, fetchBarberPortfolio } from "@ozilcuts/api";
+import type { BarberProfilePublic, BarberPortfolioResponse } from "@ozilcuts/types";
 import { OZILCUTS_APP_NAME } from "@ozilcuts/types";
 import {
   Button,
@@ -19,20 +22,13 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
+  EmptyState,
   ScreenTitle,
   Skeleton,
-  cn,
 } from "@ozilcuts/ui";
-import { X } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 type BarberState =
   | { kind: "loading" }
@@ -45,32 +41,6 @@ type PortfolioState =
   | { kind: "error"; message: string };
 
 const PER_PAGE = 24;
-
-function PortfolioMasonrySkeleton() {
-  return (
-    <ul
-      className="columns-1 gap-5 sm:columns-2 md:columns-3"
-      aria-hidden
-    >
-      {Array.from({ length: 9 }).map((_, i) => (
-        <li key={i} className="mb-5 break-inside-avoid">
-          <Skeleton
-            className={cn(
-              "w-full rounded-2xl",
-              i % 2 === 0 ? "aspect-[4/5]" : "aspect-square",
-            )}
-          />
-        </li>
-      ))}
-    </ul>
-  );
-}
-
-type LightboxPayload = {
-  url: string;
-  alt: string;
-  caption: string | null;
-} | null;
 
 export default function BarberPortfolioPage() {
   const params = useParams();
@@ -90,13 +60,11 @@ export default function BarberPortfolioPage() {
     kind: "loading",
   });
   const [page, setPage] = useState(1);
-  const [lightbox, setLightbox] = useState<LightboxPayload>(null);
-  const lightboxRef = useRef<HTMLDialogElement>(null);
+  const [lightbox, setLightbox] = useState<LightboxPayload | null>(null);
 
   const loadBarber = useCallback(async () => {
     if (!Number.isFinite(userId) || userId < 1) {
       setBarberState({ kind: "error", message: "Invalid portfolio link." });
-
       return;
     }
     setBarberState({ kind: "loading" });
@@ -110,7 +78,6 @@ export default function BarberPortfolioPage() {
           message: "This barber portfolio could not be found.",
           notFound: true,
         });
-
         return;
       }
       const message =
@@ -149,27 +116,29 @@ export default function BarberPortfolioPage() {
     void loadPortfolio();
   }, [loadPortfolio]);
 
-  useEffect(() => {
-    const el = lightboxRef.current;
-    if (!el) return;
-    if (lightbox) {
-      if (!el.open) el.showModal();
-    } else if (el.open) {
-      el.close();
-    }
-  }, [lightbox]);
+  const galleryItems = useMemo(() => {
+    if (portfolioState.kind !== "ok") return [];
+    return layoutPortfolioPhotos(portfolioState.portfolio.data);
+  }, [portfolioState]);
+
+  const barberName =
+    barberState.kind === "ok" ? barberState.barber.barber.name : undefined;
 
   const showGallerySkeleton =
     barberState.kind === "loading" ||
     (barberState.kind === "ok" && portfolioState.kind === "loading");
 
+  const openPhoto = useCallback(
+    (url: string, alt: string, caption: string | null) => {
+      setLightbox({ url, alt, caption });
+    },
+    [],
+  );
+
   return (
     <div className="flex min-h-dvh flex-1 flex-col">
       <SiteHeader profile={profile} onSignOut={signOut} />
-      <main
-        id="main-content"
-        className="page-main"
-      >
+      <main id="main-content" className="page-main">
         <div className="mx-auto w-full max-w-6xl page-stack">
           <ScreenTitle
             eyebrow={OZILCUTS_APP_NAME}
@@ -186,6 +155,15 @@ export default function BarberPortfolioPage() {
             className="gap-5 sm:gap-6"
           />
 
+          {barberState.kind === "ok" ? (
+            <VisualStorySection
+              eyebrow="Visual trust"
+              title="Photography you can believe in"
+              description="Every image here is published with client consent. Before and after pairs are shown together so you can see the full story — not just the highlight reel."
+              className="mt-2"
+            />
+          ) : null}
+
           {showGallerySkeleton ? (
             <div className="space-y-6" role="status" aria-live="polite">
               <span className="sr-only">Loading portfolio…</span>
@@ -196,7 +174,7 @@ export default function BarberPortfolioPage() {
                 <Skeleton className="h-4 w-36 sm:w-44" />
                 <Skeleton className="h-9 w-32 rounded-md" />
               </div>
-              <PortfolioMasonrySkeleton />
+              <PhotographyGallerySkeleton />
             </div>
           ) : null}
 
@@ -248,84 +226,46 @@ export default function BarberPortfolioPage() {
 
           {barberState.kind === "ok" && portfolioState.kind === "ok" ? (
             <>
-              <div className="flex flex-col gap-4 border-b border-border/40 pb-6 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    Gallery
-                  </p>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    {portfolioState.portfolio.meta.total === 0
-                      ? "No photos yet — check back soon."
-                      : `${portfolioState.portfolio.meta.total} photo${portfolioState.portfolio.meta.total === 1 ? "" : "s"} · Tap to view full size`}
-                  </p>
-                </div>
-                <Button asChild variant="outline" size="sm" className="shrink-0">
-                  <Link href={`/barbers/${userId}`}>Back to profile</Link>
-                </Button>
-              </div>
+              <ContentSectionHeader
+                eyebrow="Gallery"
+                title="Portfolio"
+                description={
+                  portfolioState.portfolio.meta.total === 0
+                    ? "No photos yet — check back soon."
+                    : `${portfolioState.portfolio.meta.total} photo${portfolioState.portfolio.meta.total === 1 ? "" : "s"} · Tap any image for full size`
+                }
+                action={
+                  <Button asChild variant="outline" size="sm" className="shrink-0 min-h-11 touch-manipulation sm:min-h-9">
+                    <Link href={`/barbers/${userId}`}>Back to profile</Link>
+                  </Button>
+                }
+              />
+
+              <GallerySyncBanner
+                className="mt-6"
+                context="portfolio"
+                barberName={barberName}
+                portfolioHref={`/barbers/${userId}/portfolio`}
+              />
 
               {portfolioState.portfolio.data.length > 0 ? (
-                <ul
-                  className="columns-1 gap-5 sm:columns-2 md:columns-3"
-                  aria-label="Portfolio gallery"
-                >
-                  {portfolioState.portfolio.data.map((photo, index) => {
-                    const alt =
-                      photo.caption ?? `${photo.kind} from portfolio`;
-
-                    return (
-                      <li key={photo.id} className="mb-5 break-inside-avoid">
-                        <button
-                          type="button"
-                          className={cn(
-                            "group relative w-full overflow-hidden rounded-2xl bg-muted/25 text-left ring-1 ring-border/45 outline-none transition-[box-shadow,transform] dark:bg-muted/15",
-                            "hover:ring-primary/35 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-                            "motion-safe:active:scale-[0.995]",
-                          )}
-                          onClick={() =>
-                            setLightbox({
-                              url: photo.url,
-                              alt,
-                              caption: photo.caption ?? null,
-                            })
-                          }
-                          aria-label={
-                            photo.caption
-                              ? `Open full size: ${photo.caption}`
-                              : "Open photo full size"
-                          }
-                        >
-                          <div
-                            className={cn(
-                              "relative w-full overflow-hidden",
-                              index % 2 === 0
-                                ? "aspect-[4/5]"
-                                : "aspect-square",
-                            )}
-                          >
-                            <Image
-                              src={photo.url}
-                              alt=""
-                              fill
-                              sizes="(min-width: 1024px) 28vw, (min-width: 768px) 32vw, (min-width: 640px) 45vw, 88vw"
-                              className="object-cover motion-safe:transition-transform motion-safe:duration-500 motion-safe:group-hover:scale-[1.03]"
-                              priority={index < 4 && page === 1}
-                              aria-hidden
-                            />
-                          </div>
-                          {photo.caption ? (
-                            <p className="line-clamp-2 px-3 py-2.5 text-xs leading-snug text-muted-foreground">
-                              {photo.caption}
-                            </p>
-                          ) : (
-                            <span className="sr-only">{alt}</span>
-                          )}
-                        </button>
-                      </li>
-                    );
-                  })}
-                </ul>
-              ) : null}
+                <PhotographyMasonryGallery
+                  items={galleryItems}
+                  barberName={barberName}
+                  page={page}
+                  onOpenPhoto={openPhoto}
+                />
+              ) : (
+                <EmptyState
+                  title="Portfolio coming soon"
+                  description="This barber hasn’t published any photos yet. Check back later or book a visit to see their work in person."
+                  action={
+                    <Button asChild variant="outline" size="sm" className="min-h-11 touch-manipulation">
+                      <Link href={`/barbers/${userId}`}>Back to profile</Link>
+                    </Button>
+                  }
+                />
+              )}
 
               {portfolioState.portfolio.meta.last_page > 1 ? (
                 <nav
@@ -372,51 +312,10 @@ export default function BarberPortfolioPage() {
             </Link>
           </p>
 
-          <dialog
-            ref={lightboxRef}
+          <PhotoLightbox
+            payload={lightbox}
             onClose={() => setLightbox(null)}
-            onClick={(e) => {
-              if (e.target === e.currentTarget) {
-                lightboxRef.current?.close();
-              }
-            }}
-            className={cn(
-              "fixed left-1/2 top-1/2 z-[100] w-[min(100vw-1rem,52rem)] max-w-[calc(100vw-1rem)] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-2xl border border-border bg-card p-0 shadow-2xl open:flex open:max-h-[min(94dvh,56rem)] open:flex-col",
-              "[&::backdrop]:bg-background/75 [&::backdrop]:backdrop-blur-[2px] dark:[&::backdrop]:bg-background/88",
-            )}
-          >
-            <div className="flex min-h-0 max-h-[min(94dvh,56rem)] flex-col">
-              <div className="flex shrink-0 items-center justify-between gap-2 border-b border-border/45 px-2 py-2 sm:px-3">
-                <p className="min-w-0 truncate px-2 text-xs text-muted-foreground sm:text-sm">
-                  {lightbox?.caption ?? "\u00a0"}
-                </p>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="shrink-0"
-                  aria-label="Close viewer"
-                  onClick={() => lightboxRef.current?.close()}
-                >
-                  <X className="size-5" aria-hidden />
-                </Button>
-              </div>
-              <div className="relative min-h-0 flex-1 bg-muted/20 p-2 sm:p-4">
-                <div className="relative mx-auto h-[min(78dvh,48rem)] w-full max-w-full">
-                  {lightbox ? (
-                    <Image
-                      src={lightbox.url}
-                      alt={lightbox.alt}
-                      fill
-                      className="object-contain"
-                      sizes="(max-width: 768px) 100vw, 52rem"
-                      priority
-                    />
-                  ) : null}
-                </div>
-              </div>
-            </div>
-          </dialog>
+          />
         </div>
       </main>
     </div>

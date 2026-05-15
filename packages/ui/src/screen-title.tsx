@@ -17,14 +17,14 @@ export function ScreenTitle({
 }: ScreenTitleProps) {
   return (
     <header className={cn("motion-enter flex flex-col gap-4", className)}>
-      <p className="text-[11px] font-semibold uppercase tracking-widecaps text-muted-foreground">
+      <p className="text-caption font-semibold uppercase tracking-widecaps text-muted-foreground">
         {eyebrow}
       </p>
-      <h1 className="text-3xl font-semibold leading-[1.12] tracking-editorial text-foreground sm:text-[2.125rem] sm:leading-[1.1]">
+      <h1 className="text-display font-semibold tracking-display text-foreground">
         {title}
       </h1>
       {description ? (
-        <div className="max-w-2xl text-base leading-relaxed text-muted-foreground sm:text-[1.0625rem]">
+        <div className="max-w-2xl text-body-lg leading-body text-muted-foreground sm:text-body-lg">
           {description}
         </div>
       ) : null}

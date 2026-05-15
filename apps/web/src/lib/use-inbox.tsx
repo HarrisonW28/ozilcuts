@@ -1,6 +1,7 @@
 "use client";
 
 import { getStoredAuthToken } from "@/lib/auth-token";
+import { dedupeInboxNotificationArrivals } from "@/lib/inbox-arrival-dedupe";
 import {
   fetchNotificationUnreadCount,
   fetchNotifications,
@@ -88,15 +89,17 @@ export function InboxProvider({ enabled, children }: ProviderProps) {
         // Initial load: prime the seen set without emitting toasts.
         seenIdsRef.current = currentIds;
       } else {
-        const arrivals = listRes.data.filter(
-          (n) => !previouslySeen.has(n.id) && n.read_at === null,
+        const arrivals = dedupeInboxNotificationArrivals(
+          listRes.data.filter(
+            (n) => !previouslySeen.has(n.id) && n.read_at === null,
+          ),
         );
         if (arrivals.length > 0) {
           setNewArrivals((queue) => {
-            // De-dupe in case a previous arrival is still queued.
             const queued = new Set(queue.map((n) => n.id));
             const fresh = arrivals.filter((n) => !queued.has(n.id));
-            return fresh.length === 0 ? queue : [...fresh, ...queue];
+            if (fresh.length === 0) return queue;
+            return dedupeInboxNotificationArrivals([...fresh, ...queue]);
           });
         }
         seenIdsRef.current = currentIds;

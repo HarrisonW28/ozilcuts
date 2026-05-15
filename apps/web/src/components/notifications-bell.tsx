@@ -1,9 +1,7 @@
 "use client";
 
+import { NotificationBellPanel } from "@/components/notifications";
 import { useInbox } from "@/lib/use-inbox";
-import type { NotificationEvent, NotificationRecord } from "@ozilcuts/types";
-import { Button } from "@ozilcuts/ui";
-import Link from "next/link";
 import {
   useCallback,
   useEffect,
@@ -17,125 +15,6 @@ type Props = {
   enabled: boolean;
 };
 
-const EVENT_LABELS: Record<NotificationEvent, string> = {
-  "appointment.confirmed": "Appointment confirmed",
-  "appointment.cancelled": "Appointment cancelled",
-  "appointment.rescheduled": "Appointment rescheduled",
-  "appointment.reminder": "Appointment reminder",
-  "appointment.running_late": "Running late",
-  "appointment.rebook_suggested": "Time for your next visit",
-  "appointment.inactivity_nudge": "It's been a while",
-  "staff.booking.created": "New booking",
-  "staff.booking.cancelled": "Booking cancelled",
-  "staff.booking.rescheduled": "Booking rescheduled",
-};
-
-function formatRelative(iso: string | null): string {
-  if (!iso) return "";
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return iso;
-  const diffSeconds = Math.floor((Date.now() - d.getTime()) / 1000);
-  if (diffSeconds < 60) return "just now";
-  if (diffSeconds < 3600) return `${Math.floor(diffSeconds / 60)}m ago`;
-  if (diffSeconds < 86400) return `${Math.floor(diffSeconds / 3600)}h ago`;
-  const days = Math.floor(diffSeconds / 86400);
-  if (days < 7) return `${days}d ago`;
-  return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
-}
-
-function describeShort(record: NotificationRecord): string {
-  const data = record.data;
-  const service =
-    typeof data.service_name === "string" && data.service_name.length > 0
-      ? data.service_name
-      : "your appointment";
-  const barber =
-    typeof data.barber_name === "string" && data.barber_name.length > 0
-      ? data.barber_name
-      : null;
-  const customer =
-    typeof data.customer_name === "string" && data.customer_name.length > 0
-      ? data.customer_name
-      : null;
-
-  if (record.type === "appointment.confirmed") {
-    return barber ? `${service} with ${barber}` : service;
-  }
-  if (record.type === "appointment.cancelled") {
-    return barber ? `${service} with ${barber} cancelled` : `${service} cancelled`;
-  }
-  if (record.type === "appointment.rescheduled") {
-    return barber ? `${service} with ${barber} moved` : `${service} moved`;
-  }
-  if (record.type === "appointment.reminder") {
-    return typeof data.headline === "string" && data.headline.length > 0
-      ? data.headline
-      : `Reminder · ${service}`;
-  }
-  if (record.type === "appointment.running_late") {
-    const mins =
-      typeof data.late_by_minutes === "number" && data.late_by_minutes > 0
-        ? data.late_by_minutes
-        : null;
-    const late =
-      mins === 1 ? "~1 min late" : mins ? `~${mins} min late` : "Running late";
-    return barber ? `${late} · ${service} · ${barber}` : `${late} · ${service}`;
-  }
-  if (record.type === "appointment.rebook_suggested") {
-    const target = barber ? `${service} with ${barber}` : service;
-    return `Rebook ${target}`;
-  }
-  if (record.type === "appointment.inactivity_nudge") {
-    const target = barber ? `${service} with ${barber}` : service;
-    return `Still thinking about ${target}?`;
-  }
-  if (record.type === "staff.booking.created") {
-    return `${customer ?? "Customer"} booked ${service}`;
-  }
-  if (record.type === "staff.booking.cancelled") {
-    return `${customer ?? "Customer"} cancelled ${service}`;
-  }
-  if (record.type === "staff.booking.rescheduled") {
-    return `${customer ?? "Customer"} rescheduled ${service}`;
-  }
-  return EVENT_LABELS[record.type] ?? record.type;
-}
-
-function primaryHref(record: NotificationRecord): string | null {
-  if (
-    record.type === "appointment.rebook_suggested"
-    || record.type === "appointment.inactivity_nudge"
-  ) {
-    const data = record.data;
-    const params = new URLSearchParams();
-    if (typeof data.service_id === "number" && data.service_id > 0) {
-      params.set("service_id", String(data.service_id));
-    }
-    if (typeof data.barber_user_id === "number" && data.barber_user_id > 0) {
-      params.set("barber_user_id", String(data.barber_user_id));
-    }
-    if (
-      typeof data.suggested_date === "string"
-      && /^\d{4}-\d{2}-\d{2}$/.test(data.suggested_date)
-    ) {
-      params.set("date", data.suggested_date);
-    }
-    return `/book${params.size > 0 ? `?${params.toString()}` : ""}`;
-  }
-  const id = record.data?.appointment_id;
-  if (typeof id === "number" && id > 0) {
-    return `/appointments/${id}/confirmation`;
-  }
-  return null;
-}
-
-function primaryLabel(record: NotificationRecord): string {
-  return record.type === "appointment.rebook_suggested"
-    || record.type === "appointment.inactivity_nudge"
-    ? "Book"
-    : "View";
-}
-
 export function NotificationsBell({ enabled }: Props) {
   const inbox = useInbox();
   const [open, setOpen] = useState(false);
@@ -143,7 +22,6 @@ export function NotificationsBell({ enabled }: Props) {
   const triggerRef = useRef<HTMLButtonElement | null>(null);
   const popoverId = useId();
 
-  // Close on outside click and Escape.
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
@@ -215,7 +93,7 @@ export function NotificationsBell({ enabled }: Props) {
         {unread > 0 ? (
           <span
             aria-hidden="true"
-            className="absolute -right-1 -top-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-semibold leading-none text-primary-foreground"
+            className="absolute -right-1 -top-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-semibold leading-none text-primary-foreground motion-safe:animate-pulse"
           >
             {unread > 99 ? "99+" : unread}
           </span>
@@ -229,122 +107,17 @@ export function NotificationsBell({ enabled }: Props) {
           id={popoverId}
           role="dialog"
           aria-label="Notifications"
-          className="motion-popover fixed inset-x-2 top-[calc(env(safe-area-inset-top,0px)+3.5rem)] z-50 max-h-[min(calc(100dvh-4.5rem-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px)),32rem)] w-auto overflow-hidden rounded-lg border border-border bg-background shadow-lg sm:absolute sm:inset-x-auto sm:right-0 sm:top-full sm:mt-2 sm:max-h-[min(70vh,32rem)] sm:w-80"
+          className="motion-popover fixed inset-x-2 top-[calc(env(safe-area-inset-top,0px)+3.5rem)] z-50 max-h-[min(calc(100dvh-4.5rem-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px)),32rem)] w-auto overflow-hidden rounded-2xl border border-border/60 bg-background/95 shadow-xl backdrop-blur-md sm:absolute sm:inset-x-auto sm:right-0 sm:top-full sm:mt-2 sm:max-h-[min(70vh,32rem)] sm:w-80 dark:border-border/50 dark:bg-background/95"
         >
-          <div className="flex items-center justify-between border-b border-border px-3 py-2">
-            <span className="text-sm font-medium text-foreground">
-              Notifications
-            </span>
-            <Button
-              type="button"
-              size="sm"
-              variant="ghost"
-              disabled={unread === 0}
-              onClick={() => void markAllRead()}
-            >
-              Mark all read
-            </Button>
-          </div>
-
-          <div className="max-h-[min(50vh,calc(100dvh-14rem))] overflow-y-auto overscroll-y-contain sm:max-h-[60vh]">
-            {error && latest.length === 0 ? (
-              <p
-                className="px-3 py-6 text-center text-sm text-destructive"
-                role="alert"
-              >
-                {error}
-              </p>
-            ) : null}
-
-            {isLoading && latest.length === 0 ? (
-              <p
-                className="px-3 py-6 text-center text-sm text-muted-foreground"
-                role="status"
-              >
-                Loading…
-              </p>
-            ) : null}
-
-            {!isLoading && latest.length === 0 && !error ? (
-              <p className="px-3 py-6 text-center text-sm text-muted-foreground">
-                You&rsquo;re all caught up.
-              </p>
-            ) : null}
-
-            {latest.length > 0 ? (
-              <ul className="divide-y divide-border">
-                {latest.map((row) => {
-                  const href = primaryHref(row);
-                  const isUnread = row.read_at === null;
-                  return (
-                    <li key={row.id} className="px-3 py-3">
-                      <div className="flex items-start gap-2">
-                        <span
-                          aria-hidden="true"
-                          className={
-                            "mt-1.5 inline-block h-2 w-2 flex-shrink-0 rounded-full " +
-                            (isUnread ? "bg-primary" : "bg-transparent")
-                          }
-                        />
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-medium text-foreground">
-                            {EVENT_LABELS[row.type] ?? row.type}
-                          </p>
-                          <p className="truncate text-xs text-muted-foreground">
-                            {describeShort(row)}
-                          </p>
-                          <p className="mt-0.5 text-[11px] text-muted-foreground">
-                            {formatRelative(row.created_at)}
-                          </p>
-                          <div className="mt-2 flex flex-wrap gap-2">
-                            {href ? (
-                              <Button
-                                asChild
-                                size="sm"
-                                variant="secondary"
-                                className="min-h-10 px-3 text-xs sm:h-7 sm:min-h-7 sm:px-2"
-                              >
-                                <Link
-                                  href={href}
-                                  onClick={() => {
-                                    if (isUnread) void markRead(row.id);
-                                    setOpen(false);
-                                  }}
-                                >
-                                  {primaryLabel(row)}
-                                </Link>
-                              </Button>
-                            ) : null}
-                            {isUnread ? (
-                              <Button
-                                type="button"
-                                size="sm"
-                                variant="ghost"
-                                className="min-h-10 px-3 text-xs sm:h-7 sm:min-h-7 sm:px-2"
-                                onClick={() => void markRead(row.id)}
-                              >
-                                Mark read
-                              </Button>
-                            ) : null}
-                          </div>
-                        </div>
-                      </div>
-                    </li>
-                  );
-                })}
-              </ul>
-            ) : null}
-          </div>
-
-          <div className="border-t border-border px-3 py-1 sm:py-2">
-            <Link
-              href="/notifications"
-              className="motion-interactive -mr-1 inline-flex min-h-11 w-full touch-manipulation items-center justify-end rounded-md py-2 pr-1 text-sm font-medium text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              onClick={() => setOpen(false)}
-            >
-              See all
-            </Link>
-          </div>
+          <NotificationBellPanel
+            latest={latest}
+            isLoading={isLoading}
+            error={error}
+            unread={unread}
+            onMarkRead={(id) => void markRead(id)}
+            onMarkAllRead={() => void markAllRead()}
+            onClose={() => setOpen(false)}
+          />
         </div>
       ) : null}
     </div>

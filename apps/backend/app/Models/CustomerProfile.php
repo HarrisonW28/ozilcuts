@@ -22,6 +22,7 @@ class CustomerProfile extends Model
         'preferences',
         'marketing_opt_in',
         'retention_paused',
+        'arrival_location_opt_in',
     ];
 
     /**
@@ -32,6 +33,7 @@ class CustomerProfile extends Model
         return [
             'marketing_opt_in' => 'boolean',
             'retention_paused' => 'boolean',
+            'arrival_location_opt_in' => 'boolean',
         ];
     }
 

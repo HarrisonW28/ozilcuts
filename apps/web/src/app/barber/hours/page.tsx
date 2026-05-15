@@ -1,6 +1,7 @@
 "use client";
 
 import { ManageBarberHoursSection } from "@/components/manage-barber-hours-section";
+import { PageSessionSkeleton } from "@/components/loading";
 import { SiteHeader } from "@/components/site-header";
 import { useSessionProfile } from "@/lib/use-session-profile";
 import { OZILCUTS_APP_NAME } from "@ozilcuts/types";
@@ -37,9 +38,7 @@ export default function BarberHoursPage() {
           />
 
           {profile.kind === "loading" || profile.kind === "none" ? (
-            <p className="text-sm text-muted-foreground" role="status">
-              Loading…
-            </p>
+            <PageSessionSkeleton statusLabel="Loading" />
           ) : null}
 
           {profile.kind === "error" ? (

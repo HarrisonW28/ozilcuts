@@ -1,5 +1,6 @@
 "use client";
 
+import { PageSessionSkeleton } from "@/components/loading";
 import { SiteHeader } from "@/components/site-header";
 import { useSessionProfile } from "@/lib/use-session-profile";
 import {
@@ -153,9 +154,7 @@ export default function AdminDashboardPage() {
       <div className="flex min-h-dvh flex-1 flex-col">
         <SiteHeader profile={profile} onSignOut={signOut} />
         <main id="main-content" className="page-main">
-          <p className="text-sm text-muted-foreground" role="status">
-            Loading…
-          </p>
+          <PageSessionSkeleton statusLabel="Loading admin dashboard" />
         </main>
       </div>
     );

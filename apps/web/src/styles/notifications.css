@@ -1,0 +1,54 @@
+/* Premium notifications — inbox, bell, toasts */
+
+.notification-kind-badge {
+  @apply inline-flex items-center rounded-full border border-border/50 bg-muted/30 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground;
+}
+
+.notification-kind-badge--operational {
+  @apply border-amber-500/35 bg-amber-500/10 text-amber-950 dark:text-amber-100;
+}
+
+.notification-kind-badge--reminder {
+  @apply border-sky-500/35 bg-sky-500/10 text-sky-950 dark:text-sky-100;
+}
+
+.notification-kind-badge--proximity {
+  @apply border-teal-500/35 bg-teal-500/10 text-teal-950 dark:text-teal-100;
+}
+
+.notification-meta-chip {
+  @apply inline-flex max-w-full items-center truncate rounded-md border border-border/45 bg-background/60 px-2 py-0.5 text-[11px] font-medium text-muted-foreground dark:bg-background/40;
+}
+
+.notification-meta-chip--emphasis {
+  @apply border-primary/30 bg-primary/10 font-semibold text-primary dark:text-primary-foreground/90;
+}
+
+.notification-thread-group {
+  @apply overflow-hidden rounded-2xl border border-border/55 bg-card/40 shadow-sm dark:border-border/45 dark:bg-card/25;
+}
+
+.notification-thread-summary {
+  @apply flex w-full touch-manipulation items-start gap-3 px-4 py-3.5 text-left transition-colors hover:bg-muted/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:px-5 sm:py-4;
+}
+
+.notification-unread-dot {
+  @apply size-2 shrink-0 rounded-full bg-primary motion-safe:animate-pulse;
+}
+
+.notification-toast-progress {
+  @apply absolute bottom-0 left-0 h-0.5 bg-primary/50 motion-safe:origin-left motion-safe:animate-[notification-toast-progress_var(--toast-duration,6.5s)_linear_forwards];
+}
+
+@keyframes notification-toast-progress {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+
+.notification-operational-strip {
+  @apply rounded-2xl border border-amber-500/30 bg-gradient-to-r from-amber-500/[0.08] via-background/80 to-transparent px-4 py-3 dark:from-amber-400/[0.1];
+}

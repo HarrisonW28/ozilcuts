@@ -45,7 +45,7 @@ final class BarberManagementService
     }
 
     /**
-     * @param  array{title?: string|null, bio?: string|null, years_experience?: int|null, is_published?: bool}  $data
+     * @param  array{title?: string|null, bio?: string|null, years_experience?: int|null, is_published?: bool, shop_latitude?: float|null, shop_longitude?: float|null}  $data
      */
     public function updateProfile(User $targetUser, array $data, User $actor): BarberProfile
     {
@@ -61,6 +61,14 @@ final class BarberManagementService
         }
 
         $profile->update($payload);
+
+        if ($actor->isAdmin()) {
+            $geo = Arr::only($data, ['shop_latitude', 'shop_longitude']);
+            if ($geo !== []) {
+                $targetUser->fill($geo);
+                $targetUser->save();
+            }
+        }
 
         return $profile->fresh()->load('user');
     }

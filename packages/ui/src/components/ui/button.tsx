@@ -47,29 +47,63 @@ type ButtonProps = ButtonPrimitive.Props &
   VariantProps<typeof buttonVariants> & {
     /** Merge styles onto a child element (e.g. `next/link`). */
     asChild?: boolean;
+    /**
+     * Async in-flight state: disables the control, sets `aria-busy`, and shows
+     * a compact spinner (skipped for `asChild` — use a plain child instead).
+     */
+    pending?: boolean;
   };
+
+function ButtonPendingSpinner() {
+  return (
+    <span
+      aria-hidden
+      className="size-4 shrink-0 animate-spin rounded-full border-2 border-current border-r-transparent opacity-85 motion-reduce:animate-none motion-reduce:border-dashed motion-reduce:opacity-75"
+    />
+  );
+}
 
 function Button({
   className,
   variant = "default",
   size = "default",
   asChild = false,
+  pending = false,
+  disabled,
+  children,
   ...props
 }: ButtonProps) {
   const classes = cn(buttonVariants({ variant, size, className }));
+  const mergedDisabled = Boolean(disabled || pending);
 
   if (asChild) {
     return (
       <Slot
         data-slot="button"
         className={classes}
+        aria-busy={pending ? true : undefined}
         {...(props as ComponentPropsWithoutRef<typeof Slot>)}
       />
     );
   }
 
   return (
-    <ButtonPrimitive data-slot="button" className={classes} {...props} />
+    <ButtonPrimitive
+      data-slot="button"
+      className={classes}
+      disabled={mergedDisabled}
+      aria-busy={pending ? true : undefined}
+      {...props}
+    >
+      {pending ? (
+        <>
+          <ButtonPendingSpinner />
+          {children}
+        </>
+      ) : (
+        children
+      )}
+    </ButtonPrimitive>
   );
 }
 

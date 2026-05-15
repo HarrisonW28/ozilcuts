@@ -1,0 +1,46 @@
+/**
+ * Video-driven homepage (Sprint 20.3)
+ * Hero loops, ambient panels, and static fallbacks.
+ */
+
+@layer components {
+  .home-video-layer {
+    @apply pointer-events-none absolute inset-0 overflow-hidden;
+  }
+
+  .home-video-hero {
+    @apply h-full min-h-[22rem] w-full scale-[1.02] object-cover opacity-[0.38] saturate-[0.92] sm:min-h-0 sm:opacity-[0.42] dark:opacity-[0.36] dark:saturate-[0.88];
+  }
+
+  .home-video-ambient {
+    @apply h-full w-full object-cover opacity-[0.5] motion-safe:transition-opacity motion-safe:duration-700 dark:opacity-[0.42];
+  }
+
+  .home-video-loading {
+    @apply absolute inset-0 bg-gradient-to-br from-muted/30 via-muted/10 to-transparent motion-safe:animate-pulse;
+  }
+
+  .home-video-fallback-hero {
+    @apply h-full min-h-[22rem] w-full bg-gradient-to-br from-muted/60 via-background/80 to-primary/[0.08] sm:min-h-full dark:from-muted/35 dark:via-background/70 dark:to-primary/[0.12];
+  }
+
+  .home-video-fallback-ambient {
+    @apply h-full w-full bg-gradient-to-br from-muted/50 to-muted/15 dark:from-muted/30 dark:to-muted/10;
+  }
+
+  .home-cinematic-hero-shell {
+    @apply relative isolate overflow-hidden rounded-[2rem] border border-border/45 bg-card shadow-sm ring-1 ring-border/20 dark:border-border/55 dark:bg-card/90 dark:ring-border/25;
+  }
+
+  .home-cinematic-hero-gradient-main {
+    @apply pointer-events-none absolute inset-0 -z-20 bg-gradient-to-br from-muted/75 via-background to-primary/[0.07] dark:from-muted/35 dark:via-background dark:to-primary/[0.11];
+  }
+
+  .home-cinematic-hero-gradient-glow {
+    @apply pointer-events-none absolute -right-[20%] top-0 -z-10 h-[min(100%,28rem)] w-[min(100%,32rem)] rounded-[50%] bg-gradient-to-bl from-primary/22 via-primary/5 to-transparent opacity-90 blur-3xl dark:from-primary/[0.28] dark:via-primary/[0.08];
+  }
+
+  .home-cinematic-hero-gradient-floor {
+    @apply pointer-events-none absolute -left-16 bottom-0 -z-10 h-48 w-[120%] bg-gradient-to-t from-background via-background/45 to-transparent dark:from-background dark:via-background/60 sm:h-56;
+  }
+}

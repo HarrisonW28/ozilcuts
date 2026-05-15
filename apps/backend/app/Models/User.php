@@ -36,6 +36,8 @@ class User extends Authenticatable
         'shop_deposits_enabled',
         'shop_tap_to_pay_later',
         'shop_default_hours',
+        'shop_latitude',
+        'shop_longitude',
     ];
 
     /**
@@ -63,6 +65,8 @@ class User extends Authenticatable
             'shop_deposits_enabled' => 'boolean',
             'shop_tap_to_pay_later' => 'boolean',
             'shop_default_hours' => 'array',
+            'shop_latitude' => 'float',
+            'shop_longitude' => 'float',
         ];
     }
 

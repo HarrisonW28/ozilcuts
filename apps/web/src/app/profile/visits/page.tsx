@@ -2,7 +2,6 @@
 
 import { AccountSubnav } from "@/components/account-subnav";
 import { CustomerVisitsView } from "@/components/customer-visits-view";
-import { SiteHeader } from "@/components/site-header";
 import { getStoredAuthToken } from "@/lib/auth-token";
 import { useSessionProfile } from "@/lib/use-session-profile";
 import { ApiError, fetchMyVisitsSummary } from "@ozilcuts/api";
@@ -66,12 +65,7 @@ export default function MyVisitsPage() {
   }, [isCustomer]);
 
   return (
-    <div className="flex min-h-dvh flex-1 flex-col">
-      <SiteHeader profile={profile} onSignOut={signOut} />
-      <main
-        id="main-content"
-        className="page-main"
-      >
+    <main id="main-content" className="page-main app-shell-scroll flex-1">
         <div className="mx-auto w-full max-w-5xl page-stack">
           <div className="flex flex-col gap-6">
             <ScreenTitle
@@ -175,7 +169,6 @@ export default function MyVisitsPage() {
             </Link>
           </p>
         </div>
-      </main>
-    </div>
+    </main>
   );
 }

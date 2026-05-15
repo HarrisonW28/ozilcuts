@@ -1,7 +1,10 @@
 "use client";
 
 import { AccountSubnav } from "@/components/account-subnav";
-import { SiteHeader } from "@/components/site-header";
+import {
+  PageSessionSkeleton,
+  ProfileFormCardSkeleton,
+} from "@/components/loading";
 import { getStoredAuthToken } from "@/lib/auth-token";
 import { useSessionProfile } from "@/lib/use-session-profile";
 import {
@@ -24,7 +27,6 @@ import {
   Input,
   Label,
   ScreenTitle,
-  Skeleton,
 } from "@ozilcuts/ui";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
@@ -54,6 +56,7 @@ export default function ProfilePage() {
   const [preferences, setPreferences] = useState("");
   const [marketingOptIn, setMarketingOptIn] = useState(false);
   const [retentionPaused, setRetentionPaused] = useState(false);
+  const [arrivalLocationOptIn, setArrivalLocationOptIn] = useState(false);
   const [busy, setBusy] = useState(false);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -71,6 +74,7 @@ export default function ProfilePage() {
     setPreferences(loaded.preferences ?? "");
     setMarketingOptIn(loaded.marketing_opt_in);
     setRetentionPaused(loaded.retention_paused);
+    setArrivalLocationOptIn(loaded.arrival_location_opt_in);
   }, []);
 
   const load = useCallback(async () => {
@@ -130,6 +134,7 @@ export default function ProfilePage() {
         preferences: preferences.trim() === "" ? null : preferences.trim(),
         marketing_opt_in: marketingOptIn,
         retention_paused: retentionPaused,
+        arrival_location_opt_in: arrivalLocationOptIn,
       });
       hydrateForm(updated);
       setState((prev) =>
@@ -154,12 +159,7 @@ export default function ProfilePage() {
     session.kind === "ready" && session.user.role.slug === "customer";
 
   return (
-    <div className="flex min-h-dvh flex-1 flex-col">
-      <SiteHeader profile={session} onSignOut={signOut} />
-      <main
-        id="main-content"
-        className="page-main"
-      >
+    <main id="main-content" className="page-main app-shell-scroll flex-1">
         <div className="mx-auto w-full max-w-3xl page-stack">
           <div className="flex flex-col gap-6">
             <ScreenTitle
@@ -174,16 +174,10 @@ export default function ProfilePage() {
           </div>
 
           {session.kind === "loading" ? (
-            <div
-              className="space-y-3"
-              role="status"
-              aria-busy="true"
-              aria-label="Loading account"
-            >
-              <span className="sr-only">Loading…</span>
-              <Skeleton className="h-10 w-full max-w-lg rounded-lg" />
-              <Skeleton className="h-48 w-full rounded-xl" />
-            </div>
+            <PageSessionSkeleton
+              className="max-w-2xl"
+              statusLabel="Loading account"
+            />
           ) : null}
 
           {session.kind === "none" ? (
@@ -222,41 +216,7 @@ export default function ProfilePage() {
           ) : null}
 
           {isCustomer && (state.kind === "loading" || state.kind === "idle") ? (
-            <Card
-              role="status"
-              aria-busy="true"
-              aria-label="Loading profile"
-            >
-              <span className="sr-only">Loading profile…</span>
-              <CardHeader className="space-y-2">
-                <Skeleton className="h-5 w-40" />
-                <Skeleton className="h-4 w-full max-w-sm" />
-              </CardHeader>
-              <CardContent className="space-y-5">
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Skeleton className="h-3 w-16" />
-                    <Skeleton className="h-11 w-full rounded-lg" />
-                  </div>
-                  <div className="space-y-2">
-                    <Skeleton className="h-3 w-14" />
-                    <Skeleton className="h-11 w-full rounded-lg" />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Skeleton className="h-3 w-28" />
-                  <Skeleton className="h-11 w-full rounded-lg" />
-                </div>
-                <div className="space-y-2">
-                  <Skeleton className="h-3 w-32" />
-                  <Skeleton className="h-28 w-full rounded-lg" />
-                </div>
-                <div className="flex flex-wrap gap-2 pt-1">
-                  <Skeleton className="h-11 w-[7.5rem] rounded-md" />
-                  <Skeleton className="h-11 w-[7.5rem] rounded-md" />
-                </div>
-              </CardContent>
-            </Card>
+            <ProfileFormCardSkeleton />
           ) : null}
 
           {isCustomer && state.kind === "error" ? (
@@ -410,6 +370,43 @@ export default function ProfilePage() {
                     </div>
                   </div>
 
+                  <div className="flex items-start gap-2 rounded-lg border border-border/60 p-3">
+                    <input
+                      id="profile-arrival-location"
+                      type="checkbox"
+                      className="mt-1 size-4 rounded border-input"
+                      checked={arrivalLocationOptIn}
+                      onChange={(ev) =>
+                        setArrivalLocationOptIn(ev.target.checked)
+                      }
+                      aria-invalid={
+                        saveFieldErrors.arrival_location_opt_in
+                          ? true
+                          : undefined
+                      }
+                    />
+                    <div className="flex flex-col gap-1">
+                      <Label htmlFor="profile-arrival-location">
+                        Arrival location sharing
+                      </Label>
+                      <p className="text-xs text-muted-foreground">
+                        When enabled, the check-in page can send a{" "}
+                        <span className="font-medium text-foreground">
+                          coarse, infrequent
+                        </span>{" "}
+                        location ping during your visit window so you and your
+                        barber get a single &ldquo;near the shop&rdquo; in-app
+                        heads-up. Nothing is stored on your booking; you can
+                        turn this off anytime.
+                      </p>
+                      {saveFieldErrors.arrival_location_opt_in ? (
+                        <p className="text-sm text-destructive">
+                          {saveFieldErrors.arrival_location_opt_in}
+                        </p>
+                      ) : null}
+                    </div>
+                  </div>
+
                   {saveMessage ? (
                     <p className="text-sm text-emerald-700 dark:text-emerald-300" role="status">
                       {saveMessage}
@@ -445,7 +442,6 @@ export default function ProfilePage() {
             </Link>
           </p>
         </div>
-      </main>
-    </div>
+    </main>
   );
 }

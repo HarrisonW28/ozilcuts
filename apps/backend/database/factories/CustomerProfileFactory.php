@@ -25,6 +25,7 @@ class CustomerProfileFactory extends Factory
             'preferences' => fake()->optional(0.6)->sentence(),
             'marketing_opt_in' => fake()->boolean(25),
             'retention_paused' => false,
+            'arrival_location_opt_in' => false,
         ];
     }
 }

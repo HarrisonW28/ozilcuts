@@ -1,0 +1,17 @@
+/* Geofenced arrival — privacy-first proximity UX */
+
+.geofence-privacy-card {
+  @apply rounded-2xl border border-border/50 bg-muted/10 p-4 dark:bg-muted/5;
+}
+
+.geofence-proximity-banner {
+  @apply rounded-lg border border-teal-500/35 bg-teal-500/[0.06] px-3 py-2.5 text-sm leading-relaxed text-teal-950 dark:text-teal-100;
+}
+
+.geofence-prep-banner {
+  @apply rounded-2xl border border-amber-500/35 bg-gradient-to-r from-amber-500/[0.08] via-background/80 to-transparent px-4 py-3 dark:from-amber-400/[0.1];
+}
+
+.geofence-eta-chip {
+  @apply inline-flex items-center gap-1 rounded-full border border-teal-500/30 bg-teal-500/10 px-2.5 py-0.5 text-micro font-semibold tabular-nums text-teal-950 dark:text-teal-100;
+}

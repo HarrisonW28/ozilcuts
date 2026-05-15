@@ -1,6 +1,7 @@
 "use client";
 
 import { SiteHeader } from "@/components/site-header";
+import { PageSessionSkeleton } from "@/components/loading";
 import { getStoredAuthToken } from "@/lib/auth-token";
 import { formatGbp } from "@/lib/format-gbp";
 import {
@@ -140,9 +141,7 @@ export default function AdminBarberComparePage() {
           />
 
           {profile.kind === "loading" || profile.kind === "none" ? (
-            <p className="text-sm text-muted-foreground" role="status">
-              Loading…
-            </p>
+            <PageSessionSkeleton statusLabel="Loading" />
           ) : null}
 
           {profile.kind === "none" ? (
@@ -252,10 +251,10 @@ export default function AdminBarberComparePage() {
                     <div className={reportFilterActionsClass}>
                       <Button
                         type="submit"
-                        disabled={state.kind === "loading"}
+                        pending={state.kind === "loading"}
                         className={reportFilterActionButtonClass}
                       >
-                        {state.kind === "loading" ? "Loading…" : "Refresh"}
+                        Refresh
                       </Button>
                     </div>
                   </form>

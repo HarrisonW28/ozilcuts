@@ -1,0 +1,41 @@
+/**
+ * Operational presence (Sprint 22.5)
+ */
+
+@layer components {
+  .presence-panel-stack {
+    @apply space-y-4;
+  }
+
+  .presence-floor-strip {
+    @apply flex flex-wrap gap-2;
+  }
+
+  .presence-floor-chip {
+    @apply inline-flex min-h-9 items-center gap-1.5 rounded-full border px-2.5 py-1 text-micro font-semibold uppercase tracking-widecaps;
+  }
+
+  .presence-floor-chip--active {
+    @apply border-teal-500/35 bg-teal-500/10 text-teal-950 dark:text-teal-100;
+  }
+
+  .presence-floor-chip--muted {
+    @apply border-border/50 bg-muted/20 text-muted-foreground;
+  }
+
+  .presence-guest-list {
+    @apply divide-y divide-border/40 rounded-xl border border-border/45 bg-background/55 dark:bg-background/40;
+  }
+
+  .presence-guest-row {
+    @apply flex min-h-11 items-center gap-3 px-3 py-2.5;
+  }
+
+  .presence-digest-banner {
+    @apply flex items-start gap-3 rounded-2xl border border-teal-500/25 bg-teal-500/[0.06] px-3 py-3 dark:border-teal-400/20 dark:bg-teal-500/[0.08] sm:px-4;
+  }
+
+  .presence-operational-alert {
+    @apply rounded-2xl border border-amber-500/25 bg-amber-500/[0.06] px-3 py-3 dark:border-amber-500/20 dark:bg-amber-500/[0.08] sm:px-4;
+  }
+}

@@ -12,11 +12,22 @@ import {
   ozilcutsPageEnterTransition,
 } from "@/lib/motion";
 import { useSessionProfile } from "@/lib/use-session-profile";
-import { ApiError, fetchBarber, fetchBarberAvailability } from "@ozilcuts/api";
+import {
+  ApiError,
+  fetchBarber,
+  fetchBarberAvailability,
+  fetchBarberPortfolio,
+} from "@ozilcuts/api";
+import {
+  BarberImageryIntro,
+  PortfolioPreviewStrip,
+} from "@/components/content";
+import { SocialLinksStrip } from "@/components/social";
 import { Button, Skeleton } from "@ozilcuts/ui";
 import type {
   BarberAvailabilityPayload,
   BarberProfilePublic,
+  HaircutPhoto,
 } from "@ozilcuts/types";
 import { BARBER_WEEKDAY_LABELS } from "@ozilcuts/types";
 import { motion, useReducedMotion } from "framer-motion";
@@ -30,6 +41,7 @@ type DetailState =
       kind: "ok";
       profile: BarberProfilePublic;
       availability: BarberAvailabilityPayload | null;
+      portfolioPreview: HaircutPhoto[];
     }
   | { kind: "error"; message: string; notFound?: boolean };
 
@@ -70,10 +82,18 @@ export default function BarberDetailPage() {
       Promise.all([
         fetchBarber(userId),
         fetchBarberAvailability(userId).catch(() => null),
+        fetchBarberPortfolio(userId, 1, 12)
+          .then((res) => res.data)
+          .catch(() => [] as HaircutPhoto[]),
       ])
-        .then(([row, availability]) => {
+        .then(([row, availability, portfolioPreview]) => {
           if (isCancelled()) return;
-          setState({ kind: "ok", profile: row, availability });
+          setState({
+            kind: "ok",
+            profile: row,
+            availability,
+            portfolioPreview,
+          });
         })
         .catch((err: unknown) => {
           if (isCancelled()) return;
@@ -225,6 +245,20 @@ export default function BarberDetailPage() {
                   </div>
                 </div>
               </header>
+
+              <BarberImageryIntro
+                barberUserId={userId}
+                barberName={state.profile.barber.name}
+              />
+
+              <PortfolioPreviewStrip
+                photos={state.portfolioPreview}
+                barberUserId={userId}
+                barberName={state.profile.barber.name}
+                className="space-y-4"
+              />
+
+              <SocialLinksStrip className="pt-2" />
 
               <div className="grid gap-10 md:grid-cols-[minmax(0,1fr)_min(100%,15rem)] md:items-start md:gap-10 lg:grid-cols-[minmax(0,1fr)_min(100%,17.5rem)] lg:gap-16">
                 <div className="space-y-4 md:space-y-5">

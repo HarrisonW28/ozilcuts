@@ -6,6 +6,7 @@ import { ModeToggle } from "@/components/mode-toggle";
 import { NotificationsBell } from "@/components/notifications-bell";
 import { NotificationsToaster } from "@/components/notifications-toaster";
 import { SiteAccountMenu } from "@/components/site-account-menu";
+import { shouldHideMobileDrawerNav } from "@/lib/app-shell-nav";
 import {
   getAccountMenuGroups,
   getPrimaryNavSections,
@@ -46,6 +47,9 @@ export function SiteHeader({ profile, onSignOut }: SiteHeaderProps) {
   const navSections = getPrimaryNavSections(profile);
   const accountMenuGroups =
     profile.kind === "ready" ? getAccountMenuGroups(profile) : [];
+  const roleSlug =
+    profile.kind === "ready" ? profile.user.role.slug : null;
+  const hideMobileDrawerNav = shouldHideMobileDrawerNav(pathname, roleSlug);
 
   useEffect(() => {
     setMobileNavOpen(false);
@@ -199,6 +203,7 @@ export function SiteHeader({ profile, onSignOut }: SiteHeaderProps) {
                 </>
               ) : null}
             </nav>
+            {!hideMobileDrawerNav ? (
             <Button
               ref={menuButtonRef}
               type="button"
@@ -218,12 +223,13 @@ export function SiteHeader({ profile, onSignOut }: SiteHeaderProps) {
                 {mobileNavOpen ? "Close main menu" : "Open main menu"}
               </span>
             </Button>
+            ) : null}
           </div>
         </div>
 
         <AdminOnboardingResumeBar profile={profile} />
 
-        {mobileNavOpen ? (
+        {mobileNavOpen && !hideMobileDrawerNav ? (
           <nav
             ref={mobilePanelRef}
             id={menuId}

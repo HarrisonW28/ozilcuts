@@ -3,7 +3,7 @@
 import { getRoleDashboardHref } from "@/lib/dashboard-routes";
 import { useSessionProfile } from "@/lib/use-session-profile";
 import { OZILCUTS_APP_NAME } from "@ozilcuts/types";
-import { ScreenTitle } from "@ozilcuts/ui";
+import { ScreenTitle, Skeleton } from "@ozilcuts/ui";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
@@ -29,9 +29,15 @@ export default function DashboardRedirectPage() {
           title="Dashboard"
           description="Taking you to your workspace…"
         />
-        <p className="text-sm text-muted-foreground" role="status" aria-busy="true">
-          Loading…
-        </p>
+        <div
+          className="mx-auto w-full max-w-sm space-y-4"
+          role="status"
+          aria-busy="true"
+          aria-label="Redirecting to your dashboard"
+        >
+          <Skeleton className="mx-auto h-4 w-48 rounded-md" />
+          <Skeleton className="mx-auto h-4 w-40 rounded-md" />
+        </div>
       </div>
     </div>
   );

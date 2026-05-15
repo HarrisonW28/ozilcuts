@@ -427,7 +427,7 @@ export function CustomerNotesTagsSection({
                     />
                     Pin to top
                   </label>
-                  <Button type="submit" size="sm" disabled={draftBusy}>
+                  <Button type="submit" size="sm" pending={draftBusy}>
                     {draftBusy ? "Saving…" : "Add note"}
                   </Button>
                 </div>
@@ -491,7 +491,7 @@ export function CustomerNotesTagsSection({
                                 size="sm"
                                 variant="destructive"
                                 onClick={() => void onDeleteNote(note)}
-                                disabled={isBusy}
+                                pending={isBusy}
                               >
                                 {isBusy ? "Working…" : "Delete"}
                               </Button>
@@ -536,7 +536,7 @@ export function CustomerNotesTagsSection({
                                   type="button"
                                   size="sm"
                                   onClick={() => void saveEditing(note.id)}
-                                  disabled={editingBusy}
+                                  pending={editingBusy}
                                 >
                                   {editingBusy ? "Saving…" : "Save"}
                                 </Button>

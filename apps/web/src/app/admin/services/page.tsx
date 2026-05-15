@@ -1,6 +1,7 @@
 "use client";
 
 import { SiteHeader } from "@/components/site-header";
+import { PageSessionSkeleton } from "@/components/loading";
 import { getStoredAuthToken } from "@/lib/auth-token";
 import {
   formatGbp,
@@ -245,9 +246,7 @@ export default function AdminServicesPage() {
           />
 
           {profile.kind === "loading" || profile.kind === "none" ? (
-            <p className="text-sm text-muted-foreground" role="status">
-              Loading…
-            </p>
+            <PageSessionSkeleton statusLabel="Loading" />
           ) : null}
 
           {profile.kind === "error" ? (
@@ -603,7 +602,7 @@ export default function AdminServicesPage() {
                                 <div className="flex flex-wrap gap-2">
                                   <Button
                                     type="button"
-                                    disabled={editBusy}
+                                    pending={editBusy}
                                     onClick={() => void onSaveEdit(row.id)}
                                   >
                                     {editBusy ? "Saving…" : "Save"}

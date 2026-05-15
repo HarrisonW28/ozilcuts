@@ -1,8 +1,16 @@
 "use client";
 
+import { NotificationInboxList } from "@/components/notifications";
 import { SiteHeader } from "@/components/site-header";
+import { useShellPageChrome } from "@/lib/use-shell-page-chrome";
 import { NotificationListSkeleton } from "@/components/load-empty";
 import { getStoredAuthToken } from "@/lib/auth-token";
+import {
+  appointmentHref,
+  isRetentionBookNotification,
+  rebookHref,
+  sortNotificationsForDisplay,
+} from "@/lib/notification-presenter";
 import { useInbox } from "@/lib/use-inbox";
 import { useSessionProfile } from "@/lib/use-session-profile";
 import {
@@ -10,26 +18,23 @@ import {
   fetchNotifications,
   snoozeRebookNudge,
 } from "@ozilcuts/api";
-import type {
-  NotificationData,
-  NotificationEvent,
-  NotificationRecord,
-  Paginated,
-} from "@ozilcuts/types";
+import type { NotificationRecord, Paginated } from "@ozilcuts/types";
 import { OZILCUTS_APP_NAME } from "@ozilcuts/types";
 import {
   Button,
   Card,
-  CardContent,
   CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
   ScreenTitle,
   EmptyState,
+  Skeleton,
+  cn,
 } from "@ozilcuts/ui";
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 type LoadState =
   | { kind: "idle" }
@@ -37,222 +42,18 @@ type LoadState =
   | { kind: "ok"; page: Paginated<NotificationRecord> }
   | { kind: "error"; message: string };
 
-const EVENT_LABELS: Record<NotificationEvent, string> = {
-  "appointment.confirmed": "Appointment confirmed",
-  "appointment.cancelled": "Appointment cancelled",
-  "appointment.rescheduled": "Appointment rescheduled",
-  "appointment.reminder": "Appointment reminder",
-  "appointment.running_late": "Running late",
-  "appointment.rebook_suggested": "Time for your next visit",
-  "appointment.inactivity_nudge": "It's been a while",
-  "staff.booking.created": "New booking alert",
-  "staff.booking.cancelled": "Cancellation alert",
-  "staff.booking.rescheduled": "Reschedule alert",
-};
-
-function formatDateTime(iso: string | null | undefined): string {
-  if (!iso) return "";
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return iso;
-  return d.toLocaleString(undefined, {
-    weekday: "short",
-    month: "short",
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  });
-}
-
-function formatRelative(iso: string | null): string {
-  if (!iso) return "";
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return iso;
-  const diffSeconds = Math.floor((Date.now() - d.getTime()) / 1000);
-  if (diffSeconds < 60) return "just now";
-  if (diffSeconds < 3600) {
-    const m = Math.floor(diffSeconds / 60);
-    return `${m}m ago`;
-  }
-  if (diffSeconds < 86400) {
-    const h = Math.floor(diffSeconds / 3600);
-    return `${h}h ago`;
-  }
-  const days = Math.floor(diffSeconds / 86400);
-  if (days < 7) return `${days}d ago`;
-  return d.toLocaleDateString(undefined, {
-    month: "short",
-    day: "numeric",
-  });
-}
-
-function isRetentionBookNotification(type: NotificationEvent): boolean {
-  return (
-    type === "appointment.rebook_suggested" ||
-    type === "appointment.inactivity_nudge"
-  );
-}
-
-function describe(record: NotificationRecord): string {
-  const data: NotificationData = record.data;
-  const service =
-    typeof data.service_name === "string" && data.service_name.length > 0
-      ? data.service_name
-      : "your appointment";
-  const barber =
-    typeof data.barber_name === "string" && data.barber_name.length > 0
-      ? data.barber_name
-      : null;
-  const when =
-    typeof data.starts_at === "string" ? formatDateTime(data.starts_at) : "";
-
-  if (record.type === "appointment.confirmed") {
-    return barber
-      ? `${service} with ${barber}${when ? ` · ${when}` : ""}`
-      : `${service}${when ? ` · ${when}` : ""}`;
-  }
-  if (record.type === "appointment.cancelled") {
-    return barber
-      ? `${service} with ${barber} was cancelled.`
-      : `${service} was cancelled.`;
-  }
-  if (record.type === "appointment.rescheduled") {
-    const previous =
-      typeof data.previous_starts_at === "string"
-        ? formatDateTime(data.previous_starts_at)
-        : null;
-    const base = barber
-      ? `${service} with ${barber} moved to ${when}`
-      : `${service} moved to ${when}`;
-    return previous ? `${base} (was ${previous}).` : `${base}.`;
-  }
-  if (record.type === "appointment.reminder") {
-    const headline =
-      typeof data.headline === "string" && data.headline.length > 0
-        ? data.headline
-        : "Reminder";
-    return `${headline}${when ? ` · ${when}` : ""}`;
-  }
-  if (record.type === "appointment.running_late") {
-    const mins =
-      typeof data.late_by_minutes === "number" && data.late_by_minutes > 0
-        ? data.late_by_minutes
-        : null;
-    const barberLine = barber ? `${service} with ${barber}` : service;
-    const late =
-      mins === 1 ? "about 1 minute late" : mins ? `about ${mins} minutes late` : "running late";
-    return `${barberLine} — your barber is ${late}${when ? ` (${when})` : ""}.`;
-  }
-  if (
-    record.type === "appointment.rebook_suggested"
-    || record.type === "appointment.inactivity_nudge"
-  ) {
-    const interval =
-      typeof data.interval_days === "number" && data.interval_days > 0
-        ? data.interval_days
-        : null;
-    const suggestedRaw =
-      typeof data.suggested_date === "string" ? data.suggested_date : null;
-    const suggestedDate = suggestedRaw
-      ? new Date(`${suggestedRaw}T00:00:00`).toLocaleDateString(undefined, {
-          weekday: "short",
-          month: "short",
-          day: "numeric",
-        })
-      : null;
-    const cadence = interval
-      ? interval === 7
-        ? "about a week"
-        : interval % 7 === 0
-          ? `about ${Math.round(interval / 7)} weeks`
-          : `about ${interval} days`
-      : null;
-    const target = barber
-      ? `${service} with ${barber}`
-      : service;
-    if (record.type === "appointment.inactivity_nudge") {
-      if (cadence && suggestedDate) {
-        return `It's been ${cadence} since your last visit — still thinking about ${target}? Try ${suggestedDate}.`;
-      }
-      if (suggestedDate) {
-        return `It's been a while — still thinking about ${target}? Try ${suggestedDate}.`;
-      }
-      return `It's been a while since your last visit — book ${target} when you're ready.`;
-    }
-    if (cadence && suggestedDate) {
-      return `It's been ${cadence} since your last visit — try ${target} around ${suggestedDate}.`;
-    }
-    if (suggestedDate) {
-      return `Try ${target} around ${suggestedDate}.`;
-    }
-    return `Time to rebook ${target}.`;
-  }
-  if (
-    record.type === "staff.booking.created" ||
-    record.type === "staff.booking.cancelled" ||
-    record.type === "staff.booking.rescheduled"
-  ) {
-    const customer =
-      typeof data.customer_name === "string" && data.customer_name.length > 0
-        ? data.customer_name
-        : "Customer";
-    const actor =
-      typeof data.actor_name === "string" && data.actor_name.length > 0
-        ? ` · Action by ${data.actor_name}`
-        : "";
-    const previous =
-      record.type === "staff.booking.rescheduled" &&
-      typeof data.previous_starts_at === "string"
-        ? ` · Was ${formatDateTime(data.previous_starts_at)}`
-        : "";
-    if (record.type === "staff.booking.created") {
-      return `${customer} booked ${service}${when ? ` · ${when}` : ""}${actor}`;
-    }
-    if (record.type === "staff.booking.cancelled") {
-      return `${customer} cancelled ${service}${when ? ` · ${when}` : ""}${actor}`;
-    }
-    return `${customer} rescheduled ${service}${when ? ` · ${when}` : ""}${previous}${actor}`;
-  }
-  return EVENT_LABELS[record.type] ?? record.type;
-}
-
-function appointmentHref(record: NotificationRecord): string | null {
-  const id = record.data?.appointment_id;
-  if (typeof id === "number" && id > 0) {
-    return `/appointments/${id}/confirmation`;
-  }
-  return null;
-}
-
-/**
- * Deep-link to the booking flow with prefill from a rebook suggestion
- * payload, so customers can confirm in one tap.
- */
-function rebookHref(record: NotificationRecord): string | null {
-  if (!isRetentionBookNotification(record.type)) return null;
-  const data = record.data;
-  const params = new URLSearchParams();
-  if (typeof data.service_id === "number" && data.service_id > 0) {
-    params.set("service_id", String(data.service_id));
-  }
-  if (typeof data.barber_user_id === "number" && data.barber_user_id > 0) {
-    params.set("barber_user_id", String(data.barber_user_id));
-  }
-  if (
-    typeof data.suggested_date === "string"
-    && /^\d{4}-\d{2}-\d{2}$/.test(data.suggested_date)
-  ) {
-    params.set("date", data.suggested_date);
-  }
-  return `/book${params.size > 0 ? `?${params.toString()}` : ""}`;
-}
-
 export default function NotificationsPage() {
   const { profile, signOut } = useSessionProfile();
   const inbox = useInbox();
+  const searchParams = useSearchParams();
+  const initialFilter = searchParams.get("filter");
   const [page, setPage] = useState<number>(1);
   const [unreadOnly, setUnreadOnly] = useState<boolean>(false);
-  const [operationalOnly, setOperationalOnly] = useState<boolean>(false);
+  const [operationalOnly, setOperationalOnly] = useState<boolean>(
+    initialFilter === "operational",
+  );
   const [state, setState] = useState<LoadState>({ kind: "idle" });
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [busyId, setBusyId] = useState<number | null>(null);
   const [allBusy, setAllBusy] = useState<boolean>(false);
   const [snoozeBusyId, setSnoozeBusyId] = useState<number | null>(null);
@@ -260,13 +61,24 @@ export default function NotificationsPage() {
 
   const isReady = profile.kind === "ready";
 
+  const displayRecords = useMemo(() => {
+    if (state.kind !== "ok") return [];
+    return sortNotificationsForDisplay(state.page.data, {
+      operationalFirst: operationalOnly,
+    });
+  }, [state, operationalOnly]);
+
   const load = useCallback(async () => {
     const token = getStoredAuthToken();
     if (!token) {
       setState({ kind: "error", message: "Sign in required." });
       return;
     }
-    setState({ kind: "loading" });
+    setState((prev) => {
+      if (prev.kind === "ok") return prev;
+      return { kind: "loading" };
+    });
+    setIsRefreshing(true);
     try {
       const data = await fetchNotifications(token, {
         unread: unreadOnly,
@@ -281,7 +93,9 @@ export default function NotificationsPage() {
           : err instanceof Error
             ? err.message
             : "Failed to load notifications.";
-      setState({ kind: "error", message });
+      setState((prev) => (prev.kind === "ok" ? prev : { kind: "error", message }));
+    } finally {
+      setIsRefreshing(false);
     }
   }, [operationalOnly, page, unreadOnly]);
 
@@ -292,26 +106,48 @@ export default function NotificationsPage() {
 
   async function onMarkRead(record: NotificationRecord) {
     if (record.read_at !== null) return;
+    const readAt = new Date().toISOString();
     setBusyId(record.id);
+    setState((prev) => {
+      if (prev.kind !== "ok") return prev;
+      return {
+        kind: "ok",
+        page: {
+          ...prev.page,
+          data: prev.page.data.map((r) =>
+            r.id === record.id ? { ...r, read_at: readAt } : r,
+          ),
+        },
+      };
+    });
     try {
-      // Provider handles the API call + optimistic badge update so the
-      // header bell stays in sync without waiting for the next poll.
       await inbox.markRead(record.id);
-      await load();
     } catch {
-      // Surface inline; non-fatal.
+      await load();
     } finally {
       setBusyId(null);
     }
   }
 
   async function onMarkAllRead() {
+    const readAt = new Date().toISOString();
     setAllBusy(true);
+    setState((prev) => {
+      if (prev.kind !== "ok") return prev;
+      return {
+        kind: "ok",
+        page: {
+          ...prev.page,
+          data: prev.page.data.map((r) =>
+            r.read_at === null ? { ...r, read_at: readAt } : r,
+          ),
+        },
+      };
+    });
     try {
       await inbox.markAllRead();
-      await load();
     } catch {
-      // Soft-fail; user can retry.
+      await load();
     } finally {
       setAllBusy(false);
     }
@@ -343,24 +179,31 @@ export default function NotificationsPage() {
     }
   }
 
+  const { useCompactShellHeader } = useShellPageChrome();
+
   return (
-    <div className="flex min-h-dvh flex-1 flex-col">
-      <SiteHeader profile={profile} onSignOut={signOut} />
-      <main
-        id="main-content"
-        className="page-main"
-      >
+    <>
+      {!useCompactShellHeader ? (
+        <SiteHeader profile={profile} onSignOut={signOut} />
+      ) : null}
+      <main id="main-content" className="page-main app-shell-scroll flex-1">
         <div className="mx-auto w-full max-w-3xl page-stack">
           <ScreenTitle
             eyebrow={OZILCUTS_APP_NAME}
             title="Notifications"
-            description="Updates about your appointments and account."
+            description="A calm inbox for reminders, booking updates, and shop alerts — grouped by day."
           />
 
-          {profile.kind === "loading" || profile.kind === "none" ? (
-            <p className="text-sm text-muted-foreground" role="status">
-              Loading…
-            </p>
+          {profile.kind === "loading" ? (
+            <div
+              className="space-y-2"
+              role="status"
+              aria-busy="true"
+              aria-label="Loading session"
+            >
+              <Skeleton className="h-5 w-44 rounded-md" />
+              <Skeleton className="h-4 w-full max-w-md rounded-md" />
+            </div>
           ) : null}
 
           {profile.kind === "none" ? (
@@ -433,9 +276,9 @@ export default function NotificationsPage() {
                     size="sm"
                     variant="outline"
                     onClick={() => void onMarkAllRead()}
-                    disabled={allBusy}
+                    pending={allBusy}
                   >
-                    {allBusy ? "Marking…" : "Mark all read"}
+                    Mark all read
                   </Button>
                   <Button asChild size="sm" variant="ghost">
                     <Link href="/profile/notifications">Preferences</Link>
@@ -443,7 +286,7 @@ export default function NotificationsPage() {
                 </div>
               </div>
 
-              {state.kind === "loading" ? (
+              {state.kind === "loading" || state.kind === "idle" ? (
                 <NotificationListSkeleton rows={5} />
               ) : null}
               {state.kind === "error" ? (
@@ -466,115 +309,72 @@ export default function NotificationsPage() {
               ) : null}
 
               {state.kind === "ok" && state.page.data.length > 0 ? (
-                <ul className="flex flex-col gap-3">
-                  {state.page.data.map((row) => {
-                    const bookFromRetention = isRetentionBookNotification(
-                      row.type,
-                    );
-                    const canSnoozeRebook =
-                      row.type === "appointment.rebook_suggested";
-                    const rebookLink = bookFromRetention
-                      ? rebookHref(row)
-                      : null;
-                    const apptLink = bookFromRetention
-                      ? null
-                      : appointmentHref(row);
+                <NotificationInboxList
+                  records={displayRecords}
+                  isRefreshing={isRefreshing}
+                  renderActions={(row) => {
+                    const bookFromRetention = isRetentionBookNotification(row.type);
+                    const canSnoozeRebook = row.type === "appointment.rebook_suggested";
+                    const rebookLink = bookFromRetention ? rebookHref(row) : null;
+                    const apptLink = bookFromRetention ? null : appointmentHref(row);
                     const unread = row.read_at === null;
                     const snoozed = snoozedIds.has(row.id);
+
                     return (
-                      <li key={row.id}>
-                        <Card
-                          className={
-                            unread
-                              ? "border-primary/40 bg-primary/5"
-                              : undefined
-                          }
-                        >
-                          <CardHeader className="pb-2">
-                            <CardTitle className="flex items-center gap-2 text-base">
-                              <span>{EVENT_LABELS[row.type] ?? row.type}</span>
-                              {unread ? (
-                                <span
-                                  className="inline-block h-2 w-2 rounded-full bg-primary"
-                                  aria-label="unread"
-                                />
-                              ) : null}
-                            </CardTitle>
-                            <CardDescription className="text-xs text-muted-foreground">
-                              {formatRelative(row.created_at)}
-                            </CardDescription>
-                          </CardHeader>
-                          <CardContent>
-                            <p className="text-sm">{describe(row)}</p>
-                            {snoozed ? (
-                              <p
-                                className="mt-2 text-xs text-muted-foreground"
-                                role="status"
-                              >
-                                Snoozed for 7 days. We&rsquo;ll check back in
-                                if you haven&rsquo;t booked by then.
-                              </p>
-                            ) : null}
-                          </CardContent>
-                          <CardFooter className="flex flex-wrap gap-2">
-                            {rebookLink ? (
-                              <Button asChild size="sm">
-                                <Link
-                                  href={rebookLink}
-                                  onClick={() => {
-                                    if (unread) void onMarkRead(row);
-                                  }}
-                                >
-                                  Book again
-                                </Link>
-                              </Button>
-                            ) : null}
-                            {canSnoozeRebook && !snoozed ? (
-                              <Button
-                                type="button"
-                                size="sm"
-                                variant="outline"
-                                disabled={snoozeBusyId === row.id}
-                                onClick={() => void onSnoozeRebook(row)}
-                              >
-                                {snoozeBusyId === row.id
-                                  ? "Snoozing…"
-                                  : "Not now"}
-                              </Button>
-                            ) : null}
-                            {apptLink ? (
-                              <Button asChild size="sm" variant="secondary">
-                                <Link href={apptLink}>View appointment</Link>
-                              </Button>
-                            ) : null}
-                            {unread && !bookFromRetention ? (
-                              <Button
-                                type="button"
-                                size="sm"
-                                variant="outline"
-                                disabled={busyId === row.id}
-                                onClick={() => void onMarkRead(row)}
-                              >
-                                {busyId === row.id ? "Marking…" : "Mark read"}
-                              </Button>
-                            ) : null}
-                            {unread && bookFromRetention ? (
-                              <Button
-                                type="button"
-                                size="sm"
-                                variant="ghost"
-                                disabled={busyId === row.id}
-                                onClick={() => void onMarkRead(row)}
-                              >
-                                {busyId === row.id ? "Marking…" : "Mark read"}
-                              </Button>
-                            ) : null}
-                          </CardFooter>
-                        </Card>
-                      </li>
+                      <div
+                        className={cn(
+                          "flex flex-wrap gap-2",
+                          (busyId === row.id || allBusy) && "optimistic-row-pending",
+                        )}
+                      >
+                        {rebookLink ? (
+                          <Button asChild size="sm">
+                            <Link
+                              href={rebookLink}
+                              onClick={() => {
+                                if (unread) void onMarkRead(row);
+                              }}
+                            >
+                              Book again
+                            </Link>
+                          </Button>
+                        ) : null}
+                        {canSnoozeRebook && !snoozed ? (
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            pending={snoozeBusyId === row.id}
+                            onClick={() => void onSnoozeRebook(row)}
+                          >
+                            Not now
+                          </Button>
+                        ) : null}
+                        {apptLink ? (
+                          <Button asChild size="sm" variant="secondary">
+                            <Link href={apptLink}>View appointment</Link>
+                          </Button>
+                        ) : null}
+                        {unread ? (
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant={bookFromRetention ? "ghost" : "outline"}
+                            pending={busyId === row.id}
+                            onClick={() => void onMarkRead(row)}
+                          >
+                            Mark read
+                          </Button>
+                        ) : null}
+                        {snoozed ? (
+                          <p className="w-full text-caption text-muted-foreground" role="status">
+                            Snoozed for 7 days.
+                          </p>
+                        ) : null}
+                      </div>
                     );
-                  })}
-                </ul>
+                  }}
+                />
               ) : null}
 
               {state.kind === "ok" && state.page.meta.last_page > 1 ? (
@@ -618,6 +418,6 @@ export default function NotificationsPage() {
           </p>
         </div>
       </main>
-    </div>
+    </>
   );
 }

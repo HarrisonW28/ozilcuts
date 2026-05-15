@@ -1,5 +1,7 @@
 "use client";
 
+import { BarberOperationalHome } from "@/components/barber-operational-home";
+import { PageSessionSkeleton } from "@/components/loading";
 import { SiteHeader } from "@/components/site-header";
 import { useSessionProfile } from "@/lib/use-session-profile";
 import {
@@ -16,9 +18,7 @@ import { OZILCUTS_APP_NAME } from "@ozilcuts/types";
 import type { LucideIcon } from "lucide-react";
 import {
   BarChart3,
-  Bell,
   CalendarDays,
-  ClipboardList,
   Clock,
   LayoutDashboard,
   User,
@@ -91,7 +91,7 @@ function HubCard({
         </div>
       </CardHeader>
       <CardFooter className="border-t border-border/40 pt-4">
-        <Button asChild variant="outline" size="sm" className="w-full sm:w-auto">
+        <Button asChild variant="outline" size="sm" className="w-full min-h-11 touch-manipulation sm:min-h-9 sm:w-auto">
           <Link href={href}>{cta}</Link>
         </Button>
       </CardFooter>
@@ -110,9 +110,7 @@ export default function BarberDashboardPage() {
       <div className="flex min-h-dvh flex-1 flex-col">
         <SiteHeader profile={profile} onSignOut={signOut} />
         <main id="main-content" className="page-main">
-          <p className="text-sm text-muted-foreground" role="status">
-            Loading…
-          </p>
+          <PageSessionSkeleton statusLabel="Loading barber dashboard" />
         </main>
       </div>
     );
@@ -163,9 +161,11 @@ export default function BarberDashboardPage() {
         <div className="mx-auto w-full max-w-5xl page-stack">
           <ScreenTitle
             eyebrow={OZILCUTS_APP_NAME}
-            title="Dashboard"
-            description="Chair, hours, stats, inbox, and appointments—everything for your side of the shop."
+            title="Operations"
+            description="Today, your queue, haircut refs, and one-tap comms—then setup tools below."
           />
+
+          <BarberOperationalHome profile={profile} />
 
           <section
             aria-labelledby="barber-work-heading"
@@ -175,7 +175,7 @@ export default function BarberDashboardPage() {
               id="barber-work-heading"
               title="Workspace"
               icon={LayoutDashboard}
-              description="Day-to-day tools behind the chair."
+              description="Profile, chair, hours, and stats—when you have a beat to plan ahead."
             />
             <div className="grid gap-3 sm:grid-cols-2">
               <HubCard
@@ -207,34 +207,6 @@ export default function BarberDashboardPage() {
                 href="/barber/analytics"
                 cta="View stats"
                 className="sm:col-span-2"
-              />
-            </div>
-          </section>
-
-          <section
-            aria-labelledby="barber-ops-heading"
-            className="space-y-4 rounded-2xl border border-border/50 bg-card/30 p-4 shadow-sm sm:p-5 dark:bg-card/20"
-          >
-            <SectionHeading
-              id="barber-ops-heading"
-              title="Bookings & inbox"
-              icon={Bell}
-              description="Your list and shop notifications."
-            />
-            <div className="grid gap-3 sm:grid-cols-2">
-              <HubCard
-                icon={ClipboardList}
-                title="Appointments"
-                description="Upcoming cuts, confirmations, and changes."
-                href="/appointments"
-                cta="View appointments"
-              />
-              <HubCard
-                icon={Bell}
-                title="Notifications"
-                description="Alerts and nudges from the shop."
-                href="/notifications"
-                cta="Open inbox"
               />
             </div>
           </section>

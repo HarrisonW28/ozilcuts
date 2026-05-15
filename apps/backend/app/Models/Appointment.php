@@ -17,6 +17,14 @@ class Appointment extends Model
 
     public const STATUS_CANCELLED = 'cancelled';
 
+    public const ARRIVAL_EXPECTED = 'expected';
+
+    public const ARRIVAL_ARRIVED = 'arrived';
+
+    public const ARRIVAL_WAITING = 'waiting';
+
+    public const ARRIVAL_IN_CHAIR = 'in_chair';
+
     public const PAYMENT_NOT_REQUIRED = 'not_required';
 
     public const PAYMENT_REQUIRES_PAYMENT = 'requires_payment';
@@ -39,6 +47,7 @@ class Appointment extends Model
         'starts_at',
         'ends_at',
         'status',
+        'arrival_state',
         'notes',
         'deposit_cents',
         'payment_status',
@@ -58,6 +67,9 @@ class Appointment extends Model
             'ends_at' => 'datetime',
             'paid_at' => 'datetime',
             'refunded_at' => 'datetime',
+            'arrival_nearby_customer_notified_at' => 'datetime',
+            'arrival_nearby_barber_notified_at' => 'datetime',
+            'arrival_checked_in_barber_notified_at' => 'datetime',
         ];
     }
 
@@ -99,5 +111,21 @@ class Appointment extends Model
     public function reminders(): HasMany
     {
         return $this->hasMany(AppointmentReminder::class);
+    }
+
+    /**
+     * @return HasMany<AppointmentMessage, $this>
+     */
+    public function messages(): HasMany
+    {
+        return $this->hasMany(AppointmentMessage::class)->orderBy('id');
+    }
+
+    /**
+     * @return HasMany<AppointmentAdjustmentRequest, $this>
+     */
+    public function adjustmentRequests(): HasMany
+    {
+        return $this->hasMany(AppointmentAdjustmentRequest::class);
     }
 }

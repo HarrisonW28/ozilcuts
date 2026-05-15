@@ -1,10 +1,19 @@
 "use client";
 
+import { AppointmentAdjustmentPanel } from "@/components/appointment-adjustment-panel";
+import { AppointmentArrivalPanel } from "@/components/appointment-arrival-panel";
+import { AppointmentContextThread } from "@/components/appointment-context-thread";
 import { CustomerNotesTagsSection } from "@/components/customer-notes-tags-section";
 import { DepositPayment } from "@/components/deposit-payment";
+import { BookingConfirmationCardSkeleton } from "@/components/load-empty";
 import { HaircutMemoryStaffNav } from "@/components/haircut-memory-staff-nav";
 import { HaircutPhotosSection } from "@/components/haircut-photos-section";
+import { HaircutShareCardLoader } from "@/components/social";
+import { StaffAiCustomerSummaryPanel } from "@/components/staff-ai-customer-summary-panel";
+import { StaffCustomerRecognitionPanel } from "@/components/staff-customer-recognition-panel";
 import { SiteHeader } from "@/components/site-header";
+import { buildBookFromRebookHint, buildBookHref } from "@/lib/booking-url";
+import { useShellPageChrome } from "@/lib/use-shell-page-chrome";
 import { StaffPosCheckoutCard } from "@/components/staff-pos-checkout-card";
 import { getStoredAuthToken } from "@/lib/auth-token";
 import { formatGbp } from "@/lib/format-gbp";
@@ -33,6 +42,7 @@ import {
   CardHeader,
   CardTitle,
   ScreenTitle,
+  Skeleton,
   cn,
 } from "@ozilcuts/ui";
 import Link from "next/link";
@@ -54,15 +64,6 @@ function formatIsoDate(date: string): string {
     month: "short",
     day: "numeric",
   });
-}
-
-function buildBookAgainHref(suggestion: RebookSuggestion): string {
-  const params = new URLSearchParams({
-    service: String(suggestion.service_id),
-    barber: String(suggestion.barber_user_id),
-    date: suggestion.suggested_date,
-  });
-  return `/book?${params.toString()}`;
 }
 
 function formatLong(iso: string | null): string {
@@ -176,6 +177,7 @@ export default function ConfirmationPage() {
   const [hairProfileError, setHairProfileError] = useState<string | null>(null);
   const [rebookHint, setRebookHint] = useState<RebookSuggestion | null>(null);
   const [rebookHintLoading, setRebookHintLoading] = useState(false);
+  const [checkInAbsoluteUrl, setCheckInAbsoluteUrl] = useState("");
 
   const load = useCallback(async () => {
     const token = getStoredAuthToken();
@@ -202,6 +204,14 @@ export default function ConfirmationPage() {
             : "Failed to load appointment.";
       setState({ kind: "error", message });
     }
+  }, [appointmentId]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (!Number.isFinite(appointmentId) || appointmentId < 1) return;
+    setCheckInAbsoluteUrl(
+      `${window.location.origin}/appointments/${appointmentId}/check-in`,
+    );
   }, [appointmentId]);
 
   useEffect(() => {
@@ -250,11 +260,20 @@ export default function ConfirmationPage() {
     isReady &&
     (isAssignedBarber || profile.user.role.slug === "admin");
   const isAdmin = isReady && profile.user.role.slug === "admin";
+  const canUseVisitThread =
+    isReady &&
+    appointment !== null &&
+    (isCustomer || isAssignedBarber || isAdmin);
   const isPastAppointment =
     appointment !== null &&
     appointment.starts_at !== null &&
     !Number.isNaN(new Date(appointment.starts_at).getTime()) &&
     new Date(appointment.starts_at).getTime() < Date.now();
+  const canRequestQuickMove =
+    canUseVisitThread &&
+    appointment !== null &&
+    appointment.status === "confirmed" &&
+    !isPastAppointment;
   const canSuggestRebook =
     isReady &&
     appointment !== null &&
@@ -325,13 +344,14 @@ export default function ConfirmationPage() {
     };
   }, [isStaff, appointment]);
 
+  const { useCompactShellHeader } = useShellPageChrome();
+
   return (
-    <div className="flex min-h-dvh flex-1 flex-col">
-      <SiteHeader profile={profile} onSignOut={signOut} />
-      <main
-        id="main-content"
-        className="page-main"
-      >
+    <>
+      {!useCompactShellHeader ? (
+        <SiteHeader profile={profile} onSignOut={signOut} />
+      ) : null}
+      <main id="main-content" className="page-main app-shell-scroll flex-1">
         <div className="mx-auto w-full max-w-2xl page-stack">
           <ScreenTitle
             eyebrow={OZILCUTS_APP_NAME}
@@ -364,9 +384,15 @@ export default function ConfirmationPage() {
           ) : null}
 
           {profile.kind === "loading" ? (
-            <p className="text-sm text-muted-foreground" role="status">
-              Loading…
-            </p>
+            <div
+              className="space-y-2"
+              role="status"
+              aria-busy="true"
+              aria-label="Loading session"
+            >
+              <Skeleton className="h-4 w-36 rounded-md" />
+              <Skeleton className="h-4 w-52 max-w-full rounded-md" />
+            </div>
           ) : null}
 
           {profile.kind === "none" ? (
@@ -386,32 +412,7 @@ export default function ConfirmationPage() {
           ) : null}
 
           {isReady && state.kind === "loading" ? (
-            <div
-              className="animate-pulse space-y-4 rounded-2xl border border-border/50 bg-card/45 p-6 ring-1 ring-border/45"
-              aria-busy="true"
-              aria-label="Loading booking"
-            >
-              <div className="flex flex-wrap items-start justify-between gap-4">
-                <div className="space-y-3">
-                  <div className="h-7 w-48 max-w-full rounded-lg bg-muted/55" />
-                  <div className="h-4 w-72 max-w-full rounded-md bg-muted/45" />
-                </div>
-                <div className="flex gap-2">
-                  <div className="h-7 w-24 rounded-full bg-muted/50" />
-                  <div className="h-7 w-28 rounded-full bg-muted/40" />
-                </div>
-              </div>
-              <div className="grid gap-3 pt-2 sm:grid-cols-2">
-                <div className="h-12 rounded-xl bg-muted/40" />
-                <div className="h-12 rounded-xl bg-muted/35" />
-                <div className="h-12 rounded-xl bg-muted/35" />
-                <div className="h-12 rounded-xl bg-muted/30" />
-              </div>
-              <div className="flex flex-wrap gap-2 pt-2">
-                <div className="h-10 w-28 rounded-lg bg-muted/45" />
-                <div className="h-10 w-32 rounded-lg bg-muted/40" />
-              </div>
-            </div>
+            <BookingConfirmationCardSkeleton />
           ) : null}
 
           {isReady && state.kind === "error" ? (
@@ -514,6 +515,18 @@ export default function ConfirmationPage() {
                 >
                   <Link href="/appointments">My appointments</Link>
                 </Button>
+                {appointment.status === "confirmed" && !isPastAppointment ? (
+                  <Button
+                    asChild
+                    variant="outline"
+                    size="sm"
+                    className="min-h-11 touch-manipulation sm:min-h-9"
+                  >
+                    <Link href={`/appointments/${appointment.id}/check-in`}>
+                      Check-in page
+                    </Link>
+                  </Button>
+                ) : null}
                 {appointment.status === "confirmed" &&
                 isCustomer &&
                 !isPastAppointment ? (
@@ -546,7 +559,7 @@ export default function ConfirmationPage() {
                     size="sm"
                     className="min-h-11 touch-manipulation sm:min-h-9"
                   >
-                    <Link href={buildBookAgainHref(rebookHint)}>
+                    <Link href={buildBookFromRebookHint(rebookHint)}>
                       Book this again
                       <span className="ml-1 text-xs font-normal opacity-80">
                         · suggested {formatIsoDate(rebookHint.suggested_date)}
@@ -566,7 +579,11 @@ export default function ConfirmationPage() {
                     className="min-h-11 touch-manipulation sm:min-h-9"
                   >
                     <Link
-                      href={`/book?service=${appointment.service.id}&barber=${appointment.barber.id}`}
+                      href={buildBookHref({
+                        serviceId: appointment.service.id,
+                        barberUserId: appointment.barber.id,
+                        express: true,
+                      })}
                     >
                       Book this again
                     </Link>
@@ -576,11 +593,72 @@ export default function ConfirmationPage() {
             </Card>
           ) : null}
 
+          {canUseVisitThread && appointment ? (
+            (() => {
+              const token = getStoredAuthToken();
+              if (!token) return null;
+
+              return (
+                <div className="mt-5 md:mt-6 space-y-5">
+                  <AppointmentAdjustmentPanel
+                    appointment={appointment}
+                    token={token}
+                    canRequest={canRequestQuickMove}
+                    rescheduleHref={`/appointments/${appointment.id}/reschedule`}
+                    onAppointmentUpdated={(row) =>
+                      setState({ kind: "ok", appointment: row })
+                    }
+                  />
+                  <AppointmentContextThread
+                    appointmentId={appointment.id}
+                    token={token}
+                    viewerUserId={profile.user.id}
+                    isShopSide={isAssignedBarber || isAdmin}
+                    endsAt={appointment.ends_at}
+                  />
+                </div>
+              );
+            })()
+          ) : null}
+
+          {isReady &&
+          appointment &&
+          appointment.status === "confirmed" &&
+          !isPastAppointment &&
+          checkInAbsoluteUrl ? (
+            (() => {
+              const token = getStoredAuthToken();
+              if (!token) return null;
+
+              return (
+                <AppointmentArrivalPanel
+                  appointment={appointment}
+                  token={token}
+                  mode={isCustomer ? "customer" : isStaff ? "staff" : "customer"}
+                  checkInAbsoluteUrl={checkInAbsoluteUrl}
+                  onUpdated={(row) => setState({ kind: "ok", appointment: row })}
+                />
+              );
+            })()
+          ) : null}
+
           {isReady && appointment && isStaff ? (
             <StaffPosCheckoutCard
               appointment={appointment}
               confirmationPath={`/appointments/${appointment.id}/confirmation`}
             />
+          ) : null}
+
+          {isReady && appointment && isStaff ? (
+            <StaffCustomerRecognitionPanel
+              appointmentId={appointment.id}
+              currentServiceId={appointment.service?.id ?? null}
+              enabled
+            />
+          ) : null}
+
+          {isReady && appointment && isStaff ? (
+            <StaffAiCustomerSummaryPanel appointmentId={appointment.id} enabled className="mt-6" />
           ) : null}
 
           {isReady && appointment && isStaff ? (
@@ -731,6 +809,21 @@ export default function ConfirmationPage() {
             </div>
           ) : null}
 
+          {isReady &&
+          appointment &&
+          isCustomer &&
+          appointment.status === "confirmed" &&
+          appointment.barber ? (
+            <HaircutShareCardLoader
+              className="mt-6"
+              appointmentId={appointment.id}
+              barberName={appointment.barber.name}
+              serviceName={appointment.service?.name}
+              visitDateIso={appointment.starts_at}
+              barberUserId={appointment.barber.id}
+            />
+          ) : null}
+
           {isReady && appointment && isStaff && appointment.customer ? (
             <div id="memory-staff-notes" className="scroll-mt-28">
               <CustomerNotesTagsSection
@@ -792,6 +885,6 @@ export default function ConfirmationPage() {
           </p>
         </div>
       </main>
-    </div>
+    </>
   );
 }

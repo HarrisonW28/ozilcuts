@@ -1,13 +1,27 @@
 <?php
 
+use App\Http\Controllers\Api\V1\AppointmentAdjustmentRequestApproveController;
+use App\Http\Controllers\Api\V1\AppointmentAdjustmentRequestRejectController;
+use App\Http\Controllers\Api\V1\AppointmentAdjustmentRequestShowController;
+use App\Http\Controllers\Api\V1\AppointmentAdjustmentRequestStoreController;
+use App\Http\Controllers\Api\V1\AppointmentAdjustmentRequestWithdrawController;
+use App\Http\Controllers\Api\V1\AppointmentAdjustmentSuggestionsController;
+use App\Http\Controllers\Api\V1\AppointmentArrivalProximityController;
+use App\Http\Controllers\Api\V1\AppointmentArrivalUpdateController;
 use App\Http\Controllers\Api\V1\AppointmentCalendarController;
 use App\Http\Controllers\Api\V1\AppointmentCalendarLinkController;
 use App\Http\Controllers\Api\V1\AppointmentCancelController;
+use App\Http\Controllers\Api\V1\AppointmentCustomerAiSummaryController;
+use App\Http\Controllers\Api\V1\AppointmentCustomerInsightsController;
 use App\Http\Controllers\Api\V1\AppointmentHaircutPhotoIndexController;
 use App\Http\Controllers\Api\V1\AppointmentHaircutPhotoStoreController;
 use App\Http\Controllers\Api\V1\AppointmentHairProfileShowController;
 use App\Http\Controllers\Api\V1\AppointmentIndexController;
+use App\Http\Controllers\Api\V1\AppointmentMessageIndexController;
+use App\Http\Controllers\Api\V1\AppointmentMessageReadController;
+use App\Http\Controllers\Api\V1\AppointmentMessageStoreController;
 use App\Http\Controllers\Api\V1\AppointmentPaymentIntentController;
+use App\Http\Controllers\Api\V1\AppointmentQueueIntelligenceController;
 use App\Http\Controllers\Api\V1\AppointmentRebookHintController;
 use App\Http\Controllers\Api\V1\AppointmentRebookNudgeSnoozeController;
 use App\Http\Controllers\Api\V1\AppointmentReminderController;
@@ -34,6 +48,7 @@ use App\Http\Controllers\Api\V1\BarberPortfolioController;
 use App\Http\Controllers\Api\V1\BarberSelfProfileShowController;
 use App\Http\Controllers\Api\V1\BarberShowController;
 use App\Http\Controllers\Api\V1\BarberSlotsController;
+use App\Http\Controllers\Api\V1\BarberSmartSlotHintsController;
 use App\Http\Controllers\Api\V1\CurrentUserController;
 use App\Http\Controllers\Api\V1\CustomerAnalyticsAggregateController;
 use App\Http\Controllers\Api\V1\CustomerAnalyticsShowController;
@@ -97,6 +112,8 @@ Route::get('/barbers/{user}/availability', BarberAvailabilityPublicController::c
     ->middleware('throttle:60,1');
 Route::get('/barbers/{user}/slots', BarberSlotsController::class)
     ->middleware('throttle:60,1');
+Route::get('/barbers/{user}/smart-slot-hints', BarberSmartSlotHintsController::class)
+    ->middleware(['throttle:90,1', 'optional.sanctum']);
 Route::get('/barbers/{user}/portfolio', BarberPortfolioController::class)
     ->middleware('throttle:60,1');
 
@@ -167,6 +184,26 @@ Route::middleware('auth:sanctum')->group(function (): void {
     Route::get('/staff/customers/search', StaffCustomerSearchController::class)
         ->middleware('throttle:90,1');
     Route::get('/appointments/{appointment}', AppointmentShowController::class);
+    Route::get('/appointments/{appointment}/messages', AppointmentMessageIndexController::class)
+        ->middleware('throttle:120,1');
+    Route::post('/appointments/{appointment}/messages', AppointmentMessageStoreController::class)
+        ->middleware('throttle:45,1');
+    Route::post('/appointments/{appointment}/messages/read', AppointmentMessageReadController::class)
+        ->middleware('throttle:90,1');
+    Route::get('/appointments/{appointment}/adjustment-suggestions', AppointmentAdjustmentSuggestionsController::class)
+        ->middleware('throttle:90,1');
+    Route::get('/appointments/{appointment}/adjustment-request', AppointmentAdjustmentRequestShowController::class)
+        ->middleware('throttle:90,1');
+    Route::post('/appointments/{appointment}/adjustment-request', AppointmentAdjustmentRequestStoreController::class)
+        ->middleware('throttle:30,1');
+    Route::patch('/appointments/{appointment}/adjustment-request/approve', AppointmentAdjustmentRequestApproveController::class)
+        ->middleware('throttle:30,1');
+    Route::patch('/appointments/{appointment}/adjustment-request/reject', AppointmentAdjustmentRequestRejectController::class)
+        ->middleware('throttle:30,1');
+    Route::patch('/appointments/{appointment}/adjustment-request/withdraw', AppointmentAdjustmentRequestWithdrawController::class)
+        ->middleware('throttle:30,1');
+    Route::get('/appointments/{appointment}/queue-intelligence', AppointmentQueueIntelligenceController::class)
+        ->middleware('throttle:60,1');
     Route::get('/appointments/{appointment}/calendar-url', AppointmentCalendarLinkController::class)
         ->middleware('throttle:30,1');
     Route::get('/appointments/{appointment}/payment-intent', AppointmentPaymentIntentController::class)
@@ -175,6 +212,10 @@ Route::middleware('auth:sanctum')->group(function (): void {
         ->middleware('throttle:60,1');
     Route::get('/appointments/{appointment}/hair-profile', AppointmentHairProfileShowController::class)
         ->middleware('throttle:60,1');
+    Route::get('/appointments/{appointment}/customer-insights', AppointmentCustomerInsightsController::class)
+        ->middleware('throttle:60,1');
+    Route::get('/appointments/{appointment}/customer-ai-summary', AppointmentCustomerAiSummaryController::class)
+        ->middleware('throttle:20,1');
     Route::get('/customers/{user}/notes', CustomerNoteIndexController::class);
     Route::post('/customers/{user}/notes', CustomerNoteStoreController::class)
         ->middleware('throttle:60,1');
@@ -199,6 +240,10 @@ Route::middleware('auth:sanctum')->group(function (): void {
     Route::patch('/appointments/{appointment}/cancel', AppointmentCancelController::class)
         ->middleware('throttle:30,1');
     Route::patch('/appointments/{appointment}/reschedule', AppointmentRescheduleController::class)
+        ->middleware('throttle:30,1');
+    Route::patch('/appointments/{appointment}/arrival', AppointmentArrivalUpdateController::class)
+        ->middleware('throttle:60,1');
+    Route::post('/appointments/{appointment}/arrival-proximity', AppointmentArrivalProximityController::class)
         ->middleware('throttle:30,1');
     Route::post('/appointments/{appointment}/reminder', AppointmentReminderController::class)
         ->middleware('throttle:30,1');

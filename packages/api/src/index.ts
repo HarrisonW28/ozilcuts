@@ -3,6 +3,20 @@ import type { ApiHealthResponse } from "@ozilcuts/types";
 import { getApiBaseUrl } from "./base";
 
 export {
+  fetchAppointmentCustomerInsights,
+} from "./appointmentCustomerInsights";
+export {
+  fetchAppointmentCustomerAiSummary,
+} from "./appointmentCustomerAiSummary";
+export {
+  approveAppointmentAdjustmentRequest,
+  createAppointmentAdjustmentRequest,
+  fetchAppointmentAdjustmentRequest,
+  fetchAppointmentAdjustmentSuggestions,
+  rejectAppointmentAdjustmentRequest,
+  withdrawAppointmentAdjustmentRequest,
+} from "./appointmentAdjustments";
+export {
   ApiError,
   ApiValidationError,
   fetchCurrentUser,
@@ -28,14 +42,23 @@ export {
   createAppointment,
   createWalkInAppointment,
   fetchAppointment,
+  fetchAppointmentQueueIntelligence,
   fetchAppointmentCalendarLink,
   fetchAppointmentPaymentIntent,
   fetchBarberSlots,
+  fetchBarberSmartSlotHints,
   fetchMyAppointments,
   rescheduleAppointment,
   sendAppointmentReminder,
   sendAppointmentRunningLate,
+  updateAppointmentArrival,
+  postAppointmentArrivalProximity,
 } from "./booking";
+export {
+  fetchAppointmentThread,
+  markAppointmentThreadRead,
+  postAppointmentThreadMessage,
+} from "./appointmentMessages";
 export {
   fetchCustomerAnalytics,
   fetchCustomerAnalyticsAggregate,

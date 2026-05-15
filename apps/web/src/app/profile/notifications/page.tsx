@@ -1,7 +1,6 @@
 "use client";
 
 import { AccountSubnav } from "@/components/account-subnav";
-import { SiteHeader } from "@/components/site-header";
 import { getStoredAuthToken } from "@/lib/auth-token";
 import { useSessionProfile } from "@/lib/use-session-profile";
 import {
@@ -139,12 +138,7 @@ export default function NotificationPreferencesPage() {
   }
 
   return (
-    <div className="flex min-h-dvh flex-1 flex-col">
-      <SiteHeader profile={profile} onSignOut={signOut} />
-      <main
-        id="main-content"
-        className="page-main"
-      >
+    <main id="main-content" className="page-main app-shell-scroll flex-1">
         <div className="mx-auto w-full max-w-3xl page-stack">
           <div className="flex flex-col gap-6">
             <ScreenTitle
@@ -314,7 +308,6 @@ export default function NotificationPreferencesPage() {
             </Link>
           </p>
         </div>
-      </main>
-    </div>
+    </main>
   );
 }

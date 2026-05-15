@@ -1,20 +1,33 @@
 "use client";
 
+import { BookingInstantConfirm } from "@/components/booking-instant-confirm";
+import { BookingQuickShortcuts } from "@/components/booking-quick-shortcuts";
+import { BookingSelectionChips } from "@/components/booking-selection-chips";
+import { BookingSlotPicker } from "@/components/booking-slot-picker";
 import { StaffCustomerLookup } from "@/components/staff-customer-lookup";
 import { SiteHeader } from "@/components/site-header";
+import { useShellPageChrome } from "@/lib/use-shell-page-chrome";
 import {
   BookCatalogFormSkeleton,
+  BookQuickRepeatCardSkeleton,
   TimeSlotChipsSkeleton,
 } from "@/components/load-empty";
 import { getStoredAuthToken } from "@/lib/auth-token";
+import {
+  readRememberedBooking,
+  writeRememberedBooking,
+} from "@/lib/booking-remembered-preferences";
+import { orderSlotsWithSuggestions } from "@/lib/booking-slot-suggestions";
 import { formatGbp } from "@/lib/format-gbp";
 import { reportFilterControlClass } from "@/lib/report-filter-classes";
+import type { SmartSlotHintsLoadStatus } from "@/lib/smart-slot-hints";
 import { useSessionProfile } from "@/lib/use-session-profile";
 import {
   ApiError,
   ApiValidationError,
   createAppointment,
   fetchBarberSlots,
+  fetchBarberSmartSlotHints,
   fetchBarbers,
   fetchCustomerProfile,
   fetchNextVisitSuggestion,
@@ -22,6 +35,7 @@ import {
 } from "@ozilcuts/api";
 import type {
   BarberProfilePublic,
+  BarberSmartSlotHintsPayload,
   CustomerProfile,
   RebookSuggestion,
   ServiceSummary,
@@ -42,7 +56,14 @@ import {
 } from "@ozilcuts/ui";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import {
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 function todayIso(): string {
   const d = new Date();
@@ -113,6 +134,7 @@ function BookingFlow() {
     parsePositiveIntParam(search.get("barber_user_id")) ??
     parsePositiveIntParam(search.get("barber"));
   const initialDate = parseIsoDateParam(search.get("date"), today);
+  const wantsExpress = search.get("express") === "1";
 
   const { profile, signOut } = useSessionProfile();
 
@@ -121,6 +143,11 @@ function BookingFlow() {
   const [barberId, setBarberId] = useState<number | null>(initialBarberId);
   const [date, setDate] = useState<string>(initialDate);
   const [slots, setSlots] = useState<SlotsState>({ kind: "idle" });
+  const [slotHints, setSlotHints] = useState<BarberSmartSlotHintsPayload | null>(
+    null,
+  );
+  const [slotHintsStatus, setSlotHintsStatus] =
+    useState<SmartSlotHintsLoadStatus>("idle");
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
   const [notes, setNotes] = useState("");
   const [bookBusy, setBookBusy] = useState(false);
@@ -130,6 +157,21 @@ function BookingFlow() {
   const [quickRepeat, setQuickRepeat] = useState<QuickRepeatState>({
     kind: "idle",
   });
+  const [pickerExpanded, setPickerExpanded] = useState(
+    () => !wantsExpress || !(initialServiceId && initialBarberId),
+  );
+
+  const rememberedAppliedRef = useRef(false);
+  const pendingAutoSelectSlotRef = useRef(false);
+
+  const hadUrlServiceBarberPrefill = useMemo(() => {
+    return (
+      parsePositiveIntParam(search.get("service_id")) !== null ||
+      parsePositiveIntParam(search.get("service")) !== null ||
+      parsePositiveIntParam(search.get("barber_user_id")) !== null ||
+      parsePositiveIntParam(search.get("barber")) !== null
+    );
+  }, [search]);
 
   useEffect(() => {
     let cancelled = false;
@@ -198,6 +240,63 @@ function BookingFlow() {
     };
   }, [profile]);
 
+  const isReady = profile.kind === "ready";
+  const isCustomer = isReady && profile.user.role.slug === "customer";
+
+  useEffect(() => {
+    if (!wantsExpress) return;
+    if (initialServiceId && initialBarberId) {
+      pendingAutoSelectSlotRef.current = true;
+      setPickerExpanded(false);
+    }
+  }, [wantsExpress, initialServiceId, initialBarberId]);
+
+  useEffect(() => {
+    if (rememberedAppliedRef.current) return;
+    if (catalog.kind !== "ok") return;
+    if (!isCustomer) return;
+    if (hadUrlServiceBarberPrefill) return;
+    const remembered = readRememberedBooking();
+    if (!remembered) return;
+    const svcOk = catalog.services.some((s) => s.id === remembered.serviceId);
+    const barberOk = catalog.barbers.some(
+      (b) => b.barber.id === remembered.barberId,
+    );
+    if (!svcOk || !barberOk) return;
+    rememberedAppliedRef.current = true;
+    pendingAutoSelectSlotRef.current = true;
+    setServiceId(remembered.serviceId);
+    setBarberId(remembered.barberId);
+    if (remembered.dateYmd) {
+      setDate(parseIsoDateParam(remembered.dateYmd, today));
+    }
+    setPickerExpanded(false);
+    setSelectedSlot(null);
+    setBookError(null);
+  }, [catalog, isCustomer, hadUrlServiceBarberPrefill, today]);
+
+  useEffect(() => {
+    if (slots.kind === "error") {
+      pendingAutoSelectSlotRef.current = false;
+      return;
+    }
+    if (!pendingAutoSelectSlotRef.current) return;
+    if (slots.kind !== "ok") return;
+    if (slots.slots.length === 0) {
+      pendingAutoSelectSlotRef.current = false;
+      return;
+    }
+    pendingAutoSelectSlotRef.current = false;
+    const ordered = orderSlotsWithSuggestions(
+      slots.slots,
+      date,
+      new Date(),
+      slotHints,
+    );
+    const first = ordered[0]?.slot;
+    if (first) setSelectedSlot(first);
+  }, [slots, date, slotHints]);
+
   useEffect(() => {
     if (profile.kind !== "ready") return;
     if (profile.user.role.slug !== "barber") return;
@@ -212,13 +311,39 @@ function BookingFlow() {
   const loadSlots = useCallback(async () => {
     if (serviceId === null || barberId === null || !date) {
       setSlots({ kind: "idle" });
+      setSlotHints(null);
+      setSlotHintsStatus("idle");
       return;
     }
     setSlots({ kind: "loading" });
+    setSlotHints(null);
+    setSlotHintsStatus("loading");
     setSelectedSlot(null);
     try {
-      const data = await fetchBarberSlots(barberId, serviceId, date);
-      setSlots({ kind: "ok", slots: data.slots });
+      const token = getStoredAuthToken();
+      const [dataOutcome, hintOutcome] = await Promise.all([
+        fetchBarberSlots(barberId, serviceId, date).then(
+          (d) => ({ ok: true as const, data: d }),
+          (err: unknown) => ({ ok: false as const, err }),
+        ),
+        fetchBarberSmartSlotHints(barberId, serviceId, date, token).then(
+          (h) => ({ ok: true as const, data: h }),
+          () => ({ ok: false as const }),
+        ),
+      ]);
+
+      if (!dataOutcome.ok) {
+        throw dataOutcome.err;
+      }
+
+      setSlots({ kind: "ok", slots: dataOutcome.data.slots });
+      if (hintOutcome.ok) {
+        setSlotHints(hintOutcome.data);
+        setSlotHintsStatus("ok");
+      } else {
+        setSlotHints(null);
+        setSlotHintsStatus("error");
+      }
     } catch (e: unknown) {
       const message =
         e instanceof ApiError
@@ -227,6 +352,8 @@ function BookingFlow() {
             ? e.message
             : "Unable to load times.";
       setSlots({ kind: "error", message });
+      setSlotHints(null);
+      setSlotHintsStatus("error");
     }
   }, [serviceId, barberId, date]);
 
@@ -251,16 +378,53 @@ function BookingFlow() {
     return catalog.barbers.find((b) => b.barber.id === preferredId) ?? null;
   }, [catalog, quickRepeat]);
 
+  const rememberedChoice = useMemo(() => {
+    if (!isCustomer || catalog.kind !== "ok") return null;
+    const r = readRememberedBooking();
+    if (!r) return null;
+    const svcOk = catalog.services.some((s) => s.id === r.serviceId);
+    const barberOk = catalog.barbers.some((b) => b.barber.id === r.barberId);
+    return svcOk && barberOk ? r : null;
+  }, [isCustomer, catalog]);
+
+  const slotDisplayItems = useMemo(() => {
+    if (slots.kind !== "ok") return [];
+    return orderSlotsWithSuggestions(slots.slots, date, new Date(), slotHints);
+  }, [slots, date, slotHints]);
+
+  const customerProfileNotesHint = useMemo(() => {
+    if (!isCustomer || quickRepeat.kind !== "ok") return "";
+    return quickRepeat.customerProfile?.preferences?.trim() ?? "";
+  }, [isCustomer, quickRepeat]);
+
   function applyNextVisitSuggestion(suggestion: RebookSuggestion) {
+    pendingAutoSelectSlotRef.current = true;
     setServiceId(suggestion.service_id);
     setBarberId(suggestion.barber_user_id);
     setDate(parseIsoDateParam(suggestion.suggested_date, today));
+    setPickerExpanded(false);
     setSelectedSlot(null);
     setBookError(null);
   }
 
   function applyPreferredBarberShortcut(barberUserId: number) {
     setBarberId(barberUserId);
+    setPickerExpanded(true);
+    setSelectedSlot(null);
+    setBookError(null);
+  }
+
+  function applyRememberedServiceWithBarber(barberUserId: number) {
+    if (!rememberedChoice || rememberedChoice.barberId !== barberUserId) {
+      return;
+    }
+    pendingAutoSelectSlotRef.current = true;
+    setServiceId(rememberedChoice.serviceId);
+    setBarberId(rememberedChoice.barberId);
+    if (rememberedChoice.dateYmd) {
+      setDate(parseIsoDateParam(rememberedChoice.dateYmd, today));
+    }
+    setPickerExpanded(false);
     setSelectedSlot(null);
     setBookError(null);
   }
@@ -299,6 +463,9 @@ function BookingFlow() {
           ? { customer_user_id: selectedCustomer.id }
           : {}),
       });
+      if (isCustomer) {
+        writeRememberedBooking({ serviceId, barberId, dateYmd: date });
+      }
       router.push(`/appointments/${booked.id}/confirmation?just_booked=1`);
       return;
     } catch (err) {
@@ -314,8 +481,6 @@ function BookingFlow() {
     }
   }
 
-  const isReady = profile.kind === "ready";
-  const isCustomer = isReady && profile.user.role.slug === "customer";
   const isStaffBooker =
     isReady &&
     (profile.user.role.slug === "admin" ||
@@ -329,15 +494,30 @@ function BookingFlow() {
     barberId !== null &&
     selectedSlot !== null &&
     (!isStaffBooker || selectedCustomer !== null);
-  const needsMobileBookPadding = bookingSelectionComplete;
+  const { useCompactShellHeader } = useShellPageChrome();
+  const needsMobileBookPadding =
+    bookingSelectionComplete && !useCompactShellHeader;
+
+  const isCompactCustomerFlow =
+    isCustomer &&
+    !pickerExpanded &&
+    serviceId !== null &&
+    barberId !== null &&
+    catalogReady;
+
+  const showInstantConfirm =
+    isCompactCustomerFlow &&
+    bookingSelectionComplete &&
+    selectedService &&
+    selectedBarber &&
+    selectedSlot;
 
   return (
-    <div className="flex min-h-dvh flex-1 flex-col">
-      <SiteHeader profile={profile} onSignOut={signOut} />
-      <main
-        id="main-content"
-        className="page-main"
-      >
+    <>
+      {!useCompactShellHeader ? (
+        <SiteHeader profile={profile} onSignOut={signOut} />
+      ) : null}
+      <main id="main-content" className="page-main app-shell-scroll flex-1">
         <div
           className={cn(
             "mx-auto w-full max-w-3xl page-stack",
@@ -357,9 +537,7 @@ function BookingFlow() {
           />
 
           {profile.kind === "loading" || profile.kind === "none" ? (
-            <p className="text-sm text-muted-foreground" role="status">
-              Loading…
-            </p>
+            <BookCatalogFormSkeleton />
           ) : null}
 
           {profile.kind === "error" ? (
@@ -371,98 +549,22 @@ function BookingFlow() {
           {isReady &&
           profile.user.role.slug === "customer" &&
           quickRepeat.kind === "loading" ? (
-            <Card
-              className="border-primary/25 bg-primary/[0.03] shadow-sm dark:border-primary/20 dark:bg-primary/[0.05]"
-              aria-busy="true"
-              aria-label="Loading quick rebook suggestions"
-            >
-              <CardHeader className="pb-2">
-                <div className="h-5 w-36 max-w-full animate-pulse rounded-md bg-muted/60" />
-                <div className="mt-2 h-4 w-full max-w-md animate-pulse rounded-md bg-muted/45" />
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="h-24 rounded-xl border border-border/40 bg-muted/25 p-3">
-                  <div className="h-4 w-40 animate-pulse rounded bg-muted/55" />
-                  <div className="mt-3 h-3 w-full animate-pulse rounded bg-muted/40" />
-                  <div className="mt-2 h-3 w-4/5 max-w-sm animate-pulse rounded bg-muted/35" />
-                  <div className="mt-4 h-10 w-36 animate-pulse rounded-md bg-muted/50" />
-                </div>
-                <p className="text-xs text-muted-foreground" role="status">
-                  Looking for your usual cut…
-                </p>
-              </CardContent>
-            </Card>
+            <BookQuickRepeatCardSkeleton />
           ) : null}
 
           {isReady &&
           profile.user.role.slug === "customer" &&
-          quickRepeat.kind === "ok" &&
-          (quickRepeat.nextVisit || preferredBarber) ? (
-            <Card className="border-primary/35 bg-primary/5 shadow-sm dark:border-primary/30">
-              <CardHeader className="space-y-1 pb-3">
-                <CardTitle className="text-lg tracking-tight sm:text-xl">
-                  Quick rebook
-                </CardTitle>
-                <CardDescription>
-                  Jump back into your usual flow, then choose the exact time
-                  that works for you.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3 text-sm">
-                {quickRepeat.nextVisit ? (
-                  <div className="dashboard-surface motion-card rounded-xl p-4">
-                    <p className="font-semibold text-foreground">
-                      Repeat your last cut
-                    </p>
-                    <p className="mt-1.5 leading-relaxed text-muted-foreground">
-                      {quickRepeat.nextVisit.service?.name ?? "Your service"}
-                      {quickRepeat.nextVisit.barber
-                        ? ` with ${quickRepeat.nextVisit.barber.name}`
-                        : ""}
-                      {" · suggested "}
-                      {formatIsoDate(quickRepeat.nextVisit.suggested_date)}
-                    </p>
-                    <Button
-                      type="button"
-                      size="sm"
-                      className="mt-4 min-h-11 touch-manipulation sm:min-h-10"
-                      onClick={() =>
-                        applyNextVisitSuggestion(quickRepeat.nextVisit!)
-                      }
-                    >
-                      Use this cut
-                    </Button>
-                  </div>
-                ) : null}
-
-                {preferredBarber ? (
-                  <div className="dashboard-surface motion-card rounded-xl p-4">
-                    <p className="font-semibold text-foreground">
-                      Favourite barber
-                    </p>
-                    <p className="mt-1.5 leading-relaxed text-muted-foreground">
-                      Start with {preferredBarber.barber.name}
-                      {preferredBarber.title
-                        ? ` · ${preferredBarber.title}`
-                        : ""}
-                      .
-                    </p>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      className="mt-4 min-h-11 touch-manipulation sm:min-h-10"
-                      onClick={() =>
-                        applyPreferredBarberShortcut(preferredBarber.barber.id)
-                      }
-                    >
-                      Book with {preferredBarber.barber.name.split(" ")[0]}
-                    </Button>
-                  </div>
-                ) : null}
-              </CardContent>
-            </Card>
+          quickRepeat.kind === "ok" ? (
+            <BookingQuickShortcuts
+              nextVisit={quickRepeat.nextVisit}
+              preferredBarber={preferredBarber}
+              rememberedChoice={rememberedChoice}
+              onApplyNextVisit={applyNextVisitSuggestion}
+              onApplyPreferredBarber={applyPreferredBarberShortcut}
+              onApplyRememberedWithBarber={applyRememberedServiceWithBarber}
+            />
           ) : null}
+
 
           {profile.kind === "none" ? (
             <Card>
@@ -519,6 +621,34 @@ function BookingFlow() {
                       />
                     ) : null}
 
+                    {showInstantConfirm ? (
+                      <BookingInstantConfirm
+                        service={selectedService}
+                        barber={selectedBarber}
+                        date={date}
+                        selectedSlot={selectedSlot}
+                        bookBusy={bookBusy}
+                        showDeposit
+                        formId="booking-flow-form"
+                        onEditDetails={() => setPickerExpanded(true)}
+                      />
+                    ) : null}
+
+                    {isCompactCustomerFlow &&
+                    selectedService &&
+                    selectedBarber &&
+                    !showInstantConfirm ? (
+                      <BookingSelectionChips
+                        service={selectedService}
+                        barber={selectedBarber}
+                        date={date}
+                        onChangeService={() => setPickerExpanded(true)}
+                        onChangeBarber={() => setPickerExpanded(true)}
+                      />
+                    ) : null}
+
+                    {!isCompactCustomerFlow || pickerExpanded ? (
+                    <>
                     <div className="flex flex-col gap-3">
                       <p
                         id="book-step-service"
@@ -623,92 +753,41 @@ function BookingFlow() {
                         </div>
                       )}
                     </div>
+                    </>
+                    ) : null}
 
-                    <div className="flex min-w-0 flex-col gap-2">
-                      <Label
-                        htmlFor="b-date"
-                        className="text-xs font-semibold uppercase tracking-wide text-muted-foreground"
-                      >
-                        Date
-                      </Label>
-                      <input
-                        id="b-date"
-                        type="date"
-                        min={todayIso()}
-                        className={cn(
-                          reportFilterControlClass,
-                          "h-12 rounded-xl shadow-xs sm:h-11",
-                        )}
-                        value={date}
-                        onChange={(ev) => {
-                          setDate(ev.target.value);
+                    {serviceId !== null && barberId !== null ? (
+                      <BookingSlotPicker
+                        date={date}
+                        today={today}
+                        slots={slots}
+                        slotHints={slotHints}
+                        slotHintsStatus={slotHintsStatus}
+                        onRetrySlotHints={() => {
+                          void loadSlots();
+                        }}
+                        viewerContext={isStaffBooker ? "staff" : "customer"}
+                        selectedSlot={selectedSlot}
+                        onSelectSlot={(slot) => {
+                          setSelectedSlot(slot);
+                          setBookError(null);
+                        }}
+                        onDateChange={(nextDate) => {
+                          setDate(nextDate);
                           setSelectedSlot(null);
                         }}
-                        required
+                        onJumpToPredictedDay={(dateYmd) => {
+                          pendingAutoSelectSlotRef.current = true;
+                          setDate(parseIsoDateParam(dateYmd, today));
+                          setSelectedSlot(null);
+                          setBookError(null);
+                        }}
+                        onPickNextAvailable={() => {
+                          const first = slotDisplayItems[0]?.slot;
+                          if (first) setSelectedSlot(first);
+                        }}
                       />
-                      <p className="text-sm text-muted-foreground">
-                        {formatIsoDate(date)}
-                      </p>
-                    </div>
-
-                    <div className="flex flex-col gap-3">
-                      <p
-                        id="book-step-time"
-                        className="text-xs font-semibold uppercase tracking-wide text-muted-foreground"
-                      >
-                        Time
-                      </p>
-                      {slots.kind === "idle" ? (
-                        <p className="text-sm text-muted-foreground">
-                          Choose a service, barber, and date to see open times.
-                        </p>
-                      ) : null}
-                      {slots.kind === "loading" ? (
-                        <TimeSlotChipsSkeleton />
-                      ) : null}
-                      {slots.kind === "error" ? (
-                        <p
-                          className="text-sm text-destructive"
-                          role="alert"
-                        >
-                          {slots.message}
-                        </p>
-                      ) : null}
-                      {slots.kind === "ok" && slots.slots.length === 0 ? (
-                        <p className="text-sm text-muted-foreground">
-                          No openings on this day — try another date.
-                        </p>
-                      ) : null}
-                      {slots.kind === "ok" && slots.slots.length > 0 ? (
-                        <div
-                          role="radiogroup"
-                          aria-labelledby="book-step-time"
-                          className="grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-4"
-                        >
-                          {slots.slots.map((slot) => {
-                            const checked = selectedSlot === slot;
-
-                            return (
-                              <button
-                                key={slot}
-                                type="button"
-                                role="radio"
-                                aria-checked={checked}
-                                onClick={() => setSelectedSlot(slot)}
-                                className={cn(
-                                  "motion-interactive min-h-12 rounded-xl border px-2 text-sm font-medium tabular-nums touch-manipulation transition-[border-color,background-color,transform] sm:min-h-11",
-                                  checked
-                                    ? "border-primary bg-primary text-primary-foreground shadow-sm"
-                                    : "border-border/70 bg-background text-foreground hover:bg-muted/50 motion-safe:active:scale-[0.98]",
-                                )}
-                              >
-                                {formatTimeFromIso(slot)}
-                              </button>
-                            );
-                          })}
-                        </div>
-                      ) : null}
-                    </div>
+                    ) : null}
 
                     <details className="group rounded-xl border border-border/50 bg-muted/10 open:bg-muted/15">
                       <summary className="motion-interactive cursor-pointer list-none px-4 py-3 text-sm font-medium text-foreground outline-none marker:content-none [&::-webkit-details-marker]:hidden focus-visible:ring-2 focus-visible:ring-ring">
@@ -720,6 +799,31 @@ function BookingFlow() {
                         </span>
                       </summary>
                       <div className="border-t border-border/40 px-4 pb-4 pt-2">
+                        {customerProfileNotesHint !== "" ? (
+                          <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                            <p className="text-xs leading-relaxed text-muted-foreground sm:max-w-[70%]">
+                              Reuse the haircut preferences saved on your
+                              profile for this booking.
+                            </p>
+                            <Button
+                              type="button"
+                              variant="secondary"
+                              size="sm"
+                              className="min-h-10 shrink-0 touch-manipulation"
+                              onClick={() => {
+                                const slice =
+                                  customerProfileNotesHint.slice(0, 500);
+                                setNotes((prev) => {
+                                  const t = prev.trim();
+                                  if (t === "") return slice;
+                                  return `${t}\n${slice}`;
+                                });
+                              }}
+                            >
+                              Paste profile notes
+                            </Button>
+                          </div>
+                        ) : null}
                         <Label htmlFor="b-notes" className="sr-only">
                           Booking notes
                         </Label>
@@ -734,7 +838,10 @@ function BookingFlow() {
                       </div>
                     </details>
 
-                    {selectedService && selectedBarber && selectedSlot ? (
+                    {selectedService &&
+                    selectedBarber &&
+                    selectedSlot &&
+                    !showInstantConfirm ? (
                       <div className="dashboard-surface rounded-xl p-4 text-sm">
                         {selectedCustomer ? (
                           <p className="mb-2 font-medium leading-snug">
@@ -772,8 +879,8 @@ function BookingFlow() {
                     <Button
                       type="submit"
                       form="booking-flow-form"
+                      pending={bookBusy}
                       disabled={
-                        bookBusy ||
                         serviceId === null ||
                         barberId === null ||
                         selectedSlot === null ||
@@ -790,6 +897,7 @@ function BookingFlow() {
           ) : null}
 
           {bookingSelectionComplete &&
+          !showInstantConfirm &&
           selectedService &&
           selectedBarber &&
           selectedSlot ? (
@@ -808,7 +916,7 @@ function BookingFlow() {
                 <Button
                   type="submit"
                   form="booking-flow-form"
-                  disabled={bookBusy}
+                  pending={bookBusy}
                   className="w-full min-h-12 touch-manipulation text-base font-semibold"
                 >
                   {bookBusy ? "Booking…" : "Confirm booking"}
@@ -824,7 +932,7 @@ function BookingFlow() {
           </p>
         </div>
       </main>
-    </div>
+    </>
   );
 }
 

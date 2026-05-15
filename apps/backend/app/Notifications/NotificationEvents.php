@@ -22,17 +22,30 @@ final class NotificationEvents
 
     public const APPOINTMENT_INACTIVITY_NUDGE = 'appointment.inactivity_nudge';
 
+    public const APPOINTMENT_ARRIVAL_NEARBY = 'appointment.arrival_nearby';
+
+    public const STAFF_ARRIVAL_NEARBY = 'staff.arrival_nearby';
+
+    public const STAFF_ARRIVAL_CHECKED_IN = 'staff.arrival_checked_in';
+
     public const STAFF_BOOKING_CREATED = 'staff.booking.created';
 
     public const STAFF_BOOKING_CANCELLED = 'staff.booking.cancelled';
 
     public const STAFF_BOOKING_RESCHEDULED = 'staff.booking.rescheduled';
 
+    public const STAFF_VISIT_MESSAGE = 'staff.visit_message';
+
+    public const APPOINTMENT_VISIT_MESSAGE = 'appointment.visit_message';
+
     /** @var list<string> */
     public const OPERATIONAL_ALERTS = [
         self::STAFF_BOOKING_CREATED,
         self::STAFF_BOOKING_CANCELLED,
         self::STAFF_BOOKING_RESCHEDULED,
+        self::STAFF_ARRIVAL_NEARBY,
+        self::STAFF_ARRIVAL_CHECKED_IN,
+        self::STAFF_VISIT_MESSAGE,
     ];
 
     /**
@@ -56,9 +69,14 @@ final class NotificationEvents
         self::APPOINTMENT_RUNNING_LATE,
         self::APPOINTMENT_REBOOK_SUGGESTED,
         self::APPOINTMENT_INACTIVITY_NUDGE,
+        self::APPOINTMENT_ARRIVAL_NEARBY,
         self::STAFF_BOOKING_CREATED,
         self::STAFF_BOOKING_CANCELLED,
         self::STAFF_BOOKING_RESCHEDULED,
+        self::STAFF_ARRIVAL_NEARBY,
+        self::STAFF_ARRIVAL_CHECKED_IN,
+        self::STAFF_VISIT_MESSAGE,
+        self::APPOINTMENT_VISIT_MESSAGE,
     ];
 
     /** @var array<string, array{label: string, description: string}> */
@@ -91,6 +109,10 @@ final class NotificationEvents
             'label' => 'It\'s been a while',
             'description' => 'A friendly check-in if it\'s been noticeably longer than your usual time between visits.',
         ],
+        self::APPOINTMENT_ARRIVAL_NEARBY => [
+            'label' => 'Near the shop',
+            'description' => 'When you have opted in, a gentle heads-up that you are close enough to check in.',
+        ],
         self::STAFF_BOOKING_CREATED => [
             'label' => 'Staff alert: new booking',
             'description' => 'Operational alert for barbers and admins when a booking is created.',
@@ -102,6 +124,22 @@ final class NotificationEvents
         self::STAFF_BOOKING_RESCHEDULED => [
             'label' => 'Staff alert: reschedule',
             'description' => 'Operational alert for barbers and admins when a booking is rescheduled.',
+        ],
+        self::STAFF_ARRIVAL_NEARBY => [
+            'label' => 'Staff alert: guest nearby',
+            'description' => 'When an opted-in guest is geofenced near the shop before a visit.',
+        ],
+        self::STAFF_ARRIVAL_CHECKED_IN => [
+            'label' => 'Staff alert: guest checked in',
+            'description' => 'When a guest checks in for their visit (one calm ping per booking).',
+        ],
+        self::STAFF_VISIT_MESSAGE => [
+            'label' => 'Staff alert: visit message',
+            'description' => 'When a guest posts an update in the booking thread (short operational messages only).',
+        ],
+        self::APPOINTMENT_VISIT_MESSAGE => [
+            'label' => 'Visit message',
+            'description' => 'When the shop replies in your booking thread — opens the visit message list in one tap.',
         ],
     ];
 }

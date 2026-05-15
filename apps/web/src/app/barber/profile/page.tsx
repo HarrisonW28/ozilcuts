@@ -1,5 +1,6 @@
 "use client";
 
+import { PageSessionSkeleton, ProfileFormCardSkeleton } from "@/components/loading";
 import { SiteHeader } from "@/components/site-header";
 import { getStoredAuthToken } from "@/lib/auth-token";
 import { useSessionProfile } from "@/lib/use-session-profile";
@@ -143,9 +144,10 @@ export default function BarberProfileEditPage() {
       <div className="flex min-h-dvh flex-1 flex-col">
         <SiteHeader profile={profile} onSignOut={signOut} />
         <main id="main-content" className="page-main">
-          <p className="text-sm text-muted-foreground" role="status">
-            Loading…
-          </p>
+          <PageSessionSkeleton
+            className="max-w-2xl"
+            statusLabel="Loading barber profile"
+          />
         </main>
       </div>
     );
@@ -199,9 +201,7 @@ export default function BarberProfileEditPage() {
           />
 
           {state.kind === "loading" || state.kind === "idle" ? (
-            <p className="text-sm text-muted-foreground" role="status">
-              Loading profile…
-            </p>
+            <ProfileFormCardSkeleton />
           ) : null}
 
           {state.kind === "error" ? (
@@ -316,7 +316,7 @@ export default function BarberProfileEditPage() {
                     ) : null}
 
                     <div className="flex flex-wrap gap-2">
-                      <Button type="submit" disabled={busy}>
+                      <Button type="submit" pending={busy}>
                         {busy ? "Saving…" : "Save profile"}
                       </Button>
                       <Button

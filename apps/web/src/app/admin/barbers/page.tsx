@@ -1,6 +1,7 @@
 "use client";
 
 import { SiteHeader } from "@/components/site-header";
+import { PageSessionSkeleton } from "@/components/loading";
 import { getStoredAuthToken } from "@/lib/auth-token";
 import { useSessionProfile } from "@/lib/use-session-profile";
 import {
@@ -57,6 +58,8 @@ export default function AdminBarbersPage() {
   const [eBio, setEBio] = useState("");
   const [eYears, setEYears] = useState("");
   const [ePublished, setEPublished] = useState(true);
+  const [eShopLat, setEShopLat] = useState("");
+  const [eShopLng, setEShopLng] = useState("");
   const [editBusy, setEditBusy] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
 
@@ -144,6 +147,12 @@ export default function AdminBarbersPage() {
     setEBio(row.bio ?? "");
     setEYears(row.years_experience != null ? String(row.years_experience) : "");
     setEPublished(row.is_published);
+    setEShopLat(
+      row.user.shop_latitude != null ? String(row.user.shop_latitude) : "",
+    );
+    setEShopLng(
+      row.user.shop_longitude != null ? String(row.user.shop_longitude) : "",
+    );
     setEditError(null);
   }
 
@@ -160,11 +169,37 @@ export default function AdminBarbersPage() {
     try {
       const yParsed =
         eYears.trim() === "" ? NaN : Number.parseInt(eYears, 10);
+      const latTrim = eShopLat.trim();
+      const lngTrim = eShopLng.trim();
+      let shop_latitude: number | null;
+      let shop_longitude: number | null;
+      if (latTrim === "" && lngTrim === "") {
+        shop_latitude = null;
+        shop_longitude = null;
+      } else if (latTrim !== "" && lngTrim !== "") {
+        const latN = Number.parseFloat(latTrim);
+        const lngN = Number.parseFloat(lngTrim);
+        if (!Number.isFinite(latN) || !Number.isFinite(lngN)) {
+          setEditError("Latitude and longitude must be valid numbers.");
+          setEditBusy(false);
+
+          return;
+        }
+        shop_latitude = latN;
+        shop_longitude = lngN;
+      } else {
+        setEditError("Enter both coordinates or clear both.");
+        setEditBusy(false);
+
+        return;
+      }
       await updateManagedBarberProfile(token, userId, {
         title: eTitle.trim() === "" ? null : eTitle.trim(),
         bio: eBio.trim() === "" ? null : eBio.trim(),
         years_experience: Number.isFinite(yParsed) ? yParsed : null,
         is_published: ePublished,
+        shop_latitude,
+        shop_longitude,
       });
       setEditingUserId(null);
       await load(page);
@@ -196,9 +231,7 @@ export default function AdminBarbersPage() {
           />
 
           {profile.kind === "loading" || profile.kind === "none" ? (
-            <p className="text-sm text-muted-foreground" role="status">
-              Loading…
-            </p>
+            <PageSessionSkeleton statusLabel="Loading" />
           ) : null}
 
           {profile.kind === "error" ? (
@@ -444,6 +477,43 @@ export default function AdminBarbersPage() {
                                     Published
                                   </Label>
                                 </div>
+                                <div className="grid gap-3 sm:grid-cols-2">
+                                  <div className="flex flex-col gap-2">
+                                    <Label htmlFor={`e-shop-lat-${row.user.id}`}>
+                                      Shop latitude (WGS84)
+                                    </Label>
+                                    <Input
+                                      id={`e-shop-lat-${row.user.id}`}
+                                      inputMode="decimal"
+                                      autoComplete="off"
+                                      placeholder="e.g. 51.5074"
+                                      value={eShopLat}
+                                      onChange={(ev) =>
+                                        setEShopLat(ev.target.value)
+                                      }
+                                    />
+                                  </div>
+                                  <div className="flex flex-col gap-2">
+                                    <Label htmlFor={`e-shop-lng-${row.user.id}`}>
+                                      Shop longitude (WGS84)
+                                    </Label>
+                                    <Input
+                                      id={`e-shop-lng-${row.user.id}`}
+                                      inputMode="decimal"
+                                      autoComplete="off"
+                                      placeholder="e.g. -0.1278"
+                                      value={eShopLng}
+                                      onChange={(ev) =>
+                                        setEShopLng(ev.target.value)
+                                      }
+                                    />
+                                  </div>
+                                </div>
+                                <p className="text-xs text-muted-foreground">
+                                  Used only for optional geofenced arrival
+                                  alerts. Leave blank if you prefer not to
+                                  enable them.
+                                </p>
                                 {editError ? (
                                   <p
                                     className="text-sm text-destructive"
@@ -455,7 +525,7 @@ export default function AdminBarbersPage() {
                                 <div className="flex flex-wrap gap-2">
                                   <Button
                                     type="button"
-                                    disabled={editBusy}
+                                    pending={editBusy}
                                     onClick={() => void onSaveEdit(row.user.id)}
                                   >
                                     {editBusy ? "Saving…" : "Save"}
@@ -489,6 +559,15 @@ export default function AdminBarbersPage() {
                                     Published:{" "}
                                   </span>
                                   {row.is_published ? "Yes" : "No"}
+                                </p>
+                                <p className="text-sm text-muted-foreground">
+                                  <span className="font-medium text-foreground">
+                                    Shop coordinates:{" "}
+                                  </span>
+                                  {row.user.shop_latitude != null &&
+                                  row.user.shop_longitude != null
+                                    ? `${row.user.shop_latitude}, ${row.user.shop_longitude}`
+                                    : "—"}
                                 </p>
                                 <div className="flex flex-wrap gap-2">
                                   <Button

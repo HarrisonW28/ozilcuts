@@ -268,4 +268,42 @@ class OperationalInsightsTest extends TestCase
         $this->assertSame(1, $by['<2 hours']['count']);
         $this->assertSame(1, $by['4–7 days']['count']);
     }
+
+    public function test_ai_insights_payload_structure(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $barber = User::factory()->barber()->create();
+        $service = Service::factory()->create([
+            'duration_minutes' => 30,
+            'price_cents' => 5000,
+        ]);
+        $cust = User::factory()->create();
+
+        $this->appt($barber, $service, $cust, '2026-06-01 10:00:00', '2026-06-01 10:30:00');
+        $this->appt($barber, $service, $cust, '2026-06-02 11:00:00', '2026-06-02 11:30:00', [
+            'ends_at' => '2026-06-02 11:30:00',
+            'arrival_state' => Appointment::ARRIVAL_EXPECTED,
+        ]);
+
+        $response = $this->actingAs($admin, 'sanctum')
+            ->getJson('/api/v1/admin/reports/operations?from=2026-06-01&to=2026-06-30')
+            ->assertOk()
+            ->json();
+
+        $this->assertArrayHasKey('ai_insights', $response);
+        $ai = $response['ai_insights'];
+        $this->assertSame('rules', $ai['source']);
+        $this->assertIsString($ai['generated_at']);
+        $this->assertArrayHasKey('staff_only', $ai['privacy']);
+        $this->assertTrue(array_key_exists('third_party', $ai['privacy']));
+
+        foreach (['staffing', 'busy_periods', 'no_shows', 'retention'] as $block) {
+            $this->assertIsString($ai[$block]['title']);
+            $this->assertNotSame('', $ai[$block]['title']);
+            $this->assertIsString($ai[$block]['summary']);
+            $this->assertIsArray($ai[$block]['actions']);
+            $this->assertGreaterThanOrEqual(2, count($ai[$block]['actions']));
+            $this->assertContains($ai[$block]['confidence'], ['low', 'medium', 'high']);
+        }
+    }
 }

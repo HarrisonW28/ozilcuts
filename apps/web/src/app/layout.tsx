@@ -40,8 +40,8 @@ export const viewport: Viewport = {
   viewportFit: "cover",
   colorScheme: "dark light",
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-    { media: "(prefers-color-scheme: dark)", color: "#252525" },
+    { media: "(prefers-color-scheme: light)", color: "#f8f7f4" },
+    { media: "(prefers-color-scheme: dark)", color: "#1a1d24" },
   ],
 };
 
@@ -56,10 +56,10 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} min-h-dvh`}
       suppressHydrationWarning
     >
-      <body className="flex min-h-dvh flex-col">
+      <body className="app-root flex min-h-dvh flex-col">
         <ThemeProvider
           attribute="class"
-          defaultTheme="system"
+          defaultTheme="dark"
           enableSystem
           disableTransitionOnChange
         >

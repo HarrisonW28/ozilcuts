@@ -19,6 +19,8 @@ class AppointmentResource extends JsonResource
         return [
             'id' => $this->id,
             'status' => $this->status,
+            'arrival_state' => (string) $this->arrival_state,
+            'arrival_nearby_barber_notified_at' => $this->arrival_nearby_barber_notified_at?->toIso8601String(),
             'starts_at' => $this->starts_at?->toIso8601String(),
             'ends_at' => $this->ends_at?->toIso8601String(),
             'notes' => $this->notes,
@@ -38,6 +40,12 @@ class AppointmentResource extends JsonResource
             'barber' => $this->whenLoaded('barber', fn () => [
                 'id' => $this->barber->id,
                 'name' => $this->barber->name,
+                'shop_latitude' => $this->barber->shop_latitude !== null
+                    ? (float) $this->barber->shop_latitude
+                    : null,
+                'shop_longitude' => $this->barber->shop_longitude !== null
+                    ? (float) $this->barber->shop_longitude
+                    : null,
             ]),
             'customer' => $this->whenLoaded('customer', fn () => [
                 'id' => $this->customer->id,

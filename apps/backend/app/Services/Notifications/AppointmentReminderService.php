@@ -78,7 +78,11 @@ final class AppointmentReminderService
     {
         $appointment->loadMissing(['service', 'barber', 'customer']);
 
-        return $this->send($appointment, headline: 'Reminder for your booking');
+        return $this->send(
+            $appointment,
+            headline: $this->headlineForKind('manual', $appointment),
+            kind: 'manual',
+        );
     }
 
     /**
@@ -88,7 +92,7 @@ final class AppointmentReminderService
      */
     private function dispatch(Appointment $appointment, string $kind, CarbonImmutable $now): bool
     {
-        $headline = $this->headlineForKind($kind);
+        $headline = $this->headlineForKind($kind, $appointment);
 
         try {
             DB::transaction(function () use ($appointment, $kind, $now): void {
@@ -104,10 +108,10 @@ final class AppointmentReminderService
             return false;
         }
 
-        return $this->send($appointment, headline: $headline);
+        return $this->send($appointment, headline: $headline, kind: $kind);
     }
 
-    private function send(Appointment $appointment, string $headline): bool
+    private function send(Appointment $appointment, string $headline, ?string $kind = null): bool
     {
         $customer = $appointment->customer;
         if ($customer === null) {
@@ -116,6 +120,9 @@ final class AppointmentReminderService
         $payload = AppointmentNotificationPayload::build($appointment) + [
             'headline' => $headline,
         ];
+        if ($kind !== null) {
+            $payload['reminder_kind'] = $kind;
+        }
 
         $this->notifications->send(
             $customer,
@@ -127,12 +134,19 @@ final class AppointmentReminderService
         return true;
     }
 
-    private function headlineForKind(string $kind): string
+    private function headlineForKind(string $kind, Appointment $appointment): string
     {
+        $service = $appointment->service?->name ?? 'your visit';
+        $starts = $appointment->starts_at;
+        $timeBit = $starts !== null
+            ? ' · '.$starts->timezone(config('app.timezone'))->format('g:i A')
+            : '';
+
         return match ($kind) {
-            AppointmentReminder::KIND_DAY_BEFORE => 'Your booking is tomorrow',
-            AppointmentReminder::KIND_HOUR_BEFORE => 'Your booking is in 2 hours',
-            default => 'Reminder for your booking',
+            AppointmentReminder::KIND_DAY_BEFORE => "Tomorrow · {$service}{$timeBit}",
+            AppointmentReminder::KIND_HOUR_BEFORE => "Starting soon · {$service}{$timeBit}",
+            'manual' => "Reminder · {$service}{$timeBit}",
+            default => "Reminder · {$service}",
         };
     }
 }
