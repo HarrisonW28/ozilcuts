@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1\Auth;
 
 use App\Exceptions\Auth\OAuthAccountLinkException;
 use App\Http\Controllers\Controller;
+use App\Services\Auth\AuthTokenIssuer;
 use App\Services\Auth\AuthenticationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Log;
@@ -13,7 +14,7 @@ use Throwable;
 
 final class GoogleOAuthCallbackController extends Controller
 {
-    public function __invoke(AuthenticationService $auth): RedirectResponse
+    public function __invoke(AuthenticationService $auth, AuthTokenIssuer $tokens): RedirectResponse
     {
         if (! config('services.google.client_id') || ! config('services.google.client_secret')) {
             abort(503, 'Google sign-in is not configured.');
@@ -40,7 +41,7 @@ final class GoogleOAuthCallbackController extends Controller
         }
 
         $user->load('role');
-        $token = $user->createToken('auth')->plainTextToken;
+        $token = $tokens->issue($user);
 
         return $this->redirectToFrontend(['token' => $token]);
     }

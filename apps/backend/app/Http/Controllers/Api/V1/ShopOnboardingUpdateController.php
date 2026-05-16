@@ -6,12 +6,16 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Manage\PatchShopOnboardingRequest;
 use App\Http\Resources\UserResource;
 use App\Models\User;
+use App\Services\Audit\AuditLogService;
+use App\Support\AuditAction;
 use Illuminate\Http\JsonResponse;
 
 final class ShopOnboardingUpdateController extends Controller
 {
-    public function __invoke(PatchShopOnboardingRequest $request): JsonResponse
-    {
+    public function __invoke(
+        PatchShopOnboardingRequest $request,
+        AuditLogService $audit,
+    ): JsonResponse {
         /** @var User $user */
         $user = $request->user();
 
@@ -49,6 +53,18 @@ final class ShopOnboardingUpdateController extends Controller
 
         $user->save();
         $user->load('role');
+
+        $audit->record(
+            action: AuditAction::SHOP_ONBOARDING_UPDATED,
+            actor: $user,
+            request: $request,
+            subjectType: 'user',
+            subjectId: $user->id,
+            metadata: [
+                'fields' => array_keys($payload),
+                'onboarding_completed' => $user->onboarding_completed_at !== null,
+            ],
+        );
 
         return response()->json((new UserResource($user))->toArray($request));
     }

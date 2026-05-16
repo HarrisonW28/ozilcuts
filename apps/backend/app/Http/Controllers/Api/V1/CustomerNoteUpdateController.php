@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\UpdateCustomerNoteRequest;
 use App\Http\Resources\CustomerNoteResource;
 use App\Models\CustomerNote;
+use App\Services\Audit\AuditLogService;
 use App\Services\Customers\CustomerNoteService;
+use App\Support\AuditAction;
 use Illuminate\Http\JsonResponse;
 
 final class CustomerNoteUpdateController extends Controller
@@ -21,11 +23,20 @@ final class CustomerNoteUpdateController extends Controller
             abort(401);
         }
 
-        if ($note->author_user_id !== $user->id && ! $user->isAdmin()) {
-            abort(403);
-        }
+        $this->authorize('update', $note);
 
-        $note = $service->update($note, $request->validated());
+        $validated = $request->validated();
+        $note = $service->update($note, $validated);
+
+        $audit->record(
+            action: AuditAction::CUSTOMER_NOTE_UPDATED,
+            actor: $user,
+            request: $request,
+            subjectType: 'customer_note',
+            subjectId: $note->id,
+            targetUserId: $note->customer_user_id,
+            metadata: ['fields' => array_keys($validated)],
+        );
 
         return response()->json((new CustomerNoteResource($note))->toArray($request));
     }

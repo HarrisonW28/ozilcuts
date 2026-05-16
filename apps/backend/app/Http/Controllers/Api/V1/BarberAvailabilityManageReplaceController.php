@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Manage\ReplaceBarberAvailabilityRequest;
 use App\Models\User;
+use App\Services\Audit\AuditLogService;
 use App\Services\Availability\BarberAvailabilityService;
+use App\Support\AuditAction;
 use Illuminate\Http\JsonResponse;
 
 final class BarberAvailabilityManageReplaceController extends Controller
@@ -14,6 +16,7 @@ final class BarberAvailabilityManageReplaceController extends Controller
         ReplaceBarberAvailabilityRequest $request,
         User $user,
         BarberAvailabilityService $availability,
+        AuditLogService $audit,
     ): JsonResponse {
         $profile = $user->barberProfile;
         if ($profile === null) {
@@ -30,6 +33,16 @@ final class BarberAvailabilityManageReplaceController extends Controller
             ->all();
 
         $availability->replace($profile, $windows);
+
+        $audit->record(
+            action: AuditAction::BARBER_AVAILABILITY_REPLACED,
+            actor: $request->user(),
+            request: $request,
+            subjectType: 'barber_profile',
+            subjectId: $profile->id,
+            targetUserId: $user->id,
+            metadata: ['window_count' => count($windows)],
+        );
 
         return response()->json([
             'weekdays' => $availability->groupedForProfile($profile->fresh()),

@@ -3,19 +3,17 @@
 namespace App\Http\Requests;
 
 use App\Models\CustomerTag;
-use App\Models\Role;
+use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreCustomerTagRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        $user = $this->user();
-        if ($user === null) {
-            return false;
-        }
+        $customer = $this->route('user');
 
-        return $user->hasRole(Role::SLUG_BARBER) || $user->isAdmin();
+        return $customer instanceof User
+            && $this->user()?->can('manageStaffCrm', $customer) === true;
     }
 
     /**

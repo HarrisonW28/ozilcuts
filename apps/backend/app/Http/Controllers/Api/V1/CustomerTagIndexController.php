@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\CustomerTagResource;
-use App\Models\Role;
 use App\Models\User;
 use App\Services\Customers\CustomerTagService;
 use Illuminate\Http\JsonResponse;
@@ -23,9 +22,7 @@ final class CustomerTagIndexController extends Controller
             abort(401);
         }
 
-        if (! $viewer->hasRole(Role::SLUG_BARBER) && ! $viewer->isAdmin()) {
-            abort(403);
-        }
+        $this->authorize('viewStaffCrm', $user);
 
         try {
             $tags = $service->listFor($user);

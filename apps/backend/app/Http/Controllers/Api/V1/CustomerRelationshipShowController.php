@@ -21,7 +21,7 @@ final class CustomerRelationshipShowController extends Controller
             abort(401);
         }
 
-        $service->assertStaffViewer($viewer);
+        $this->authorize('viewStaffCrm', $user);
         $service->assertCustomer($user);
 
         return response()->json([

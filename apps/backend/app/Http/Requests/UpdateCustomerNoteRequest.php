@@ -2,19 +2,17 @@
 
 namespace App\Http\Requests;
 
-use App\Models\Role;
+use App\Models\CustomerNote;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateCustomerNoteRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        $user = $this->user();
-        if ($user === null) {
-            return false;
-        }
+        $note = $this->route('note');
 
-        return $user->hasRole(Role::SLUG_BARBER) || $user->isAdmin();
+        return $note instanceof CustomerNote
+            && $this->user()?->can('update', $note) === true;
     }
 
     /**
