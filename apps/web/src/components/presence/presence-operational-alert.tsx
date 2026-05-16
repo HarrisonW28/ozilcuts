@@ -4,7 +4,7 @@ import { NotificationGlyph } from "@/components/notification-glyph";
 import {
   getNotificationDisplayTitle,
   getNotificationShortLine,
-  isOperationalAlertType,
+  isOperationalPriorityRecord,
 } from "@/lib/notification-presenter";
 import {
   pickPriorityOperationalAlert,
@@ -38,7 +38,7 @@ export function PresenceOperationalAlert({
   if (!lead) return null;
 
   const operationalUnread = inbox.latest.filter(
-    (n) => n.read_at === null && isOperationalAlertType(n.type),
+    (n) => n.read_at === null && isOperationalPriorityRecord(n),
   );
   const totalUnread = operationalUnread.length;
 

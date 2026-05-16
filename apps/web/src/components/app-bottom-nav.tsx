@@ -5,10 +5,11 @@ import {
   isAppShellRouteActive,
   type AppShellNavVariant,
 } from "@/lib/app-shell-nav";
+import { hapticTouch } from "@/lib/haptics";
 import { useSessionProfile } from "@/lib/use-session-profile";
 import { cn } from "@ozilcuts/ui";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 export type AppBottomNavVariant = AppShellNavVariant;
 
@@ -19,6 +20,7 @@ export type AppBottomNavVariant = AppShellNavVariant;
  */
 export function AppBottomNav({ variant }: { variant: AppBottomNavVariant }) {
   const pathname = usePathname();
+  const router = useRouter();
   const { profile } = useSessionProfile();
 
   if (profile.kind !== "ready") return null;
@@ -64,6 +66,19 @@ export function AppBottomNav({ variant }: { variant: AppBottomNavVariant }) {
                 <li key={href} className="min-w-0 flex-1">
                   <Link
                     href={href}
+                    prefetch
+                    onPointerDown={(ev) => {
+                      if (!active) {
+                        hapticTouch("selection", ev.pointerType);
+                      }
+                    }}
+                    onPointerEnter={() => {
+                      try {
+                        router.prefetch(href);
+                      } catch {
+                        /* noop */
+                      }
+                    }}
                     className={cn(
                       "motion-interactive relative flex min-h-[3.25rem] touch-manipulation flex-col items-center justify-center gap-0.5 rounded-xl px-0.5 py-1 text-[10px] font-semibold leading-tight tracking-tight sm:min-h-14 sm:text-[11px]",
                       "motion-safe:active:scale-[0.97]",

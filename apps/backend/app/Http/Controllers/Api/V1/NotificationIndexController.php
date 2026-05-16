@@ -26,7 +26,15 @@ final class NotificationIndexController extends Controller
         $page = Notification::query()
             ->where('user_id', $user->id)
             ->when($unreadOnly, fn ($q) => $q->whereNull('read_at'))
-            ->when($operationalOnly, fn ($q) => $q->whereIn('type', NotificationEvents::OPERATIONAL_ALERTS))
+            ->when($operationalOnly, function ($q): void {
+                $q->where(function ($inner): void {
+                    $inner->whereIn('type', NotificationEvents::OPERATIONAL_ALERTS)
+                        ->orWhere(function ($visit): void {
+                            $visit->where('type', NotificationEvents::APPOINTMENT_VISIT_MESSAGE)
+                                ->where('data->urgency', 'operational');
+                        });
+                });
+            })
             ->orderByDesc('created_at')
             ->paginate($perPage);
 

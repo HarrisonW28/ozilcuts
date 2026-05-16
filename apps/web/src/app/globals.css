@@ -70,7 +70,9 @@
     --motion-duration-slow: 260ms;
     --motion-ease-standard: cubic-bezier(0.2, 0, 0, 1);
     --motion-ease-emphasized: cubic-bezier(0.2, 0, 0, 1.2);
-    --motion-spring-out: cubic-bezier(0.22, 1, 0.36, 1);
+    /** Settling “spring” for content choreography (see ozilcuts-brand-tokens). */
+    --motion-ease-spring-settle: var(--motion-ease-enter);
+    --motion-spring-out: cubic-bezier(0.22, 1, 0.4, 1);
     /**
      * Space reserved under main scroll when the native bottom tab bar is shown
      * (barber + admin layouts &lg). Matches AppBottomNav float height + safe area.
@@ -183,6 +185,25 @@
 
 @layer components {
   /**
+   * Below sticky app headers (z-50); informs offline / weak-signal state globally.
+   */
+  .connectivity-shell-root {
+    display: flex;
+    min-height: 0;
+    min-width: 0;
+    flex: 1 1 auto;
+    flex-direction: column;
+  }
+
+  .connectivity-ribbon {
+    flex-shrink: 0;
+    position: sticky;
+    top: 0;
+    z-index: 55;
+    padding-top: max(0.15rem, env(safe-area-inset-top, 0px));
+  }
+
+  /**
    * Native shell viewport — full dynamic height, no rubber-band chrome bleed.
    */
   .app-shell-viewport {
@@ -238,8 +259,8 @@
 
   @keyframes ozilcuts-shell-route {
     from {
-      opacity: 0.88;
-      transform: translate3d(0, 5px, 0);
+      opacity: 0.94;
+      transform: translate3d(0, 2px, 0);
     }
     to {
       opacity: 1;
@@ -250,7 +271,7 @@
   @media (prefers-reduced-motion: no-preference) {
     .app-shell-route {
       animation: ozilcuts-shell-route var(--motion-duration-base)
-        var(--motion-ease-standard) both;
+        var(--motion-ease-spring-settle) both;
     }
   }
 
@@ -412,10 +433,12 @@
 }
 
 @layer utilities {
+  /* —— Motion & tactile language (Sprint 25.6) —— */
+
   @keyframes ozilcuts-fade-up {
     from {
       opacity: 0;
-      transform: translate3d(0, 6px, 0);
+      transform: translate3d(0, var(--motion-distance-enter), 0);
     }
     to {
       opacity: 1;
@@ -426,7 +449,8 @@
   @keyframes ozilcuts-popover {
     from {
       opacity: 0;
-      transform: translate3d(0, -3px, 0) scale(0.99);
+      transform: translate3d(0, calc(var(--motion-distance-popover) * -1), 0)
+        scale(0.992);
     }
     to {
       opacity: 1;
@@ -437,7 +461,7 @@
   @keyframes ozilcuts-toast {
     from {
       opacity: 0;
-      transform: translate3d(12px, 12px, 0) scale(0.97);
+      transform: translate3d(10px, 10px, 0) scale(0.985);
     }
     to {
       opacity: 1;
@@ -448,7 +472,7 @@
   @keyframes ozilcuts-notification-row {
     from {
       opacity: 0;
-      transform: translate3d(0, 8px, 0);
+      transform: translate3d(0, 6px, 0);
     }
     to {
       opacity: 1;
@@ -458,13 +482,13 @@
 
   .motion-enter {
     animation: ozilcuts-fade-up var(--motion-duration-slow)
-      var(--motion-ease-standard) both;
+      var(--motion-ease-spring-settle) both;
   }
 
   /** Loaded async content — pairs with skeleton → content crossfade. */
   .motion-content-in {
     animation: ozilcuts-fade-up var(--motion-duration-base)
-      var(--motion-ease-standard) both;
+      var(--motion-ease-spring-settle) both;
   }
 
   /** Subtle dim while optimistic or soft-refresh updates are in flight. */
@@ -481,18 +505,18 @@
 
   .motion-popover {
     animation: ozilcuts-popover var(--motion-duration-base)
-      var(--motion-ease-emphasized) both;
+      var(--motion-ease-spring-settle) both;
     transform-origin: top right;
   }
 
   .motion-toast {
     animation: ozilcuts-toast var(--motion-duration-slow)
-      var(--motion-ease-emphasized) both;
+      var(--motion-ease-spring-settle) both;
   }
 
   .motion-notification-row {
     animation: ozilcuts-notification-row var(--motion-duration-slow)
-      var(--motion-ease-standard) both;
+      var(--motion-ease-spring-settle) both;
   }
 
   .motion-card {
@@ -500,14 +524,33 @@
       border-color var(--motion-duration-base) var(--motion-ease-standard),
       background-color var(--motion-duration-base) var(--motion-ease-standard),
       box-shadow var(--motion-duration-base) var(--motion-ease-standard),
-      transform var(--motion-duration-fast) var(--motion-ease-standard);
+      transform var(--motion-duration-base) var(--motion-spring-out);
   }
 
   .motion-interactive {
-    transition-property: color, background-color, border-color, box-shadow,
-      transform, opacity;
-    transition-duration: var(--motion-duration-fast);
-    transition-timing-function: var(--motion-ease-standard);
+    transition:
+      color var(--motion-duration-fast) var(--motion-ease-standard),
+      background-color var(--motion-duration-fast) var(--motion-ease-standard),
+      border-color var(--motion-duration-fast) var(--motion-ease-standard),
+      box-shadow var(--motion-duration-fast) var(--motion-ease-standard),
+      opacity var(--motion-duration-fast) var(--motion-ease-standard),
+      filter var(--motion-duration-fast) var(--motion-ease-standard),
+      transform var(--motion-duration-fast) var(--motion-spring-out);
+  }
+
+  /**
+   * Horizontal pill subnavs: thumb-swipe with soft snap points.
+   * Desktop may wrap — disable snap when `sm:flex-wrap` is applied alongside.
+   */
+  .subnav-scroll-snap {
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    overscroll-behavior-x: contain;
+  }
+
+  .subnav-scroll-snap > * {
+    scroll-snap-align: start;
   }
 
   .ease-brand-spring {

@@ -52,6 +52,7 @@ export default function ProfilePage() {
   const { profile: session, signOut } = useSessionProfile();
   const [state, setState] = useState<LoadState>({ kind: "idle" });
   const [phone, setPhone] = useState("");
+  const [dateOfBirth, setDateOfBirth] = useState("");
   const [preferredBarberId, setPreferredBarberId] = useState("");
   const [preferences, setPreferences] = useState("");
   const [marketingOptIn, setMarketingOptIn] = useState(false);
@@ -66,6 +67,7 @@ export default function ProfilePage() {
 
   const hydrateForm = useCallback((loaded: CustomerProfile) => {
     setPhone(loaded.phone ?? "");
+    setDateOfBirth(loaded.date_of_birth ?? "");
     setPreferredBarberId(
       loaded.preferred_barber_user_id === null
         ? ""
@@ -128,6 +130,7 @@ export default function ProfilePage() {
     try {
       const updated = await updateCustomerProfile(token, {
         phone: phone.trim() === "" ? null : phone.trim(),
+        date_of_birth: dateOfBirth === "" ? null : dateOfBirth,
         preferred_barber_user_id: Number.isFinite(preferred)
           ? preferred
           : null,
@@ -170,6 +173,23 @@ export default function ProfilePage() {
             />
             {session.kind === "ready" ? (
               <AccountSubnav isCustomer={isCustomer} />
+            ) : null}
+            {isCustomer && state.kind === "ok" ? (
+              <Card className="dashboard-surface border-primary/30 bg-gradient-to-br from-primary/8 via-background to-background dark:from-primary/12">
+                <CardHeader className="space-y-2">
+                  <CardTitle className="text-lg">Your studio story</CardTitle>
+                  <CardDescription className="text-sm leading-relaxed">
+                    See your haircut timeline, loyalty tier, visit streaks, and
+                    the photo gallery your barber knows you by — built to make
+                    every return feel familiar.
+                  </CardDescription>
+                </CardHeader>
+                <CardFooter className="pt-0">
+                  <Button asChild className="min-h-11 touch-manipulation sm:min-h-10">
+                    <Link href="/profile/identity">Open your story</Link>
+                  </Button>
+                </CardFooter>
+              </Card>
             ) : null}
           </div>
 
@@ -269,6 +289,26 @@ export default function ProfilePage() {
                       {saveFieldErrors.phone ? (
                         <p className="text-sm text-destructive">
                           {saveFieldErrors.phone}
+                        </p>
+                      ) : null}
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <Label htmlFor="profile-birthday">Birthday</Label>
+                      <Input
+                        id="profile-birthday"
+                        type="date"
+                        value={dateOfBirth}
+                        onChange={(ev) => setDateOfBirth(ev.target.value)}
+                        aria-invalid={
+                          saveFieldErrors.date_of_birth ? true : undefined
+                        }
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Optional — helps your barber celebrate you on the day.
+                      </p>
+                      {saveFieldErrors.date_of_birth ? (
+                        <p className="text-sm text-destructive">
+                          {saveFieldErrors.date_of_birth}
                         </p>
                       ) : null}
                     </div>

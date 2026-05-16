@@ -3,7 +3,7 @@
 import { AppointmentAdjustmentPanel } from "@/components/appointment-adjustment-panel";
 import { AppointmentArrivalPanel } from "@/components/appointment-arrival-panel";
 import { AppointmentContextThread } from "@/components/appointment-context-thread";
-import { CustomerNotesTagsSection } from "@/components/customer-notes-tags-section";
+import { CustomerRelationshipCrmSection } from "@/components/customer-relationship";
 import { DepositPayment } from "@/components/deposit-payment";
 import { BookingConfirmationCardSkeleton } from "@/components/load-empty";
 import { HaircutMemoryStaffNav } from "@/components/haircut-memory-staff-nav";
@@ -164,6 +164,10 @@ export default function ConfirmationPage() {
 
   const justBooked = search.get("just_booked") === "1";
   const justRescheduled = search.get("just_rescheduled") === "1";
+  const fromThreadNotification = (() => {
+    const t = search.get("thread");
+    return t === "1" || t === "true";
+  })();
 
   const { profile, signOut } = useSessionProfile();
   const [state, setState] = useState<LoadState>({ kind: "idle" });
@@ -218,6 +222,31 @@ export default function ConfirmationPage() {
     if (profile.kind !== "ready") return;
     void load();
   }, [profile, load]);
+
+  useEffect(() => {
+    if (!fromThreadNotification) return;
+    if (state.kind !== "ok") return;
+    const tmr = window.setTimeout(() => {
+      document.getElementById("visit-thread")?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }, 280);
+    return () => window.clearTimeout(tmr);
+  }, [fromThreadNotification, state]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (state.kind !== "ok") return;
+    if (window.location.hash !== "#visit-wrap-up") return;
+    const tmr = window.setTimeout(() => {
+      document.getElementById("visit-wrap-up")?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }, 320);
+    return () => window.clearTimeout(tmr);
+  }, [state]);
 
   useEffect(() => {
     if (state.kind !== "ok") return;
@@ -609,13 +638,18 @@ export default function ConfirmationPage() {
                       setState({ kind: "ok", appointment: row })
                     }
                   />
-                  <AppointmentContextThread
-                    appointmentId={appointment.id}
-                    token={token}
-                    viewerUserId={profile.user.id}
-                    isShopSide={isAssignedBarber || isAdmin}
-                    endsAt={appointment.ends_at}
-                  />
+                  <div
+                    id="visit-thread"
+                    className="scroll-mt-28 motion-safe:scroll-mt-24 md:scroll-mt-28"
+                  >
+                    <AppointmentContextThread
+                      appointmentId={appointment.id}
+                      token={token}
+                      viewerUserId={profile.user.id}
+                      isShopSide={isAssignedBarber || isAdmin}
+                      endsAt={appointment.ends_at}
+                    />
+                  </div>
                 </div>
               );
             })()
@@ -643,10 +677,15 @@ export default function ConfirmationPage() {
           ) : null}
 
           {isReady && appointment && isStaff ? (
-            <StaffPosCheckoutCard
-              appointment={appointment}
-              confirmationPath={`/appointments/${appointment.id}/confirmation`}
-            />
+            <div
+              id="visit-wrap-up"
+              className="scroll-mt-28 motion-safe:scroll-mt-24 md:scroll-mt-28"
+            >
+              <StaffPosCheckoutCard
+                appointment={appointment}
+                confirmationPath={`/appointments/${appointment.id}/confirmation`}
+              />
+            </div>
           ) : null}
 
           {isReady && appointment && isStaff ? (
@@ -825,13 +864,12 @@ export default function ConfirmationPage() {
           ) : null}
 
           {isReady && appointment && isStaff && appointment.customer ? (
-            <div id="memory-staff-notes" className="scroll-mt-28">
-              <CustomerNotesTagsSection
-                customerUserId={appointment.customer.id}
-                currentUserId={profile.user.id}
-                isAdmin={profile.user.role.slug === "admin"}
-              />
-            </div>
+            <CustomerRelationshipCrmSection
+              customerUserId={appointment.customer.id}
+              customerName={appointment.customer.name}
+              currentUserId={profile.user.id}
+              isAdmin={profile.user.role.slug === "admin"}
+            />
           ) : null}
 
           {isReady &&

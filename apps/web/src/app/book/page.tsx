@@ -3,6 +3,7 @@
 import { BookingInstantConfirm } from "@/components/booking-instant-confirm";
 import { BookingQuickShortcuts } from "@/components/booking-quick-shortcuts";
 import { BookingSelectionChips } from "@/components/booking-selection-chips";
+import { BarberTrustBookingStrip } from "@/components/barber-trust";
 import { BookingSlotPicker } from "@/components/booking-slot-picker";
 import { StaffCustomerLookup } from "@/components/staff-customer-lookup";
 import { SiteHeader } from "@/components/site-header";
@@ -19,6 +20,7 @@ import {
 } from "@/lib/booking-remembered-preferences";
 import { orderSlotsWithSuggestions } from "@/lib/booking-slot-suggestions";
 import { formatGbp } from "@/lib/format-gbp";
+import { haptic } from "@/lib/haptics";
 import { reportFilterControlClass } from "@/lib/report-filter-classes";
 import type { SmartSlotHintsLoadStatus } from "@/lib/smart-slot-hints";
 import { useSessionProfile } from "@/lib/use-session-profile";
@@ -28,6 +30,7 @@ import {
   createAppointment,
   fetchBarberSlots,
   fetchBarberSmartSlotHints,
+  fetchBarberTrust,
   fetchBarbers,
   fetchCustomerProfile,
   fetchNextVisitSuggestion,
@@ -36,6 +39,7 @@ import {
 import type {
   BarberProfilePublic,
   BarberSmartSlotHintsPayload,
+  BarberTrustSummary,
   CustomerProfile,
   RebookSuggestion,
   ServiceSummary,
@@ -157,6 +161,9 @@ function BookingFlow() {
   const [quickRepeat, setQuickRepeat] = useState<QuickRepeatState>({
     kind: "idle",
   });
+  const [barberTrust, setBarberTrust] = useState<BarberTrustSummary | null>(
+    null,
+  );
   const [pickerExpanded, setPickerExpanded] = useState(
     () => !wantsExpress || !(initialServiceId && initialBarberId),
   );
@@ -307,6 +314,24 @@ function BookingFlow() {
       setBarberId(selfId);
     }
   }, [profile, catalog, barberId]);
+
+  useEffect(() => {
+    if (barberId === null) {
+      setBarberTrust(null);
+      return;
+    }
+    let cancelled = false;
+    fetchBarberTrust(barberId)
+      .then((trust) => {
+        if (!cancelled) setBarberTrust(trust);
+      })
+      .catch(() => {
+        if (!cancelled) setBarberTrust(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [barberId]);
 
   const loadSlots = useCallback(async () => {
     if (serviceId === null || barberId === null || !date) {
@@ -466,6 +491,7 @@ function BookingFlow() {
       if (isCustomer) {
         writeRememberedBooking({ serviceId, barberId, dateYmd: date });
       }
+      haptic("success");
       router.push(`/appointments/${booked.id}/confirmation?just_booked=1`);
       return;
     } catch (err) {
@@ -757,6 +783,13 @@ function BookingFlow() {
                     ) : null}
 
                     {serviceId !== null && barberId !== null ? (
+                      <>
+                      {barberTrust ? (
+                        <BarberTrustBookingStrip
+                          trust={barberTrust}
+                          barberUserId={barberId}
+                        />
+                      ) : null}
                       <BookingSlotPicker
                         date={date}
                         today={today}
@@ -787,6 +820,7 @@ function BookingFlow() {
                           if (first) setSelectedSlot(first);
                         }}
                       />
+                      </>
                     ) : null}
 
                     <details className="group rounded-xl border border-border/50 bg-muted/10 open:bg-muted/15">

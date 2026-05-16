@@ -15,6 +15,8 @@ class CustomerTag extends Model
 
     public const MAX_LABEL_LENGTH = 32;
 
+    public const LABEL_VIP = 'vip';
+
     /**
      * @var list<string>
      */
@@ -45,5 +47,10 @@ class CustomerTag extends Model
         $trimmed = trim(preg_replace('/\s+/', ' ', $label) ?? '');
 
         return Str::lower($trimmed);
+    }
+
+    public static function isVipLabel(string $label): bool
+    {
+        return self::normalizeLabel($label) === self::LABEL_VIP;
     }
 }

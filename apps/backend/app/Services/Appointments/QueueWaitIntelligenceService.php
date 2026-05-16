@@ -31,6 +31,66 @@ final class QueueWaitIntelligenceService
      *     updated_at: string,
      * }
      */
+    /**
+     * Shop-floor metrics for one barber's ordered same-day queue.
+     *
+     * @param  Collection<int, Appointment>  $queue
+     * @return array{
+     *     chair_in_use: bool,
+     *     serving_appointment_id: int|null,
+     *     serving_customer_name: string|null,
+     *     serving_service_name: string|null,
+     *     waiting_count: int,
+     *     behind_count: int,
+     *     lounge_guests: int,
+     *     remaining_visits: int,
+     *     completed_visits: int,
+     * }
+     */
+    public function barberDayMetrics(Collection $queue, ?int $nowMs = null): array
+    {
+        $nowMs ??= (int) (CarbonImmutable::now()->getTimestamp() * 1000);
+
+        $serving = $this->findServingAppointment($queue, $nowMs);
+        $waiting = 0;
+        $behind = 0;
+        $lounge = 0;
+        $remaining = 0;
+        $completed = 0;
+
+        foreach ($queue as $a) {
+            $status = $this->deriveOperationalStatus($a, $nowMs);
+            if ($status === 'wrapped_up' || $status === 'cancelled') {
+                $completed++;
+
+                continue;
+            }
+            $remaining++;
+            if (in_array($status, ['checked_in', 'waiting_room'], true)) {
+                $waiting++;
+            }
+            if ($status === 'behind_schedule') {
+                $behind++;
+            }
+            $arrival = (string) $a->arrival_state;
+            if (in_array($arrival, [Appointment::ARRIVAL_ARRIVED, Appointment::ARRIVAL_WAITING], true)) {
+                $lounge++;
+            }
+        }
+
+        return [
+            'chair_in_use' => $serving !== null,
+            'serving_appointment_id' => $serving !== null ? (int) $serving->id : null,
+            'serving_customer_name' => $serving?->customer?->name,
+            'serving_service_name' => $serving?->service?->name,
+            'waiting_count' => $waiting,
+            'behind_count' => $behind,
+            'lounge_guests' => $lounge,
+            'remaining_visits' => $remaining,
+            'completed_visits' => $completed,
+        ];
+    }
+
     public function summarize(
         Appointment $focal,
         ?int $nowMs = null,

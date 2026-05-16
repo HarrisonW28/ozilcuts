@@ -2,8 +2,8 @@
 
 import { ArrivalFlowStrip } from "@/components/arrival-flow-strip";
 import { BarberOperationalArrivalTap } from "@/components/barber-operational/barber-operational-arrival-tap";
+import { BarberOperationalOneTapStrip } from "@/components/barber-operational/barber-operational-one-tap-strip";
 import {
-  canSendRunningLateNotice,
   formatStart,
   isPastStart,
 } from "@/lib/barber-operational-home";
@@ -56,6 +56,8 @@ type BarberOperationalAppointmentCardProps = {
     row: AppointmentRecord,
     next: AppointmentArrivalState,
   ) => void | Promise<void>;
+  onRefreshAfterQuickPing?: () => void;
+  onQuickActionError?: (message: string) => void;
 };
 
 export function BarberOperationalAppointmentCard({
@@ -70,12 +72,13 @@ export function BarberOperationalAppointmentCard({
   onReminder,
   onRunningLate,
   onAdvance,
+  onRefreshAfterQuickPing,
+  onQuickActionError,
 }: BarberOperationalAppointmentCardProps) {
   const past = isPastStart(row.starts_at);
   const canMutate = row.status === "confirmed" && !past;
   const canSendReminder =
     row.status === "confirmed" && !past && row.barber?.id === user.id;
-  const canLate = canSendRunningLateNotice(row, user);
   const opStatus = deriveOperationalStatus(row, nowMs);
   const est =
     queue.length > 0 ? estimateMinutesAheadInQueue(queue, row.id, nowMs) : null;
@@ -177,6 +180,16 @@ export function BarberOperationalAppointmentCard({
       </CardHeader>
 
       <CardFooter className="flex flex-col gap-2 border-t border-border/40 bg-muted/5 pt-3 dark:bg-muted/10">
+        <BarberOperationalOneTapStrip
+          row={row}
+          user={user}
+          variant={dense ? "compact" : "comfortable"}
+          lateBusy={actions.lateBusyId === row.id}
+          lateSent={actions.lateSentId === row.id}
+          onRunningLate={onRunningLate}
+          onChairReadyDone={onRefreshAfterQuickPing}
+          onActionError={onQuickActionError}
+        />
         <BarberOperationalArrivalTap
           row={row}
           pending={actions.arrivalBusyId === row.id}
@@ -217,29 +230,6 @@ export function BarberOperationalAppointmentCard({
               ? "Reminder sent"
               : "Send reminder"}
           </Button>
-        ) : null}
-
-        {!dense && canLate ? (
-          <div className="w-full space-y-2 border-t border-border/35 pt-2">
-            <p className="text-xs font-medium text-muted-foreground">
-              Running behind?
-            </p>
-            <div className="flex gap-2">
-              {[10, 15, 20].map((m) => (
-                <Button
-                  key={m}
-                  type="button"
-                  size="sm"
-                  variant="secondary"
-                  className="min-h-11 min-w-0 flex-1 touch-manipulation sm:min-h-9"
-                  pending={actions.lateBusyId === row.id}
-                  onClick={() => onRunningLate(row, m)}
-                >
-                  +{m}m
-                </Button>
-              ))}
-            </div>
-          </div>
         ) : null}
 
         {!dense && canMutate ? (

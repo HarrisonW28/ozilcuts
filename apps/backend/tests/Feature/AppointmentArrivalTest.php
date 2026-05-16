@@ -128,6 +128,16 @@ class AppointmentArrivalTest extends TestCase
             ])
             ->assertOk()
             ->assertJsonPath('arrival_state', Appointment::ARRIVAL_IN_CHAIR);
+
+        $thread = $this->actingAs($customer, 'sanctum')
+            ->getJson("/api/v1/appointments/{$appt->id}/messages")
+            ->assertOk()
+            ->json();
+        $this->assertCount(3, $thread['messages']);
+        $this->assertSame(
+            'arrival_auto_shop_in_chair',
+            $thread['messages'][2]['operational_key'],
+        );
     }
 
     public function test_barber_cannot_skip_waiting(): void

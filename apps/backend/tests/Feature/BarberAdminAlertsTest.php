@@ -211,6 +211,39 @@ class BarberAdminAlertsTest extends TestCase
             ->assertJsonPath('data.1.type', NotificationEvents::STAFF_BOOKING_CREATED);
     }
 
+    public function test_operational_filter_includes_operational_visit_messages_for_customer(): void
+    {
+        $customer = User::factory()->create();
+        Notification::factory()->create([
+            'user_id' => $customer->id,
+            'type' => NotificationEvents::APPOINTMENT_CONFIRMED,
+        ]);
+        Notification::factory()->create([
+            'user_id' => $customer->id,
+            'type' => NotificationEvents::APPOINTMENT_VISIT_MESSAGE,
+            'data' => [
+                'appointment_id' => 42,
+                'urgency' => 'standard',
+                'message_preview' => 'Thanks',
+            ],
+        ]);
+        Notification::factory()->create([
+            'user_id' => $customer->id,
+            'type' => NotificationEvents::APPOINTMENT_VISIT_MESSAGE,
+            'data' => [
+                'appointment_id' => 42,
+                'urgency' => 'operational',
+                'message_preview' => 'Parked nearby',
+            ],
+        ]);
+
+        $this->actingAs($customer, 'sanctum')
+            ->getJson('/api/v1/notifications?operational=1')
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.data.urgency', 'operational');
+    }
+
     public function test_staff_alert_events_appear_in_preferences_matrix(): void
     {
         $admin = User::factory()->admin()->create();

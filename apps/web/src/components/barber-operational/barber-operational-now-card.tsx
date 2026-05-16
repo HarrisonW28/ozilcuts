@@ -2,6 +2,7 @@
 
 import { ArrivalFlowStrip } from "@/components/arrival-flow-strip";
 import { BarberOperationalArrivalTap } from "@/components/barber-operational/barber-operational-arrival-tap";
+import { BarberOperationalOneTapStrip } from "@/components/barber-operational/barber-operational-one-tap-strip";
 import {
   formatStart,
   formatStartTime,
@@ -13,6 +14,7 @@ import type { LiveShopSummary } from "@/lib/shop-live-status";
 import type {
   AppointmentArrivalState,
   AppointmentRecord,
+  AuthUser,
 } from "@ozilcuts/types";
 import {
   Button,
@@ -29,10 +31,16 @@ import Link from "next/link";
 
 type BarberOperationalNowCardProps = {
   row: AppointmentRecord;
+  user: AuthUser;
   thumb: string | null;
   nowMs: number;
   arrivalBusy: boolean;
+  lateBusy: boolean;
+  lateSent: boolean;
   liveSummary?: LiveShopSummary | null;
+  onRunningLate: (row: AppointmentRecord, minutes: number) => void | Promise<void>;
+  onQuickRefresh?: () => void;
+  onQuickActionError?: (message: string) => void;
   onAdvance: (
     row: AppointmentRecord,
     next: AppointmentArrivalState,
@@ -41,10 +49,16 @@ type BarberOperationalNowCardProps = {
 
 export function BarberOperationalNowCard({
   row,
+  user,
   thumb,
   nowMs,
   arrivalBusy,
+  lateBusy,
+  lateSent,
   liveSummary,
+  onRunningLate,
+  onQuickRefresh,
+  onQuickActionError,
   onAdvance,
 }: BarberOperationalNowCardProps) {
   const opStatus = deriveOperationalStatus(row, nowMs);
@@ -107,6 +121,16 @@ export function BarberOperationalNowCard({
         <ArrivalFlowStrip state={row.arrival_state} className="pt-1" />
       </CardHeader>
       <CardContent className="space-y-3 pt-0">
+        <BarberOperationalOneTapStrip
+          row={row}
+          user={user}
+          variant="comfortable"
+          lateBusy={lateBusy}
+          lateSent={lateSent}
+          onRunningLate={onRunningLate}
+          onChairReadyDone={onQuickRefresh}
+          onActionError={onQuickActionError}
+        />
         <BarberOperationalArrivalTap
           row={row}
           pending={arrivalBusy}

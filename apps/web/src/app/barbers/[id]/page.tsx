@@ -12,11 +12,13 @@ import {
   ozilcutsPageEnterTransition,
 } from "@/lib/motion";
 import { useSessionProfile } from "@/lib/use-session-profile";
+import { BarberTrustPanel } from "@/components/barber-trust";
 import {
   ApiError,
   fetchBarber,
   fetchBarberAvailability,
   fetchBarberPortfolio,
+  fetchBarberTrust,
 } from "@ozilcuts/api";
 import {
   BarberImageryIntro,
@@ -27,6 +29,7 @@ import { Button, Skeleton } from "@ozilcuts/ui";
 import type {
   BarberAvailabilityPayload,
   BarberProfilePublic,
+  BarberTrustSummary,
   HaircutPhoto,
 } from "@ozilcuts/types";
 import { BARBER_WEEKDAY_LABELS } from "@ozilcuts/types";
@@ -42,6 +45,7 @@ type DetailState =
       profile: BarberProfilePublic;
       availability: BarberAvailabilityPayload | null;
       portfolioPreview: HaircutPhoto[];
+      trust: BarberTrustSummary | null;
     }
   | { kind: "error"; message: string; notFound?: boolean };
 
@@ -79,20 +83,30 @@ export default function BarberDetailPage() {
         return;
       }
       setState({ kind: "loading" });
-      Promise.all([
+      Promise.allSettled([
         fetchBarber(userId),
-        fetchBarberAvailability(userId).catch(() => null),
-        fetchBarberPortfolio(userId, 1, 12)
-          .then((res) => res.data)
-          .catch(() => [] as HaircutPhoto[]),
+        fetchBarberAvailability(userId),
+        fetchBarberPortfolio(userId, 1, 12),
+        fetchBarberTrust(userId),
       ])
-        .then(([row, availability, portfolioPreview]) => {
+        .then(([profileRes, availabilityRes, portfolioRes, trustRes]) => {
           if (isCancelled()) return;
+          if (profileRes.status === "rejected") {
+            throw profileRes.reason;
+          }
           setState({
             kind: "ok",
-            profile: row,
-            availability,
-            portfolioPreview,
+            profile: profileRes.value,
+            availability:
+              availabilityRes.status === "fulfilled"
+                ? availabilityRes.value
+                : null,
+            portfolioPreview:
+              portfolioRes.status === "fulfilled"
+                ? portfolioRes.value.data
+                : [],
+            trust:
+              trustRes.status === "fulfilled" ? trustRes.value : null,
           });
         })
         .catch((err: unknown) => {
@@ -250,6 +264,14 @@ export default function BarberDetailPage() {
                 barberUserId={userId}
                 barberName={state.profile.barber.name}
               />
+
+              {state.trust ? (
+                <BarberTrustPanel
+                  trust={state.trust}
+                  barberName={state.profile.barber.name}
+                  portfolioHref={`/barbers/${userId}/portfolio`}
+                />
+              ) : null}
 
               <PortfolioPreviewStrip
                 photos={state.portfolioPreview}

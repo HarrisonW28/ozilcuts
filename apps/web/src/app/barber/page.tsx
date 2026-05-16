@@ -1,6 +1,7 @@
 "use client";
 
 import { BarberOperationalHome } from "@/components/barber-operational-home";
+import { ShopOperationalIntelligenceBoard } from "@/components/shop-operational";
 import { PageSessionSkeleton } from "@/components/loading";
 import { SiteHeader } from "@/components/site-header";
 import { useSessionProfile } from "@/lib/use-session-profile";
@@ -163,6 +164,11 @@ export default function BarberDashboardPage() {
             eyebrow={OZILCUTS_APP_NAME}
             title="Operations"
             description="Today, your queue, haircut refs, and one-tap comms—then setup tools below."
+          />
+
+          <ShopOperationalIntelligenceBoard
+            highlightBarberUserId={profile.user.id}
+            className="rounded-2xl border border-border/50 bg-card/30 p-4 sm:p-5 dark:bg-card/20"
           />
 
           <BarberOperationalHome profile={profile} />

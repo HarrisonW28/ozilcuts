@@ -1,5 +1,6 @@
 "use client";
 
+import { hapticTouch } from "@/lib/haptics";
 import { cn } from "@ozilcuts/ui";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -9,7 +10,7 @@ type AccountSubnavProps = {
 };
 
 const pillClass =
-  "inline-flex min-h-11 shrink-0 items-center rounded-full border px-4 text-sm font-medium transition-colors sm:min-h-10";
+  "motion-interactive inline-flex min-h-11 shrink-0 snap-start items-center rounded-full border px-4 text-sm font-medium motion-safe:active:scale-[0.985] sm:min-h-10";
 
 export function AccountSubnav({ isCustomer }: AccountSubnavProps) {
   const pathname = usePathname();
@@ -17,6 +18,7 @@ export function AccountSubnav({ isCustomer }: AccountSubnavProps) {
     { href: "/profile" as const, label: "Account" },
     ...(isCustomer
       ? ([
+          { href: "/profile/identity" as const, label: "Your story" },
           { href: "/profile/hair" as const, label: "Hair" },
           { href: "/profile/visits" as const, label: "Visits" },
         ] as const)
@@ -27,7 +29,7 @@ export function AccountSubnav({ isCustomer }: AccountSubnavProps) {
   return (
     <nav
       aria-label="Account sections"
-      className="-mx-1 flex flex-wrap gap-2 sm:max-w-none"
+      className="-mx-1 flex max-w-full snap-x snap-proximity flex-nowrap gap-2 overflow-x-auto overflow-y-visible pb-0.5 subnav-scroll-snap sm:flex-wrap sm:overflow-visible sm:pb-0"
     >
       {items.map((item) => {
         const active =
@@ -39,6 +41,7 @@ export function AccountSubnav({ isCustomer }: AccountSubnavProps) {
           <Link
             key={item.href}
             href={item.href}
+            onPointerDown={(ev) => hapticTouch("selection", ev.pointerType)}
             className={cn(
               pillClass,
               active

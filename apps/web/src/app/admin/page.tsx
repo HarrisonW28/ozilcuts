@@ -1,6 +1,7 @@
 "use client";
 
 import { PageSessionSkeleton } from "@/components/loading";
+import { ShopOperationalIntelligenceBoard } from "@/components/shop-operational";
 import { SiteHeader } from "@/components/site-header";
 import { useSessionProfile } from "@/lib/use-session-profile";
 import {
@@ -208,6 +209,8 @@ export default function AdminDashboardPage() {
             title="Dashboard"
             description="Shop overview, catalog, team, reports, inbox, and appointments—your control room for the business."
           />
+
+          <ShopOperationalIntelligenceBoard className="rounded-2xl border border-border/50 bg-card/30 p-4 sm:p-5 dark:bg-card/20" />
 
           {setupIncomplete ? (
             <Card className="border-primary/30 bg-primary/[0.06] dark:border-primary/35 dark:bg-primary/10">

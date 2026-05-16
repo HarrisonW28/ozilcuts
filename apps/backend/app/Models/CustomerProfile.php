@@ -18,6 +18,7 @@ class CustomerProfile extends Model
     protected $fillable = [
         'user_id',
         'phone',
+        'date_of_birth',
         'preferred_barber_user_id',
         'preferences',
         'marketing_opt_in',
@@ -34,6 +35,7 @@ class CustomerProfile extends Model
             'marketing_opt_in' => 'boolean',
             'retention_paused' => 'boolean',
             'arrival_location_opt_in' => 'boolean',
+            'date_of_birth' => 'date',
         ];
     }
 

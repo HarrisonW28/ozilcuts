@@ -27,8 +27,8 @@ final class ArrivalPresenceNotificationService
         $appointment->loadMissing(['service', 'barber', 'customer']);
 
         $base = AppointmentNotificationPayload::build($appointment) + [
-            'deep_link' => '/appointments/'.$appointment->id.'/check-in',
-            'thread_group_key' => 'arrival_presence:'.$appointment->id,
+            'deep_link' => '/appointments/'.$appointment->id.'/check-in#visit-thread',
+            'thread_group_key' => 'visit_thread:'.$appointment->id,
             'headline' => 'Guest checked in',
         ];
 

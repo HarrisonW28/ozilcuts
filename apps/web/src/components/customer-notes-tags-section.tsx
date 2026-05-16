@@ -273,7 +273,7 @@ export function CustomerNotesTagsSection({
   }
 
   return (
-    <Card>
+    <Card className="mt-6">
       <CardHeader>
         <CardTitle>Customer notes & tags</CardTitle>
         <CardDescription>

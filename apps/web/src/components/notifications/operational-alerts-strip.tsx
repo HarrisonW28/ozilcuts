@@ -4,7 +4,7 @@ import { NotificationGlyph } from "@/components/notification-glyph";
 import {
   getNotificationDisplayTitle,
   getNotificationShortLine,
-  isOperationalAlertType,
+  isOperationalPriorityRecord,
 } from "@/lib/notification-presenter";
 import { useInbox } from "@/lib/use-inbox";
 import { Button, cn } from "@ozilcuts/ui";
@@ -19,7 +19,7 @@ type OperationalAlertsStripProps = {
 export function OperationalAlertsStrip({ className }: OperationalAlertsStripProps) {
   const inbox = useInbox();
   const operationalUnread = inbox.latest.filter(
-    (n) => n.read_at === null && isOperationalAlertType(n.type),
+    (n) => n.read_at === null && isOperationalPriorityRecord(n),
   );
   const lead = operationalUnread[0];
 

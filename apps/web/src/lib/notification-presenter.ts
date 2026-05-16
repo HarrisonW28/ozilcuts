@@ -235,6 +235,16 @@ export function getNotificationDisplayTitle(
     if (eta) return `${base} · ~${eta} min walk`;
     return base;
   }
+  if (
+    record.type === "appointment.visit_message" ||
+    record.type === "staff.visit_message"
+  ) {
+    const base = NOTIFICATION_TITLES[record.type];
+    if (record.data.urgency === "operational") {
+      return `${base} · operational`;
+    }
+    return base;
+  }
   return NOTIFICATION_TITLES[record.type] ?? record.type;
 }
 
@@ -424,6 +434,27 @@ export function getNotificationBody(record: NotificationRecord): string {
     }
     return `${customer} rescheduled ${service}${when ? ` to ${when}` : ""}.${previous}${actor}`;
   }
+  if (
+    record.type === "appointment.visit_message" ||
+    record.type === "staff.visit_message"
+  ) {
+    const sender =
+      typeof data.sender_name === "string" && data.sender_name.trim().length > 0
+        ? data.sender_name.trim()
+        : record.type === "staff.visit_message"
+          ? "Guest"
+          : "Shop";
+    const preview =
+      typeof data.message_preview === "string" && data.message_preview.trim()
+        ? data.message_preview.trim()
+        : null;
+    const target = barber ? `${service} with ${barber}` : service;
+    const whenBit = when ? ` · ${when}` : "";
+    if (preview) {
+      return `${sender} — ${preview}${whenBit ? ` (${target}${whenBit})` : ` · ${target}`}`;
+    }
+    return `${sender} sent a booking-thread update for ${target}${whenBit}.`;
+  }
   return NOTIFICATION_TITLES[record.type] ?? record.type;
 }
 
@@ -512,6 +543,27 @@ export function getNotificationShortLine(record: NotificationRecord): string {
   if (record.type === "staff.booking.rescheduled") {
     return `${customer ?? "Guest"} · ${service}`;
   }
+  if (
+    record.type === "appointment.visit_message" ||
+    record.type === "staff.visit_message"
+  ) {
+    const sender =
+      typeof data.sender_name === "string" && data.sender_name.trim().length > 0
+        ? data.sender_name.trim()
+        : record.type === "staff.visit_message"
+          ? "Guest"
+          : "Shop";
+    const preview =
+      typeof data.message_preview === "string" && data.message_preview.trim()
+        ? data.message_preview.trim()
+        : null;
+    if (preview) {
+      const clipped =
+        preview.length > 56 ? `${preview.slice(0, 55)}…` : preview;
+      return `${sender}: ${clipped}`;
+    }
+    return `${sender} · ${service}`;
+  }
   return NOTIFICATION_TITLES[record.type] ?? record.type;
 }
 
@@ -542,10 +594,31 @@ export function rebookHref(record: NotificationRecord): string | null {
   return `/book${params.size > 0 ? `?${params.toString()}` : ""}`;
 }
 
+/** Prefer server `deep_link` (path, search, hash) for premium one-tap routing. */
+export function resolveNotificationDeepLink(
+  record: NotificationRecord,
+): string | null {
+  const dl = record.data?.deep_link;
+  if (typeof dl !== "string") return null;
+  const t = dl.trim();
+  if (!t) return null;
+  if (t.startsWith("/")) return t;
+  try {
+    const u = new URL(t);
+    return `${u.pathname}${u.search}${u.hash}`;
+  } catch {
+    return null;
+  }
+}
+
 export function notificationPrimaryHref(
   record: NotificationRecord,
 ): string | null {
-  return rebookHref(record) ?? appointmentHref(record);
+  return (
+    rebookHref(record) ??
+    resolveNotificationDeepLink(record) ??
+    appointmentHref(record)
+  );
 }
 
 export function formatRelativeNotificationTime(
@@ -597,6 +670,17 @@ export const OPERATIONAL_ALERT_TYPES: NotificationEvent[] = [
 
 export function isOperationalAlertType(type: NotificationEvent): boolean {
   return OPERATIONAL_ALERT_TYPES.includes(type);
+}
+
+/** Staff alert types + high-priority guest visit pings (operational templates). */
+export function isOperationalPriorityRecord(
+  record: NotificationRecord,
+): boolean {
+  if (isOperationalAlertType(record.type)) return true;
+  return (
+    record.type === "appointment.visit_message" &&
+    record.data.urgency === "operational"
+  );
 }
 
 export function notificationCategoryLabel(
@@ -736,7 +820,14 @@ export function notificationThreadKey(
 ): string | null {
   const explicit = record.data.thread_group_key;
   if (typeof explicit === "string" && explicit.trim().length > 0) {
-    return explicit.trim();
+    const raw = explicit.trim();
+    const legacy = raw.match(
+      /^(?:arrival_proximity|arrival_presence):(\d+)$/,
+    );
+    if (legacy) {
+      return `visit_thread:${legacy[1]}`;
+    }
+    return raw;
   }
   const aid = record.data.appointment_id;
   if (typeof aid === "number" && aid > 0) {
@@ -811,8 +902,8 @@ export function sortNotificationsForDisplay(
   const { operationalFirst = false } = options;
   return [...records].sort((a, b) => {
     if (operationalFirst) {
-      const aOp = isOperationalAlertType(a.type) ? 1 : 0;
-      const bOp = isOperationalAlertType(b.type) ? 1 : 0;
+      const aOp = isOperationalPriorityRecord(a) ? 1 : 0;
+      const bOp = isOperationalPriorityRecord(b) ? 1 : 0;
       if (aOp !== bOp) return bOp - aOp;
     }
     const aUnread = a.read_at === null ? 1 : 0;
@@ -825,10 +916,7 @@ export function sortNotificationsForDisplay(
 }
 
 export function toastDurationMs(record: NotificationRecord): number {
-  if (
-    record.data.urgency === "operational" ||
-    isOperationalAlertType(record.type)
-  ) {
+  if (isOperationalPriorityRecord(record)) {
     return 9_500;
   }
   if (record.type === "appointment.reminder") return 8_000;

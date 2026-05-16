@@ -21,6 +21,7 @@ class BarberManageResource extends JsonResource
             'title' => $this->title,
             'bio' => $this->bio,
             'years_experience' => $this->years_experience,
+            'specialties' => $this->specialties ?? [],
             'is_published' => $this->is_published,
             'user' => [
                 'id' => $this->user->id,

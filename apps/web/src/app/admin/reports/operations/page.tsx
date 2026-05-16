@@ -17,6 +17,7 @@ import {
   OperationalAiInsightsSection,
   OperationalAiInsightsSkeleton,
 } from "@/components/operational-ai-insights";
+import { ShopOperationalIntelligenceBoard } from "@/components/shop-operational";
 import { useSessionProfile } from "@/lib/use-session-profile";
 import {
   ApiError,
@@ -161,6 +162,10 @@ export default function AdminOperationalInsightsPage() {
             title="Operations"
             description="Today's pulse, the upcoming week, and patterns that drive scheduling decisions."
           />
+
+          {isAdmin ? (
+            <ShopOperationalIntelligenceBoard className="rounded-2xl border border-border/50 bg-card/30 p-4 sm:p-5 dark:bg-card/20" />
+          ) : null}
 
           {profile.kind === "loading" || profile.kind === "none" ? (
             <PageSessionSkeleton statusLabel="Loading" />

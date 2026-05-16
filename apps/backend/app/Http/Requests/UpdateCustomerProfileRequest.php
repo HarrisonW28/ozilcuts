@@ -20,6 +20,7 @@ class UpdateCustomerProfileRequest extends FormRequest
     {
         return [
             'phone' => ['sometimes', 'nullable', 'string', 'max:40'],
+            'date_of_birth' => ['sometimes', 'nullable', 'date', 'before:today'],
             'preferred_barber_user_id' => [
                 'sometimes',
                 'nullable',

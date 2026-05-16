@@ -15,6 +15,31 @@ function authHeaders(token: string): HeadersInit {
   };
 }
 
+/** Weak-signal resilience: bounded wait before surfacing a friendly timeout. */
+const APPOINTMENT_THREAD_FETCH_MS = 26_000;
+
+async function appointmentThreadFetch(
+  input: string,
+  init: RequestInit,
+): Promise<Response> {
+  const ctrl = new AbortController();
+  const tid = setTimeout(() => ctrl.abort(), APPOINTMENT_THREAD_FETCH_MS);
+  try {
+    return await fetch(input, { ...init, signal: ctrl.signal });
+  } catch (e: unknown) {
+    if (e instanceof DOMException && e.name === "AbortError") {
+      throw new ApiError(
+        "Could not reach the server in time — check your connection and try again.",
+        0,
+        { reason: "timeout" },
+      );
+    }
+    throw e;
+  } finally {
+    clearTimeout(tid);
+  }
+}
+
 export async function fetchAppointmentThread(
   token: string,
   appointmentId: number,
@@ -27,7 +52,7 @@ export async function fetchAppointmentThread(
     url.searchParams.set("after", String(options.after));
   }
 
-  const res = await fetch(url.toString(), {
+  const res = await appointmentThreadFetch(url.toString(), {
     headers: authHeaders(token),
     cache: "no-store",
   });
@@ -59,7 +84,7 @@ export async function postAppointmentThreadMessage(
     preset_key?: string;
   },
 ): Promise<{ message: AppointmentThreadMessage }> {
-  const res = await fetch(
+  const res = await appointmentThreadFetch(
     `${getApiBaseUrl()}/api/v1/appointments/${appointmentId}/messages`,
     {
       method: "POST",
@@ -90,7 +115,7 @@ export async function markAppointmentThreadRead(
   appointmentId: number,
   lastReadMessageId: number,
 ): Promise<{ ok: boolean }> {
-  const res = await fetch(
+  const res = await appointmentThreadFetch(
     `${getApiBaseUrl()}/api/v1/appointments/${appointmentId}/messages/read`,
     {
       method: "POST",

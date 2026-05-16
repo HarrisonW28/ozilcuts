@@ -3,6 +3,7 @@
 import { CustomerHomeGallery } from "@/components/customer-home/customer-home-gallery";
 import { CustomerHomeLoyalty } from "@/components/customer-home/customer-home-loyalty";
 import { CustomerHomeNotifications } from "@/components/customer-home/customer-home-notifications";
+import { CustomerHomeRetentionPanel } from "@/components/customer-home/customer-home-retention-panel";
 import { CustomerHomeShortcuts } from "@/components/customer-home/customer-home-shortcuts";
 import { CustomerHomeUpcoming } from "@/components/customer-home/customer-home-upcoming";
 import { CustomerHomeSkeleton } from "@/components/loading";
@@ -20,6 +21,7 @@ import { useSessionProfile } from "@/lib/use-session-profile";
 import {
   ApiError,
   fetchCustomerProfile,
+  fetchCustomerRetentionSummary,
   fetchHairProfile,
   fetchMyAppointments,
   fetchMyVisitsSummary,
@@ -29,6 +31,7 @@ import type {
   AppointmentRecord,
   CustomerAnalyticsResponse,
   CustomerProfile,
+  CustomerRetentionSummary,
   HairProfile,
   RebookSuggestion,
 } from "@ozilcuts/types";
@@ -49,6 +52,7 @@ type HomePayload = {
   appointments: AppointmentRecord[];
   visits: CustomerAnalyticsResponse | null;
   nextVisit: RebookSuggestion | null;
+  retentionSummary: CustomerRetentionSummary | null;
   customerProfile: CustomerProfile | null;
   hairProfile: HairProfile | null;
 };
@@ -79,7 +83,7 @@ export function CustomerHomeDashboard() {
     const [
       apptRes,
       visitsRes,
-      nextRes,
+      retentionRes,
       profileRes,
       hairRes,
     ] = await Promise.allSettled([
@@ -89,7 +93,7 @@ export function CustomerHomeDashboard() {
         perPage: 15,
       }),
       fetchMyVisitsSummary(token),
-      fetchNextVisitSuggestion(token),
+      fetchCustomerRetentionSummary(token),
       fetchCustomerProfile(token),
       fetchHairProfile(token),
     ]);
@@ -97,8 +101,17 @@ export function CustomerHomeDashboard() {
     const appointments =
       apptRes.status === "fulfilled" ? apptRes.value.data : [];
     const visits = visitsRes.status === "fulfilled" ? visitsRes.value : null;
-    const nextVisit =
-      nextRes.status === "fulfilled" ? nextRes.value : null;
+    const retentionSummary =
+      retentionRes.status === "fulfilled" ? retentionRes.value : null;
+    let nextVisit =
+      retentionSummary?.rebook ?? null;
+    if (retentionRes.status === "rejected") {
+      try {
+        nextVisit = await fetchNextVisitSuggestion(token);
+      } catch {
+        nextVisit = null;
+      }
+    }
     const customerProfile =
       profileRes.status === "fulfilled" ? profileRes.value : null;
     const hairProfile =
@@ -107,7 +120,6 @@ export function CustomerHomeDashboard() {
     const allRejected =
       apptRes.status === "rejected" &&
       visitsRes.status === "rejected" &&
-      nextRes.status === "rejected" &&
       profileRes.status === "rejected" &&
       hairRes.status === "rejected";
 
@@ -128,6 +140,7 @@ export function CustomerHomeDashboard() {
         appointments,
         visits,
         nextVisit,
+        retentionSummary,
         customerProfile,
         hairProfile,
       },
@@ -212,6 +225,10 @@ export function CustomerHomeDashboard() {
           aria-busy={isRefreshing || undefined}
         >
           <CustomerHomeUpcoming upcoming={upcoming} />
+
+          <CustomerHomeRetentionPanel
+            summary={state.data.retentionSummary}
+          />
 
           <CustomerHomeLoyalty
             loyalty={loyalty}

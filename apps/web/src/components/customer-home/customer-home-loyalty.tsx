@@ -104,7 +104,7 @@ export function CustomerHomeLoyalty({
             size="sm"
             className="min-h-11 w-full touch-manipulation sm:min-h-9 sm:w-auto"
           >
-            <Link href="/profile/visits">Visit history</Link>
+            <Link href="/profile/identity">Your studio story</Link>
           </Button>
         </CardFooter>
       </Card>

@@ -249,6 +249,35 @@ export function ProfileFormCardSkeleton({
   );
 }
 
+/** Generic native-shell segment placeholder while Next.js swaps route modules. */
+export function AppShellSegmentLoading({
+  className,
+  statusLabel = "Loading page",
+}: ListSkeletonProps) {
+  return (
+    <main
+      id="main-content"
+      className={cn("page-main app-shell-scroll flex-1", className)}
+      aria-busy="true"
+      aria-label={statusLabel}
+    >
+      <div className="page-stack mx-auto w-full max-w-lg sm:max-w-2xl lg:max-w-3xl">
+        <div className="space-y-3">
+          <Skeleton className="h-3 w-24 rounded-md" />
+          <Skeleton className="h-9 w-52 max-w-full rounded-lg" />
+          <Skeleton className="h-4 w-full max-w-md rounded-md" />
+        </div>
+        <Skeleton className="h-48 w-full rounded-2xl sm:h-52" />
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <Skeleton className="h-32 rounded-xl sm:h-36" />
+          <Skeleton className="h-32 rounded-xl sm:h-36" />
+        </div>
+        <Skeleton className="h-24 w-full rounded-xl" />
+      </div>
+    </main>
+  );
+}
+
 /** Customer `/home` shell while session resolves or redirects. */
 export function CustomerHomeSkeleton({ className }: { className?: string }) {
   return (

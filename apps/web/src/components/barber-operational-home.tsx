@@ -433,10 +433,16 @@ export function BarberOperationalHome({ profile }: { profile: ReadyProfile }) {
       {rows !== null && !loadError && nowFocus ? (
         <BarberOperationalNowCard
           row={nowFocus}
+          user={user}
           thumb={thumbs[nowFocus.id] ?? null}
           nowMs={nowTick}
           liveSummary={liveSummary}
           arrivalBusy={arrivalBusyId === nowFocus.id}
+          lateBusy={lateBusyId === nowFocus.id}
+          lateSent={lateSentId === nowFocus.id}
+          onRunningLate={onRunningLate}
+          onQuickRefresh={() => void load({ silent: true })}
+          onQuickActionError={(msg) => setActionError(msg)}
           onAdvance={onAdvanceArrival}
         />
       ) : null}
@@ -483,6 +489,8 @@ export function BarberOperationalHome({ profile }: { profile: ReadyProfile }) {
                       onReminder={onReminder}
                       onRunningLate={onRunningLate}
                       onAdvance={onAdvanceArrival}
+                      onRefreshAfterQuickPing={() => void load({ silent: true })}
+                      onQuickActionError={(msg) => setActionError(msg)}
                     />
                   </li>
                 ))}
@@ -522,6 +530,8 @@ export function BarberOperationalHome({ profile }: { profile: ReadyProfile }) {
                       onReminder={onReminder}
                       onRunningLate={onRunningLate}
                       onAdvance={onAdvanceArrival}
+                      onRefreshAfterQuickPing={() => void load({ silent: true })}
+                      onQuickActionError={(msg) => setActionError(msg)}
                     />
                   </li>
                 ))}

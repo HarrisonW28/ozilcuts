@@ -22,12 +22,13 @@ final class CustomerProfileService
     }
 
     /**
-     * @param  array{phone?: string|null, preferred_barber_user_id?: int|null, preferences?: string|null, marketing_opt_in?: bool, retention_paused?: bool, arrival_location_opt_in?: bool}  $data
+     * @param  array{phone?: string|null, date_of_birth?: string|null, preferred_barber_user_id?: int|null, preferences?: string|null, marketing_opt_in?: bool, retention_paused?: bool, arrival_location_opt_in?: bool}  $data
      */
     public function update(CustomerProfile $profile, array $data): CustomerProfile
     {
         $profile->update(array_intersect_key($data, array_flip([
             'phone',
+            'date_of_birth',
             'preferred_barber_user_id',
             'preferences',
             'marketing_opt_in',

@@ -36,6 +36,7 @@ export {
   replaceManageBarberAvailability,
 } from "./barberAvailability";
 export { fetchBarber, fetchBarbers, fetchMyBarberProfile } from "./barbers";
+export { fetchBarberTrust, submitAppointmentReview } from "./barberTrust";
 export { fetchStaffCustomerSearch } from "./staffCustomers";
 export {
   cancelAppointment,
@@ -59,6 +60,7 @@ export {
   markAppointmentThreadRead,
   postAppointmentThreadMessage,
 } from "./appointmentMessages";
+export { fetchVisitThreadAssist } from "./appointmentVisitThreadAssist";
 export {
   fetchCustomerAnalytics,
   fetchCustomerAnalyticsAggregate,
@@ -73,6 +75,7 @@ export {
   updateNotificationPreferences,
 } from "./notifications";
 export { fetchOperationalInsights } from "./operationalInsights";
+export { fetchShopOperationalLive } from "./shopOperationalIntelligence";
 export { fetchRetentionReport } from "./retentionReport";
 export {
   attachCustomerTag,
@@ -88,6 +91,11 @@ export {
   fetchCustomerProfile,
   updateCustomerProfile,
 } from "./customerProfile";
+export {
+  fetchCustomerRelationship,
+  fetchSelfCustomerRelationship,
+  updateCustomerVip,
+} from "./customerRelationship";
 export {
   deleteHairProfilePhoto,
   fetchAppointmentHairProfile,
@@ -108,6 +116,7 @@ export {
   fetchNextVisitSuggestion,
   snoozeRebookNudge,
 } from "./rebookSuggestions";
+export { fetchCustomerRetentionSummary } from "./customerRetentionSummary";
 export {
   downloadRevenueReportCsv,
   fetchRevenueReport,

@@ -37,10 +37,10 @@ export function isVisitThreadEntryUnreadForViewer(
   return msg.id > watermark;
 }
 
-export function visitThreadKindLabel(
-  msg: AppointmentThreadMessage,
-): "Operational" | "Quick reply" | "Note" {
-  if (msg.kind === "operational") return "Operational";
+export function visitThreadKindLabel(msg: AppointmentThreadMessage): string {
   if (msg.kind === "preset") return "Quick reply";
-  return "Note";
+  if (msg.kind !== "operational") return "Note";
+  const key = msg.operational_key ?? "";
+  if (key.startsWith("arrival_auto_")) return "Arrival update";
+  return "Operational";
 }

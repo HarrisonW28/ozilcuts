@@ -21,6 +21,7 @@ class BarberProfile extends Model
         'title',
         'bio',
         'years_experience',
+        'specialties',
         'is_published',
     ];
 
@@ -31,6 +32,7 @@ class BarberProfile extends Model
     {
         return [
             'is_published' => 'boolean',
+            'specialties' => 'array',
         ];
     }
 

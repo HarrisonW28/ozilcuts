@@ -36,6 +36,8 @@ final class AppointmentMessageService
         'thanks_patience' => 'Thanks for your patience today.',
         /** Thread-only: posted when the queue advances to “waiting” (not shown as a chip). */
         'arrival_auto_shop_queue' => 'You’re next in the queue — I’ll bring you over calmly when it’s time.',
+        /** Thread-only: barber seats the guest in the chair. */
+        'arrival_auto_shop_in_chair' => 'We’re in the chair — settling in, no rush.',
     ];
 
     /** @var list<string> */
@@ -244,19 +246,88 @@ final class AppointmentMessageService
 
         $cid = $appointment->customer_user_id;
         $bid = $appointment->barber_user_id;
+        $isCustomer = $cid !== null && (int) $actor->id === (int) $cid;
+        $isShopSide = $actor->isAdmin()
+            || ($bid !== null && (int) $actor->id === (int) $bid);
+
         $key = null;
-        if ($cid !== null && (int) $actor->id === (int) $cid
+        if ($isCustomer
             && $from === Appointment::ARRIVAL_EXPECTED && $to === Appointment::ARRIVAL_ARRIVED) {
             $key = 'arrival_auto_guest_checked_in';
-        } elseif ($bid !== null && (int) $actor->id === (int) $bid
+        } elseif ($isShopSide
             && $from === Appointment::ARRIVAL_ARRIVED && $to === Appointment::ARRIVAL_WAITING) {
             $key = 'arrival_auto_shop_queue';
+        } elseif ($isShopSide
+            && $from === Appointment::ARRIVAL_WAITING && $to === Appointment::ARRIVAL_IN_CHAIR) {
+            $key = 'arrival_auto_shop_in_chair';
         }
         if ($key === null) {
             return;
         }
 
         $this->store($appointment, $actor, AppointmentMessage::KIND_OPERATIONAL, null, $key);
+    }
+
+    /**
+     * Quiet thread line when the guest first enters the shop geofence — mirrors one-shot proximity
+     * notifications, keeps the partner in the same calm channel.
+     */
+    public function postProximityArrivalThreadLine(
+        Appointment $appointment,
+        User $customer,
+        int $etaMinutes,
+    ): void {
+        if (! $customer->can('sendMessages', $appointment)) {
+            return;
+        }
+        if (! $this->inArrivalMessagingWindow($appointment)) {
+            return;
+        }
+        if ($appointment->customer_user_id === null
+            || (int) $appointment->customer_user_id !== (int) $customer->id) {
+            return;
+        }
+        if ((string) $appointment->arrival_state !== Appointment::ARRIVAL_EXPECTED) {
+            return;
+        }
+
+        $eta = max(1, min(45, $etaMinutes));
+        $body = sprintf(
+            'Nearby the shop — about %d minutes on foot; easing in calmly.',
+            $eta,
+        );
+
+        $this->storeArrivalAutomatedLine(
+            $appointment,
+            $customer,
+            'arrival_auto_guest_near_shop',
+            $body,
+        );
+    }
+
+    /**
+     * @internal Automated arrival lines (operational_key prefix arrival_auto_).
+     */
+    private function storeArrivalAutomatedLine(
+        Appointment $appointment,
+        User $sender,
+        string $operationalKey,
+        string $body,
+    ): void {
+        if (! str_starts_with($operationalKey, 'arrival_auto_')) {
+            abort(500, 'Invalid automated arrival message key.');
+        }
+
+        $row = new AppointmentMessage([
+            'appointment_id' => $appointment->id,
+            'sender_user_id' => $sender->id,
+            'kind' => AppointmentMessage::KIND_OPERATIONAL,
+            'operational_key' => $operationalKey,
+            'body' => $body,
+        ]);
+        $row->save();
+
+        $this->notifyVisitThreadPartner($appointment, $sender, $row);
     }
 
     public function store(

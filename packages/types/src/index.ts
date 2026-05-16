@@ -58,11 +58,72 @@ export type BarberAvailabilityWindowInput = {
   ends_at: string;
 };
 
+export type BarberTrustConsistencyLevel = "strong" | "good" | "building";
+
+export type BarberTrustConsistencyIndicator = {
+  key: string;
+  label: string;
+  value_label: string;
+  level: BarberTrustConsistencyLevel;
+  description: string;
+};
+
+export type BarberTrustRepeatMetrics = {
+  unique_customers: number;
+  repeat_customers: number;
+  /** 0..1 fraction of guests with 2+ visits. */
+  repeat_rate: number;
+  verified_visits: number;
+};
+
+export type BarberTrustPortfolioSignals = {
+  public_photo_count: number;
+  before_after_pair_count: number;
+  has_recent_work: boolean;
+  guest_consent_photos: boolean;
+};
+
+export type BarberTrustReview = {
+  id: number;
+  rating: number;
+  body: string;
+  customer_display_name: string;
+  service_name: string | null;
+  visited_at: string | null;
+  verified: true;
+};
+
+export type BarberTrustSummary = {
+  barber_user_id: number;
+  average_rating: number | null;
+  review_count: number;
+  repeat_metrics: BarberTrustRepeatMetrics;
+  consistency: BarberTrustConsistencyIndicator[];
+  specialties: string[];
+  specialties_source: "profile" | "inferred";
+  portfolio: BarberTrustPortfolioSignals;
+  reviews: BarberTrustReview[];
+  highlights: string[];
+};
+
+export type AppointmentReview = {
+  id: number;
+  appointment_id: number;
+  rating: number;
+  body: string;
+  verified: boolean;
+  customer_display_name: string;
+  service_name: string | null;
+  visited_at: string | null;
+  created_at: string | null;
+};
+
 export type BarberManageRow = {
   id: number;
   title: string | null;
   bio: string | null;
   years_experience: number | null;
+  specialties?: string[];
   is_published: boolean;
   user: {
     id: number;
@@ -156,6 +217,8 @@ export type UpdateBarberProfileInput = {
 export type CustomerProfile = {
   id: number;
   phone: string | null;
+  /** ISO date (YYYY-MM-DD) for birthday personalization. */
+  date_of_birth: string | null;
   preferred_barber_user_id: number | null;
   preferences: string | null;
   marketing_opt_in: boolean;
@@ -180,6 +243,7 @@ export type CustomerProfile = {
 
 export type UpdateCustomerProfileInput = {
   phone?: string | null;
+  date_of_birth?: string | null;
   preferred_barber_user_id?: number | null;
   preferences?: string | null;
   marketing_opt_in?: boolean;
@@ -335,6 +399,67 @@ export type CustomerTagsResponse = {
 
 export type CustomerTagSuggestionsResponse = {
   data: string[];
+};
+
+export type CustomerRelationshipBirthday = {
+  has_date: boolean;
+  display: string | null;
+  month: number | null;
+  day: number | null;
+  days_until: number | null;
+  is_today: boolean;
+  is_soon: boolean;
+};
+
+export type CustomerRelationshipMilestone = {
+  visit_count: number;
+  label: string;
+  visits_remaining?: number;
+};
+
+export type CustomerRelationshipMilestones = {
+  achieved: CustomerRelationshipMilestone[];
+  next: CustomerRelationshipMilestone | null;
+};
+
+export type CustomerRelationshipLoyaltyEvent = {
+  kind: "visit" | "milestone";
+  label: string;
+  occurred_at: string | null;
+  visit_number?: number;
+  visit_count?: number;
+};
+
+export type CustomerRelationshipNotePreview = {
+  id: number;
+  body: string;
+  pinned: boolean;
+  author_name?: string | null;
+  created_at: string | null;
+};
+
+export type CustomerRelationshipSnapshot = {
+  customer_user_id: number;
+  customer_name: string;
+  is_vip: boolean;
+  birthday: CustomerRelationshipBirthday;
+  milestones: CustomerRelationshipMilestones;
+  loyalty_history: CustomerRelationshipLoyaltyEvent[];
+  relationship_notes: CustomerRelationshipNotePreview[];
+  visit_summary: {
+    total_visits: number;
+    last_visit_at: string | null;
+    first_visit_at: string | null;
+  };
+  tags: Array<{
+    id: number;
+    label: string;
+    is_vip: boolean;
+  }>;
+};
+
+export type UpdateCustomerVipInput = {
+  is_vip: boolean;
 };
 
 export type ApiHealthResponse = {
@@ -533,6 +658,19 @@ export type AppointmentThreadMeta = {
 export type AppointmentThreadPayload = {
   messages: AppointmentThreadMessage[];
   meta: AppointmentThreadMeta;
+};
+
+/** Optional AI/rules phrasing help for the visit thread (suggestions only; never auto-sent). */
+export type VisitThreadAssistPayload = {
+  source: "model" | "rules";
+  generated_at: string;
+  privacy: {
+    staff_only: string;
+    third_party: string | null;
+  };
+  delay_prompt: string | null;
+  suggested_notes: string[];
+  optional_status_line: string | null;
 };
 
 export type AppointmentAdjustmentSuggestion = {
@@ -891,6 +1029,77 @@ export type OperationalInsightsRangeFilters = {
   to: string;
 };
 
+export type ShopChairState =
+  | "open"
+  | "in_use"
+  | "guests_waiting"
+  | "catching_up";
+
+export type ShopChairServing = {
+  appointment_id: number;
+  customer_name: string | null;
+  service_name: string | null;
+};
+
+export type ShopOperationalChair = {
+  barber_user_id: number;
+  barber_name: string;
+  barber_title: string | null;
+  chair: {
+    state: ShopChairState;
+    in_use: boolean;
+    serving: ShopChairServing | null;
+  };
+  utilization: {
+    booked_minutes: number;
+    available_minutes: number;
+    utilization_pct: number;
+  };
+  workload: {
+    confirmed_today: number;
+    remaining_today: number;
+    completed_today: number;
+    waiting_count: number;
+    behind_count: number;
+    lounge_guests: number;
+  };
+  queue: {
+    pace_tone: QueuePaceTone;
+    visits_behind_schedule: number;
+  };
+};
+
+export type ShopQueueBalanceHint = {
+  tone: "balance" | "pace" | "capacity";
+  message: string;
+  barber_user_id: number | null;
+};
+
+export type ShopOperationalLiveSnapshot = {
+  snapshot_date: string;
+  updated_at: string;
+  shop_summary: {
+    chairs_total: number;
+    chairs_in_use: number;
+    chairs_open: number;
+    guests_waiting_total: number;
+    behind_visits_total: number;
+    confirmed_today: number;
+    remaining_today: number;
+    avg_utilization_pct: number;
+  };
+  chairs: ShopOperationalChair[];
+  queue_balance: {
+    headline: string;
+    hints: ShopQueueBalanceHint[];
+  };
+  analytics: {
+    booked_minutes_total: number;
+    available_minutes_total: number;
+    shop_utilization_pct: number;
+  };
+};
+
 /** Admin preview of customers matching retention rules (no sends). */
 export type RetentionReportRow = {
   appointment_id: number;
@@ -1144,4 +1353,56 @@ export type RebookSuggestion = {
   last_appointment_at: string | null;
   service: ServiceSummary | null;
   barber: BarberPublicRef | null;
+};
+
+export type CustomerRetentionPredictedCut = {
+  source: "booked" | "predicted";
+  /** YYYY-MM-DD */
+  date: string | null;
+  /** Full ISO when source is booked */
+  starts_at?: string | null;
+  appointment_id?: number | null;
+  typical_interval_days?: number | null;
+};
+
+export type CustomerRetentionSignals = {
+  days_since_last_visit: number | null;
+  typical_interval_days: number | null;
+  suggested_date: string | null;
+  due_soon: boolean;
+  dormant: boolean;
+  inactivity_threshold_days: number | null;
+};
+
+export type CustomerRetentionNudgeTone =
+  | "muted"
+  | "standard"
+  | "warm"
+  | "urgent";
+
+export type CustomerRetentionNudge = {
+  variant:
+    | "paused"
+    | "booked"
+    | "dormant"
+    | "due_soon"
+    | "welcome"
+    | "steady"
+    | "reengage";
+  tone: CustomerRetentionNudgeTone;
+  headline: string;
+  body: string | null;
+  cta_label: string;
+  cta_href: string | null;
+};
+
+/** Smart retention snapshot for the signed-in customer (repeat-booking focus). */
+export type CustomerRetentionSummary = {
+  retention_paused: boolean;
+  has_upcoming_booking: boolean;
+  total_visits: number;
+  rebook: RebookSuggestion | null;
+  predicted: CustomerRetentionPredictedCut | null;
+  signals: CustomerRetentionSignals;
+  nudge: CustomerRetentionNudge;
 };

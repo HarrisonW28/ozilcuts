@@ -19,6 +19,7 @@ class CustomerProfileResource extends JsonResource
         return [
             'id' => $this->id,
             'phone' => $this->phone,
+            'date_of_birth' => $this->date_of_birth?->format('Y-m-d'),
             'preferred_barber_user_id' => $this->preferred_barber_user_id,
             'preferences' => $this->preferences,
             'marketing_opt_in' => $this->marketing_opt_in,

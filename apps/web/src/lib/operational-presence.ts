@@ -4,7 +4,7 @@ import type {
   NotificationRecord,
 } from "@ozilcuts/types";
 
-import { isOperationalAlertType } from "@/lib/notification-presenter";
+import { isOperationalPriorityRecord } from "@/lib/notification-presenter";
 
 /** Background sync with check-in poll — calm cadence, visible tab only. */
 export const OPERATIONAL_PRESENCE_POLL_MS = 22_000;
@@ -118,7 +118,7 @@ export function pickPriorityOperationalAlert(
   records: NotificationRecord[],
 ): NotificationRecord | null {
   const unread = records.filter(
-    (n) => n.read_at === null && isOperationalAlertType(n.type),
+    (n) => n.read_at === null && isOperationalPriorityRecord(n),
   );
   if (unread.length === 0) return null;
 

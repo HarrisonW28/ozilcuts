@@ -34,6 +34,8 @@ class UpdateBarberProfileRequest extends FormRequest
             'title' => ['sometimes', 'nullable', 'string', 'max:255'],
             'bio' => ['sometimes', 'nullable', 'string', 'max:5000'],
             'years_experience' => ['sometimes', 'nullable', 'integer', 'min:0', 'max:80'],
+            'specialties' => ['sometimes', 'nullable', 'array', 'max:8'],
+            'specialties.*' => ['string', 'max:64'],
             'is_published' => [
                 Rule::when($this->user() !== null && $this->user()->isAdmin(), ['sometimes', 'boolean'], ['prohibited']),
             ],

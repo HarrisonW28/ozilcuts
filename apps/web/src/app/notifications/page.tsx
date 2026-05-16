@@ -6,8 +6,9 @@ import { useShellPageChrome } from "@/lib/use-shell-page-chrome";
 import { NotificationListSkeleton } from "@/components/load-empty";
 import { getStoredAuthToken } from "@/lib/auth-token";
 import {
-  appointmentHref,
   isRetentionBookNotification,
+  notificationPrimaryHref,
+  primaryActionLabel,
   rebookHref,
   sortNotificationsForDisplay,
 } from "@/lib/notification-presenter";
@@ -316,7 +317,7 @@ export default function NotificationsPage() {
                     const bookFromRetention = isRetentionBookNotification(row.type);
                     const canSnoozeRebook = row.type === "appointment.rebook_suggested";
                     const rebookLink = bookFromRetention ? rebookHref(row) : null;
-                    const apptLink = bookFromRetention ? null : appointmentHref(row);
+                    const primaryLink = bookFromRetention ? null : notificationPrimaryHref(row);
                     const unread = row.read_at === null;
                     const snoozed = snoozedIds.has(row.id);
 
@@ -350,9 +351,16 @@ export default function NotificationsPage() {
                             Not now
                           </Button>
                         ) : null}
-                        {apptLink ? (
+                        {primaryLink ? (
                           <Button asChild size="sm" variant="secondary">
-                            <Link href={apptLink}>View appointment</Link>
+                            <Link
+                              href={primaryLink}
+                              onClick={() => {
+                                if (unread) void onMarkRead(row);
+                              }}
+                            >
+                              {primaryActionLabel(row)}
+                            </Link>
                           </Button>
                         ) : null}
                         {unread ? (

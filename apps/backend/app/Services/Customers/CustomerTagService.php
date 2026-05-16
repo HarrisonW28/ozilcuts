@@ -48,6 +48,38 @@ final class CustomerTagService
         $tag->delete();
     }
 
+    public function isVip(User $customer): bool
+    {
+        $this->assertCustomer($customer);
+
+        return CustomerTag::query()
+            ->where('customer_user_id', $customer->id)
+            ->where('label', CustomerTag::LABEL_VIP)
+            ->exists();
+    }
+
+    public function setVip(User $customer, User $createdBy, bool $vip): void
+    {
+        $this->assertCustomer($customer);
+
+        $existing = CustomerTag::query()
+            ->where('customer_user_id', $customer->id)
+            ->where('label', CustomerTag::LABEL_VIP)
+            ->first();
+
+        if ($vip) {
+            if ($existing === null) {
+                $this->attach($customer, $createdBy, CustomerTag::LABEL_VIP);
+            }
+
+            return;
+        }
+
+        if ($existing !== null) {
+            $existing->delete();
+        }
+    }
+
     /**
      * Suggest existing labels (case-insensitive de-dupe) for autocomplete.
      *

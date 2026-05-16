@@ -7,6 +7,7 @@ import {
   getNotificationDisplayTitle,
   getNotificationShortLine,
   notificationAccentClass,
+  notificationThreadKey,
   notificationVisualKind,
 } from "@/lib/notification-presenter";
 import type { NotificationRecord } from "@ozilcuts/types";
@@ -29,6 +30,8 @@ export function NotificationThreadGroup({
 }: NotificationThreadGroupProps) {
   const [open, setOpen] = useState(false);
   const latest = records[0]!;
+  const visitBundle =
+    notificationThreadKey(latest)?.startsWith("visit_thread:") ?? false;
   const kind = notificationVisualKind(latest.type);
   const accent = notificationAccentClass(kind);
   const unreadCount = records.filter((r) => r.read_at === null).length;
@@ -52,7 +55,7 @@ export function NotificationThreadGroup({
         <span className="min-w-0 flex-1 space-y-1 text-left">
           <span className="flex flex-wrap items-center gap-2">
             <span className="rounded-full bg-muted/50 px-2 py-0.5 text-micro font-semibold tabular-nums text-muted-foreground">
-              {records.length} updates
+              {records.length} {visitBundle ? "visit updates" : "updates"}
             </span>
             {unreadCount > 0 ? (
               <span className="notification-unread-dot" aria-label={`${unreadCount} unread`} />

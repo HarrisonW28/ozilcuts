@@ -1,5 +1,6 @@
 "use client";
 
+import { hapticTouch } from "@/lib/haptics";
 import { Button, cn } from "@ozilcuts/ui";
 import { MapPin } from "lucide-react";
 
@@ -23,6 +24,10 @@ export function CheckInTapButton({
         size="lg"
         className="check-in-tap-button"
         disabled={disabled || busy}
+        onPointerDown={(ev) => {
+          if (disabled || busy) return;
+          hapticTouch("medium", ev.pointerType);
+        }}
         onClick={onCheckIn}
       >
         <MapPin className="mr-2 size-5 shrink-0" aria-hidden />

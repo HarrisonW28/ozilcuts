@@ -56,6 +56,14 @@ final class BarberManagementService
 
         $payload = Arr::only($data, ['title', 'bio', 'years_experience']);
 
+        if (array_key_exists('specialties', $data)) {
+            $specialties = is_array($data['specialties']) ? $data['specialties'] : [];
+            $payload['specialties'] = array_values(array_filter(array_map(
+                fn ($s) => is_string($s) ? trim($s) : '',
+                $specialties,
+            )));
+        }
+
         if ($actor->isAdmin() && array_key_exists('is_published', $data)) {
             $payload['is_published'] = (bool) $data['is_published'];
         }

@@ -1,6 +1,7 @@
 "use client";
 
 import { AppointmentArrivalPanel } from "@/components/appointment-arrival-panel";
+import { AppointmentContextThread } from "@/components/appointment-context-thread";
 import { BarberReadinessPanel } from "@/components/barber-readiness-panel";
 import { CheckInPageSkeleton } from "@/components/loading";
 import { SiteHeader } from "@/components/site-header";
@@ -99,12 +100,18 @@ export default function AppointmentCheckInPage() {
     isReady && appointment !== null
       ? appointment.customer?.id === profile.user.id
       : false;
-  const isStaff =
+  const isAssignedBarber =
     isReady &&
     appointment !== null &&
-    (profile.user.role.slug === "admin" ||
-      (profile.user.role.slug === "barber" &&
-        appointment.barber?.id === profile.user.id));
+    profile.user.role.slug === "barber" &&
+    appointment.barber?.id === profile.user.id;
+  const isAdmin = isReady && profile.user.role.slug === "admin";
+  const isStaff =
+    isReady && appointment !== null && (isAdmin || isAssignedBarber);
+  const canUseVisitThread =
+    isReady &&
+    appointment !== null &&
+    (isCustomer || isAssignedBarber || isAdmin);
 
   const token = getStoredAuthToken();
 
@@ -120,7 +127,7 @@ export default function AppointmentCheckInPage() {
           <ScreenTitle
             eyebrow={OZILCUTS_APP_NAME}
             title="Check-in"
-            description="Tap when you walk in, scan the QR at the desk, or let auto check-in handle it when you are nearby — this page stays live while you wait."
+            description="Tap when you walk in, scan the QR at the desk, or let auto check-in handle it when you are nearby. Calm visit pings (parking, outside, ETA) live in the thread below — no need for a separate chat."
           />
 
           {profile.kind === "loading" ? (
@@ -156,6 +163,9 @@ export default function AppointmentCheckInPage() {
               mode={isCustomer ? "customer" : isStaff ? "staff" : "customer"}
               checkInAbsoluteUrl={checkInUrl}
               onUpdated={(row) => setState({ kind: "ok", appointment: row })}
+              visitThreadAnchorId={
+                canUseVisitThread ? "visit-thread" : undefined
+              }
             />
           ) : null}
 
@@ -167,6 +177,21 @@ export default function AppointmentCheckInPage() {
               enabled
               className="mt-6"
             />
+          ) : null}
+
+          {isReady && canUseVisitThread && appointment && token ? (
+            <div
+              id="visit-thread"
+              className="mt-8 scroll-mt-28 motion-safe:scroll-mt-24 md:scroll-mt-28"
+            >
+              <AppointmentContextThread
+                appointmentId={appointment.id}
+                token={token}
+                viewerUserId={profile.user.id}
+                isShopSide={isAssignedBarber || isAdmin}
+                endsAt={appointment.ends_at}
+              />
+            </div>
           ) : null}
 
           {isReady && appointment ? (

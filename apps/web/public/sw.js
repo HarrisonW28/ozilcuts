@@ -13,7 +13,7 @@
  * pruned during `activate`.
  */
 
-const CACHE_VERSION = "v1";
+const CACHE_VERSION = "offline-v2";
 const PRECACHE = `ozilcuts-precache-${CACHE_VERSION}`;
 const RUNTIME_STATIC = `ozilcuts-static-${CACHE_VERSION}`;
 const OFFLINE_URL = "/offline";

@@ -14,6 +14,13 @@ import { useOptimisticAction } from "@/lib/use-optimistic-action";
 import { SwipeRevealActions } from "@/components/swipe-reveal-actions";
 import { arrivalStateLabel } from "@/lib/appointment-arrival";
 import { getStoredAuthToken } from "@/lib/auth-token";
+import {
+  appointmentsCacheKey,
+  readAppointmentsSnapshot,
+  tokenSignature,
+  writeAppointmentsSnapshot,
+} from "@/lib/appointments-cache";
+import { browserLooksOffline, isLikelyUnreachableNetwork } from "@/lib/network-errors";
 import { formatGbp } from "@/lib/format-gbp";
 import { useMediaQuery } from "@/lib/use-media-query";
 import { useSessionProfile } from "@/lib/use-session-profile";
@@ -53,7 +60,12 @@ import { useCallback, useEffect, useState } from "react";
 type ListState =
   | { kind: "idle" }
   | { kind: "loading" }
-  | { kind: "ok"; page: Paginated<AppointmentRecord> }
+  | {
+      kind: "ok";
+      page: Paginated<AppointmentRecord>;
+      /** Last successful fetch snapshot when live network is unavailable. */
+      servedFromCache?: { savedAt: number };
+    }
   | { kind: "error"; message: string };
 
 const RANGE_OPTIONS: Array<{ value: AppointmentRangeFilter; label: string }> = [
@@ -70,6 +82,17 @@ const STATUS_OPTIONS: Array<{
   { value: "cancelled", label: "Cancelled" },
   { value: "all", label: "Any status" },
 ];
+
+function formatSavedSnapshotLabel(savedAt: number): string {
+  const d = new Date(savedAt);
+  if (Number.isNaN(d.getTime())) return "earlier";
+  return d.toLocaleString(undefined, {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
 
 function formatStart(iso: string | null): string {
   if (!iso) return "—";
@@ -208,6 +231,32 @@ export default function AppointmentsPage() {
 
         return;
       }
+      const cacheKey = appointmentsCacheKey(p, r, s);
+      const sig = tokenSignature(token);
+
+      if (browserLooksOffline()) {
+        const cached = readAppointmentsSnapshot(sig, cacheKey);
+        if (cached) {
+          setState({
+            kind: "ok",
+            page: cached.page,
+            servedFromCache: { savedAt: cached.savedAt },
+          });
+        } else {
+          setState((prev) =>
+            prev.kind === "ok"
+              ? prev
+              : {
+                  kind: "error",
+                  message:
+                    "You appear offline and we don’t have a saved list for these filters yet.",
+                },
+          );
+        }
+        setIsRefreshing(false);
+        return;
+      }
+
       setState((prev) => {
         if (prev.kind === "ok") return prev;
         return { kind: "loading" };
@@ -219,6 +268,7 @@ export default function AppointmentsPage() {
           range: r,
           status: s,
         });
+        writeAppointmentsSnapshot(sig, cacheKey, data);
         setState({ kind: "ok", page: data });
       } catch (e: unknown) {
         const message =
@@ -227,7 +277,21 @@ export default function AppointmentsPage() {
             : e instanceof Error
               ? e.message
               : "Failed to load appointments.";
-        setState((prev) => (prev.kind === "ok" ? prev : { kind: "error", message }));
+        const cached = readAppointmentsSnapshot(sig, cacheKey);
+        const useStale =
+          cached !== null &&
+          (browserLooksOffline() || isLikelyUnreachableNetwork(e));
+        if (useStale) {
+          setState({
+            kind: "ok",
+            page: cached.page,
+            servedFromCache: { savedAt: cached.savedAt },
+          });
+        } else {
+          setState((prev) =>
+            prev.kind === "ok" ? prev : { kind: "error", message },
+          );
+        }
       } finally {
         setIsRefreshing(false);
       }
@@ -276,6 +340,12 @@ export default function AppointmentsPage() {
   }
 
   async function onCancel(row: AppointmentRecord) {
+    if (state.kind === "ok" && state.servedFromCache) {
+      setActionError(
+        "Reconnect to change bookings — you’re viewing a saved copy of this list.",
+      );
+      return;
+    }
     const ok = window.confirm(
       `Cancel ${row.service?.name ?? "this appointment"} on ${formatStart(row.starts_at)}?`,
     );
@@ -320,6 +390,12 @@ export default function AppointmentsPage() {
   }
 
   async function onSendReminder(row: AppointmentRecord) {
+    if (state.kind === "ok" && state.servedFromCache) {
+      setActionError(
+        "Reconnect to send reminders — offline mode is view-only for actions.",
+      );
+      return;
+    }
     const ok = window.confirm(
       `Send a reminder for ${row.customer?.name ?? "this customer"}'s booking on ${formatStart(row.starts_at)}?`,
     );
@@ -344,6 +420,12 @@ export default function AppointmentsPage() {
   }
 
   async function onRunningLate(row: AppointmentRecord, lateByMinutes: number) {
+    if (state.kind === "ok" && state.servedFromCache) {
+      setActionError(
+        "Reconnect to notify running late while viewing a saved list.",
+      );
+      return;
+    }
     const token = getStoredAuthToken();
     if (!token) return;
     setLateBusyId(row.id);
@@ -503,6 +585,19 @@ export default function AppointmentsPage() {
                   })}
                 </div>
               </div>
+
+              {state.kind === "ok" && state.servedFromCache ? (
+                <div
+                  className="rounded-xl border border-amber-500/40 bg-amber-500/[0.09] px-3 py-2.5 text-sm leading-snug text-foreground dark:border-amber-400/35 dark:bg-amber-500/[0.12]"
+                  role="status"
+                >
+                  Offline or unstable link · showing saved visits from{" "}
+                  <span className="font-medium">
+                    {formatSavedSnapshotLabel(state.servedFromCache.savedAt)}
+                  </span>
+                  . Connect to confirm times, payments, and cancellations.
+                </div>
+              ) : null}
 
               {actionError ? (
                 <p className="text-sm text-destructive" role="alert">

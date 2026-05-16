@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Appointment;
+use App\Models\AppointmentMessage;
 use App\Models\BarberAvailabilityWindow;
 use App\Models\BarberProfile;
 use App\Models\CustomerProfile;
@@ -102,6 +103,12 @@ class AppointmentArrivalProximityTest extends TestCase
             'type' => 'staff.arrival_nearby',
         ]);
 
+        $this->assertSame(1, AppointmentMessage::query()->count());
+        $threadLine = AppointmentMessage::query()->first();
+        $this->assertNotNull($threadLine);
+        $this->assertSame('arrival_auto_guest_near_shop', $threadLine->operational_key);
+        $this->assertStringContainsString('Nearby the shop', (string) $threadLine->body);
+
         $this->actingAs($customer, 'sanctum')
             ->postJson("/api/v1/appointments/{$appt->id}/arrival-proximity", [
                 'lat' => 51.5083,
@@ -113,6 +120,7 @@ class AppointmentArrivalProximityTest extends TestCase
             ->assertJsonPath('barber_notified', false);
 
         $this->assertDatabaseCount('notifications', 2);
+        $this->assertSame(1, AppointmentMessage::query()->count());
     }
 
     public function test_outside_geofence_does_not_notify(): void
@@ -218,5 +226,6 @@ class AppointmentArrivalProximityTest extends TestCase
         $this->assertNotNull($row);
         $this->assertSame('operational', $row->data['urgency'] ?? null);
         $this->assertStringContainsString('/check-in', (string) ($row->data['deep_link'] ?? ''));
+        $this->assertStringContainsString('visit-thread', (string) ($row->data['deep_link'] ?? ''));
     }
 }

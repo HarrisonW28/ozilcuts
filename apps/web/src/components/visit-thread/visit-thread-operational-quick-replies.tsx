@@ -52,11 +52,13 @@ export function VisitThreadOperationalQuickReplies({
     <fieldset className="min-w-0 space-y-4 border-0 p-0">
       <legend className="mb-1 w-full text-micro font-semibold uppercase tracking-wide text-muted-foreground">
         {inArrivalMessagingWindow
-          ? "On-site quick replies"
+          ? "Arrival, parking & ETA"
           : "One-tap operational replies"}
       </legend>
       <p className="text-caption leading-relaxed text-muted-foreground">
-        Fastest taps first — each sends a short, booking-only line to the thread.
+        {inArrivalMessagingWindow
+          ? "Short, practical lines — arriving now, parked nearby, outside, or a soft ETA update."
+          : "Fastest taps first — each sends a short, booking-only line to the thread."}
       </p>
       <div className="space-y-4">
         {groups.map((group, gi) => (

@@ -98,12 +98,14 @@
   --motion-ease-standard: cubic-bezier(0.2, 0, 0, 1);
   --motion-ease-emphasized: cubic-bezier(0.2, 0, 0, 1.2);
   --motion-ease-enter: cubic-bezier(0.16, 1, 0.3, 1);
-  --motion-spring-out: cubic-bezier(0.22, 1, 0.36, 1);
-  --motion-spring-press: cubic-bezier(0.34, 1.2, 0.64, 1);
+  /** Subtle overshoot — entrances / settles (Sprint 25.6). */
+  --motion-spring-out: cubic-bezier(0.22, 1, 0.4, 1);
+  /** Quick press release — tactile controls without bounce. */
+  --motion-spring-press: cubic-bezier(0.32, 0.94, 0.38, 1);
 
-  --motion-distance-enter: 6px;
+  --motion-distance-enter: 5px;
   --motion-distance-popover: 3px;
-  --motion-scale-press: 0.98;
+  --motion-scale-press: 0.985;
   --motion-scale-hover: 1.01;
 
   --motion-stagger-step: 40ms;

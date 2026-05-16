@@ -8,15 +8,18 @@ import {
   VISIT_THREAD_SHOP_PRESET_LABELS,
 } from "@/lib/visit-thread-labels";
 import { Button, Label } from "@ozilcuts/ui";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import { VisitThreadOperationalQuickReplies } from "./visit-thread-operational-quick-replies";
+import { VisitThreadWritingAssist } from "./visit-thread-writing-assist";
 
 type VisitThreadComposerProps = {
   appointmentId: number;
   meta: AppointmentThreadMeta;
   isShopSide: boolean;
   sending: boolean;
+  /** When set, optional wording assist loads in the arrival window. */
+  authToken?: string | null;
   onSendOperational: (key: string) => void;
   onSendPreset: (key: string) => void;
   onSendNote: (body: string) => Promise<void>;
@@ -27,11 +30,13 @@ export function VisitThreadComposer({
   meta,
   isShopSide,
   sending,
+  authToken = null,
   onSendOperational,
   onSendPreset,
   onSendNote,
 }: VisitThreadComposerProps) {
   const [noteDraft, setNoteDraft] = useState("");
+  const noteDetailsRef = useRef<HTMLDetailsElement>(null);
 
   const chipMap = isShopSide
     ? VISIT_THREAD_SHOP_OPERATIONAL_LABELS
@@ -39,6 +44,21 @@ export function VisitThreadComposer({
   const presetLabelMap = isShopSide
     ? VISIT_THREAD_SHOP_PRESET_LABELS
     : VISIT_THREAD_GUEST_PRESET_LABELS;
+
+  const assistEnabled =
+    Boolean(authToken) &&
+    meta.in_arrival_messaging_window &&
+    meta.can_send;
+
+  const applyAssistLine = (text: string) => {
+    setNoteDraft(text);
+    if (noteDetailsRef.current) {
+      noteDetailsRef.current.open = true;
+    }
+    requestAnimationFrame(() => {
+      document.getElementById(`visit-thread-note-${appointmentId}`)?.focus();
+    });
+  };
 
   if (!meta.can_send) return null;
 
@@ -55,6 +75,15 @@ export function VisitThreadComposer({
         sending={sending}
         onSendOperational={onSendOperational}
       />
+
+      {authToken ? (
+        <VisitThreadWritingAssist
+          appointmentId={appointmentId}
+          token={authToken}
+          enabled={assistEnabled}
+          onPickSuggestion={applyAssistLine}
+        />
+      ) : null}
 
       {meta.preset_keys.length > 0 ? (
         <fieldset className="min-w-0 space-y-2 border-0 border-t border-border/40 pt-4 dark:border-border/35">
@@ -79,7 +108,10 @@ export function VisitThreadComposer({
         </fieldset>
       ) : null}
 
-      <details className="rounded-lg border border-border/50 bg-background/60 dark:bg-background/40">
+      <details
+        ref={noteDetailsRef}
+        className="rounded-lg border border-border/50 bg-background/60 dark:bg-background/40"
+      >
         <summary
           className={[
             "min-h-11 cursor-pointer list-none px-3 py-2.5 text-sm font-medium outline-none transition-colors",

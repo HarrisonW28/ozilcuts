@@ -18,7 +18,10 @@ final class ArrivalProximityService
 
     private const WALK_METRES_PER_MINUTE = 78;
 
-    public function __construct(private readonly NotificationService $notifications) {}
+    public function __construct(
+        private readonly NotificationService $notifications,
+        private readonly AppointmentMessageService $visitThread,
+    ) {}
 
     /**
      * @return array{
@@ -60,13 +63,13 @@ final class ArrivalProximityService
         $eta = max(1, (int) round($distance / self::WALK_METRES_PER_MINUTE));
         $bucketM = (int) (round($distance / 25) * 25);
 
-        $deepLink = '/appointments/'.$appointment->id.'/check-in';
+        $deepLink = '/appointments/'.$appointment->id.'/check-in#visit-thread';
 
         $base = AppointmentNotificationPayload::build($appointment) + [
             'approximate_eta_minutes' => $eta,
             'distance_bucket_m' => $bucketM,
             'deep_link' => $deepLink,
-            'thread_group_key' => 'arrival_proximity:'.$appointment->id,
+            'thread_group_key' => 'visit_thread:'.$appointment->id,
         ];
 
         $customerNotified = false;
@@ -76,6 +79,7 @@ final class ArrivalProximityService
             $appointment,
             $customer,
             $base,
+            $eta,
             &$customerNotified,
             &$barberNotified,
         ): void {
@@ -112,6 +116,7 @@ final class ArrivalProximityService
                 }
                 $fresh->arrival_nearby_barber_notified_at = now();
                 $barberNotified = true;
+                $this->visitThread->postProximityArrivalThreadLine($fresh, $customer, $eta);
             }
 
             $fresh->save();

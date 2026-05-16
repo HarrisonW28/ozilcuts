@@ -20,12 +20,14 @@ use App\Http\Controllers\Api\V1\AppointmentIndexController;
 use App\Http\Controllers\Api\V1\AppointmentMessageIndexController;
 use App\Http\Controllers\Api\V1\AppointmentMessageReadController;
 use App\Http\Controllers\Api\V1\AppointmentMessageStoreController;
+use App\Http\Controllers\Api\V1\AppointmentOperationalCommunicationAssistController;
 use App\Http\Controllers\Api\V1\AppointmentPaymentIntentController;
 use App\Http\Controllers\Api\V1\AppointmentQueueIntelligenceController;
 use App\Http\Controllers\Api\V1\AppointmentRebookHintController;
 use App\Http\Controllers\Api\V1\AppointmentRebookNudgeSnoozeController;
 use App\Http\Controllers\Api\V1\AppointmentReminderController;
 use App\Http\Controllers\Api\V1\AppointmentRescheduleController;
+use App\Http\Controllers\Api\V1\AppointmentReviewStoreController;
 use App\Http\Controllers\Api\V1\AppointmentRunningLateController;
 use App\Http\Controllers\Api\V1\AppointmentShowController;
 use App\Http\Controllers\Api\V1\AppointmentStoreController;
@@ -49,6 +51,7 @@ use App\Http\Controllers\Api\V1\BarberSelfProfileShowController;
 use App\Http\Controllers\Api\V1\BarberShowController;
 use App\Http\Controllers\Api\V1\BarberSlotsController;
 use App\Http\Controllers\Api\V1\BarberSmartSlotHintsController;
+use App\Http\Controllers\Api\V1\BarberTrustController;
 use App\Http\Controllers\Api\V1\CurrentUserController;
 use App\Http\Controllers\Api\V1\CustomerAnalyticsAggregateController;
 use App\Http\Controllers\Api\V1\CustomerAnalyticsShowController;
@@ -59,6 +62,10 @@ use App\Http\Controllers\Api\V1\CustomerNoteStoreController;
 use App\Http\Controllers\Api\V1\CustomerNoteUpdateController;
 use App\Http\Controllers\Api\V1\CustomerProfileShowController;
 use App\Http\Controllers\Api\V1\CustomerProfileUpdateController;
+use App\Http\Controllers\Api\V1\CustomerRelationshipShowController;
+use App\Http\Controllers\Api\V1\CustomerRetentionSummaryController;
+use App\Http\Controllers\Api\V1\CustomerSelfRelationshipController;
+use App\Http\Controllers\Api\V1\CustomerVipUpdateController;
 use App\Http\Controllers\Api\V1\CustomerTagDestroyController;
 use App\Http\Controllers\Api\V1\CustomerTagIndexController;
 use App\Http\Controllers\Api\V1\CustomerTagStoreController;
@@ -80,6 +87,7 @@ use App\Http\Controllers\Api\V1\NotificationPreferenceShowController;
 use App\Http\Controllers\Api\V1\NotificationPreferenceUpdateController;
 use App\Http\Controllers\Api\V1\NotificationUnreadCountController;
 use App\Http\Controllers\Api\V1\OperationalInsightsController;
+use App\Http\Controllers\Api\V1\ShopOperationalIntelligenceController;
 use App\Http\Controllers\Api\V1\PaymentConfigController;
 use App\Http\Controllers\Api\V1\RetentionReportController;
 use App\Http\Controllers\Api\V1\RevenueReportController;
@@ -116,6 +124,8 @@ Route::get('/barbers/{user}/smart-slot-hints', BarberSmartSlotHintsController::c
     ->middleware(['throttle:90,1', 'optional.sanctum']);
 Route::get('/barbers/{user}/portfolio', BarberPortfolioController::class)
     ->middleware('throttle:60,1');
+Route::get('/barbers/{user}/trust', BarberTrustController::class)
+    ->middleware('throttle:60,1');
 
 Route::post('/auth/register', RegisterController::class)
     ->middleware('throttle:10,1');
@@ -143,14 +153,19 @@ Route::middleware('auth:sanctum')->group(function (): void {
     Route::get('/user', CurrentUserController::class);
     Route::post('/auth/logout', LogoutController::class);
     Route::get('/customer/profile', CustomerProfileShowController::class);
+    Route::get('/customer/relationship', CustomerSelfRelationshipController::class);
     Route::patch('/customer/profile', CustomerProfileUpdateController::class)
         ->middleware('throttle:30,1');
     Route::get('/customer/next-visit', CustomerNextVisitController::class)
+        ->middleware('throttle:60,1');
+    Route::get('/customer/retention-summary', CustomerRetentionSummaryController::class)
         ->middleware('throttle:60,1');
     Route::get('/customer/hair-profile', HairProfileShowController::class);
     Route::patch('/customer/hair-profile', HairProfileUpdateController::class)
         ->middleware('throttle:30,1');
     Route::get('/barber/profile', BarberSelfProfileShowController::class);
+    Route::get('/operations/live', ShopOperationalIntelligenceController::class)
+        ->middleware('throttle:120,1');
     Route::post('/customer/hair-profile/photos', HairProfilePhotoStoreController::class)
         ->middleware('throttle:20,1');
     Route::delete('/customer/hair-profile/photos/{photo}', HairProfilePhotoDestroyController::class)
@@ -190,6 +205,8 @@ Route::middleware('auth:sanctum')->group(function (): void {
         ->middleware('throttle:45,1');
     Route::post('/appointments/{appointment}/messages/read', AppointmentMessageReadController::class)
         ->middleware('throttle:90,1');
+    Route::get('/appointments/{appointment}/visit-thread-assist', AppointmentOperationalCommunicationAssistController::class)
+        ->middleware('throttle:45,1');
     Route::get('/appointments/{appointment}/adjustment-suggestions', AppointmentAdjustmentSuggestionsController::class)
         ->middleware('throttle:90,1');
     Route::get('/appointments/{appointment}/adjustment-request', AppointmentAdjustmentRequestShowController::class)
@@ -223,6 +240,9 @@ Route::middleware('auth:sanctum')->group(function (): void {
         ->middleware('throttle:60,1');
     Route::delete('/customer-notes/{note}', CustomerNoteDestroyController::class)
         ->middleware('throttle:60,1');
+    Route::get('/customers/{user}/relationship', CustomerRelationshipShowController::class);
+    Route::patch('/customers/{user}/relationship/vip', CustomerVipUpdateController::class)
+        ->middleware('throttle:60,1');
     Route::get('/customers/{user}/tags', CustomerTagIndexController::class);
     Route::post('/customers/{user}/tags', CustomerTagStoreController::class)
         ->middleware('throttle:60,1');
@@ -237,6 +257,8 @@ Route::middleware('auth:sanctum')->group(function (): void {
         ->middleware('throttle:30,1');
     Route::delete('/haircut-photos/{photo}', HaircutPhotoDestroyController::class)
         ->middleware('throttle:30,1');
+    Route::post('/appointments/{appointment}/review', AppointmentReviewStoreController::class)
+        ->middleware('throttle:20,1');
     Route::patch('/appointments/{appointment}/cancel', AppointmentCancelController::class)
         ->middleware('throttle:30,1');
     Route::patch('/appointments/{appointment}/reschedule', AppointmentRescheduleController::class)

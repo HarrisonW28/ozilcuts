@@ -1,6 +1,7 @@
 "use client";
 
 import { AppointmentQueueWaitCard } from "@/components/appointment-queue-wait-card";
+import { ArrivalVisitThreadCue } from "@/components/arrival-messaging";
 import {
   CheckInArrivedWelcome,
   CheckInAutoAssist,
@@ -44,6 +45,8 @@ type AppointmentArrivalPanelProps = {
   checkInAbsoluteUrl: string;
   onUpdated: (next: AppointmentRecord) => void;
   className?: string;
+  /** When set, shows a calm link to the visit thread on the same page (check-in). */
+  visitThreadAnchorId?: string;
 };
 
 export function AppointmentArrivalPanel({
@@ -53,6 +56,7 @@ export function AppointmentArrivalPanel({
   checkInAbsoluteUrl,
   onUpdated,
   className,
+  visitThreadAnchorId,
 }: AppointmentArrivalPanelProps) {
   const { resolvedTheme } = useTheme();
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -225,6 +229,10 @@ export function AppointmentArrivalPanel({
           lastSyncedAt={lastSyncedAt}
           syncing={syncing}
         />
+
+        {windowOpen && visitThreadAnchorId ? (
+          <ArrivalVisitThreadCue threadAnchorId={visitThreadAnchorId} />
+        ) : null}
 
         {windowOpen &&
         state !== "in_chair" &&
