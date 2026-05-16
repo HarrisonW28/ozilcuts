@@ -25,6 +25,7 @@ import {
   LayoutGrid,
   ListChecks,
   RotateCcw,
+  Shield,
   Sparkles,
   TrendingUp,
   User,
@@ -260,6 +261,13 @@ export default function AdminDashboardPage() {
                 description="Account email, name, and shop display name (read-only summary)."
                 href="/admin/profile"
                 cta="Open profile"
+              />
+              <HubCard
+                icon={Shield}
+                title="Security & audit"
+                description="Privileged action log, auth events, and role escalation review."
+                href="/admin/security"
+                cta="Open security"
               />
             </div>
           </section>

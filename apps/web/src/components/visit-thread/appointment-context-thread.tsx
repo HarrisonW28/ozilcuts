@@ -17,6 +17,7 @@ import {
 } from "@ozilcuts/ui";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import { abuseBlockedMessage, isAbuseBlockedError } from "@/lib/abuse-errors";
 import { browserLooksOffline, isLikelyUnreachableNetwork } from "@/lib/network-errors";
 import {
   THREAD_OUTBOX_FLUSH_EVENT,
@@ -87,6 +88,9 @@ export function AppointmentContextThread(props: {
   const [sending, setSending] = useState(false);
   const [threadStaleFromCache, setThreadStaleFromCache] = useState(false);
   const [outboxCount, setOutboxCount] = useState(0);
+  const [sendBlockedMessage, setSendBlockedMessage] = useState<string | null>(
+    null,
+  );
   const lastMarkedRead = useRef(0);
 
   const refreshOutboxCount = useCallback(() => {
@@ -276,6 +280,7 @@ export function AppointmentContextThread(props: {
     };
     setMessages((prev) => mergeVisitThreadMessages(prev, [optimistic]));
     setSending(true);
+    setSendBlockedMessage(null);
     try {
       const { message } = await postAppointmentThreadMessage(
         token,
@@ -292,7 +297,11 @@ export function AppointmentContextThread(props: {
       void load({ silent: true });
     } catch (e: unknown) {
       setMessages((prev) => prev.filter((m) => m.id !== tempId));
-      if (shouldQueueThreadSend(e)) {
+      if (isAbuseBlockedError(e)) {
+        setSendBlockedMessage(
+          abuseBlockedMessage(e) ?? "That message could not be sent right now.",
+        );
+      } else if (shouldQueueThreadSend(e)) {
         enqueueThreadOutboxItem(appointmentId, {
           kind: "note",
           body: trimmed,
@@ -374,6 +383,15 @@ export function AppointmentContextThread(props: {
                   </p>
                 ) : null}
               </div>
+            ) : null}
+
+            {sendBlockedMessage ? (
+              <p
+                className="rounded-lg border border-amber-500/35 bg-amber-500/10 px-3 py-2 text-sm text-foreground"
+                role="alert"
+              >
+                {sendBlockedMessage}
+              </p>
             ) : null}
 
             <VisitThreadComposer

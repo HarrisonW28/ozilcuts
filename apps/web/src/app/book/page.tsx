@@ -24,6 +24,7 @@ import { haptic } from "@/lib/haptics";
 import { reportFilterControlClass } from "@/lib/report-filter-classes";
 import type { SmartSlotHintsLoadStatus } from "@/lib/smart-slot-hints";
 import { useSessionProfile } from "@/lib/use-session-profile";
+import { abuseBlockedMessage } from "@/lib/abuse-errors";
 import {
   ApiError,
   ApiValidationError,
@@ -498,7 +499,7 @@ function BookingFlow() {
       if (err instanceof ApiValidationError) {
         setBookError(err.firstMessage() ?? "Validation failed.");
       } else if (err instanceof ApiError) {
-        setBookError(err.message);
+        setBookError(abuseBlockedMessage(err) ?? err.message);
       } else {
         setBookError("Could not book. Please try again.");
       }
