@@ -10,7 +10,7 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 const EXTRA_BY_ROLE: Record<string, string[]> = {
-  customer: ["/notifications"],
+  customer: ["/notifications", "/profile/privacy"],
   barber: [],
   admin: [],
 };
