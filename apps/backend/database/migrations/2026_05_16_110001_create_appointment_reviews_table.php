@@ -19,7 +19,10 @@ return new class extends Migration
             $table->boolean('is_published')->default(true);
             $table->timestamps();
 
-            $table->index(['barber_user_id', 'is_published', 'verified_at']);
+            $table->index(
+                ['barber_user_id', 'is_published', 'verified_at'],
+                'appt_reviews_barber_pub_verified_idx',
+            );
         });
     }
 
