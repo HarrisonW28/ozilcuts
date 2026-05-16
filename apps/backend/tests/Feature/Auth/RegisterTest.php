@@ -17,6 +17,8 @@ class RegisterTest extends TestCase
             'email' => 'Test@Example.com',
             'password' => 'password123',
             'password_confirmation' => 'password123',
+            'accept_terms' => true,
+            'accept_privacy' => true,
         ]);
 
         $response->assertCreated()
@@ -37,6 +39,9 @@ class RegisterTest extends TestCase
             'email' => 'test@example.com',
             'name' => 'Test User',
         ]);
+        $user = User::query()->where('email', 'test@example.com')->first();
+        $this->assertNotNull($user?->terms_accepted_at);
+        $this->assertNotNull($user?->privacy_policy_accepted_at);
 
         $this->assertNotEmpty($response->json('token'));
     }
@@ -50,6 +55,8 @@ class RegisterTest extends TestCase
             'email' => 'taken@example.com',
             'password' => 'password123',
             'password_confirmation' => 'password123',
+            'accept_terms' => true,
+            'accept_privacy' => true,
         ])->assertUnprocessable()
             ->assertJsonValidationErrors(['email']);
     }

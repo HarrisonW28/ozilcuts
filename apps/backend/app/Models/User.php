@@ -59,6 +59,8 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
+            'terms_accepted_at' => 'datetime',
+            'privacy_policy_accepted_at' => 'datetime',
             'password' => 'hashed',
             'onboarding_completed_at' => 'datetime',
             'shop_pays_cash_only' => 'boolean',

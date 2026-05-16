@@ -6,6 +6,7 @@ use App\Exceptions\Auth\OAuthAccountLinkException;
 use App\Mail\WelcomeMail;
 use App\Models\Role;
 use App\Models\User;
+use App\Services\Customers\CustomerPrivacyService;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Laravel\Socialite\Contracts\User as SocialiteUser;
@@ -15,8 +16,16 @@ final class AuthenticationService
 {
     public const PROVIDER_GOOGLE = 'google';
 
-    public function register(string $name, string $email, string $password): User
-    {
+    public function __construct(
+        private readonly CustomerPrivacyService $privacy,
+    ) {}
+
+    public function register(
+        string $name,
+        string $email,
+        string $password,
+        bool $marketingOptIn = false,
+    ): User {
         $roleId = Role::query()->where('slug', Role::SLUG_CUSTOMER)->value('id');
         if ($roleId === null) {
             throw new RuntimeException('Default customer role is not configured.');
@@ -29,6 +38,7 @@ final class AuthenticationService
             'role_id' => $roleId,
         ]);
 
+        $this->privacy->recordRegistrationConsents($user, $marketingOptIn);
         $this->dispatchWelcomeMail($user);
 
         return $user;
@@ -117,6 +127,7 @@ final class AuthenticationService
             'email_verified_at' => now(),
         ]);
 
+        $this->privacy->recordOAuthConsents($user);
         $this->dispatchWelcomeMail($user);
 
         return $user;
