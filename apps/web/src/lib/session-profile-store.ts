@@ -16,11 +16,17 @@ export type ProfileState =
 const SESSION_CACHE_KEY = "ozilcuts_session_profile_v1";
 const CACHE_TTL_MS = 3 * 60 * 1000;
 
+const SERVER_SNAPSHOT: ProfileState = { kind: "none" };
+
 const listeners = new Set<() => void>();
 let fetchGeneration = 0;
 let fetchFailed = false;
+let clientSnapshot: ProfileState = SERVER_SNAPSHOT;
 
 function notify(): void {
+  if (!refreshClientSnapshot()) {
+    return;
+  }
   listeners.forEach((listener) => listener());
 }
 
@@ -61,13 +67,30 @@ export function clearSessionProfileCache(): void {
   }
 }
 
+function profileSnapshotEqual(a: ProfileState, b: ProfileState): boolean {
+  if (a.kind !== b.kind) {
+    return false;
+  }
+
+  if (a.kind === "ready" && b.kind === "ready") {
+    return (
+      a.user.id === b.user.id &&
+      a.user.email === b.user.email &&
+      a.user.name === b.user.name &&
+      a.user.role.slug === b.user.role.slug
+    );
+  }
+
+  return true;
+}
+
 /** Synchronous read from token + session cache (client only). */
-export function readProfileFromClientStorage(): ProfileState {
-  if (typeof window === "undefined") return { kind: "none" };
+function readProfileFromClientStorage(): ProfileState {
+  if (typeof window === "undefined") return SERVER_SNAPSHOT;
 
   const token = getStoredAuthToken();
   if (!token) {
-    return { kind: "none" };
+    return SERVER_SNAPSHOT;
   }
 
   const cached = readSessionCache(token);
@@ -80,6 +103,15 @@ export function readProfileFromClientStorage(): ProfileState {
   }
 
   return { kind: "loading" };
+}
+
+function refreshClientSnapshot(): boolean {
+  const next = readProfileFromClientStorage();
+  if (profileSnapshotEqual(clientSnapshot, next)) {
+    return false;
+  }
+  clientSnapshot = next;
+  return true;
 }
 
 export function hasStoredAuthSession(): boolean {
@@ -99,11 +131,12 @@ export function subscribeProfileStore(listener: () => void): () => void {
 }
 
 export function getProfileServerSnapshot(): ProfileState {
-  return { kind: "none" };
+  return SERVER_SNAPSHOT;
 }
 
 export function getProfileClientSnapshot(): ProfileState {
-  return readProfileFromClientStorage();
+  refreshClientSnapshot();
+  return clientSnapshot;
 }
 
 export async function syncProfileFromNetwork(): Promise<void> {
@@ -119,7 +152,12 @@ export async function syncProfileFromNetwork(): Promise<void> {
   fetchGeneration += 1;
   const generation = fetchGeneration;
   fetchFailed = false;
-  notify();
+
+  const becameLoading =
+    clientSnapshot.kind !== "loading" && readSessionCache(token) === null;
+  if (becameLoading) {
+    notify();
+  }
 
   try {
     const user = await fetchCurrentUser(token);
