@@ -92,6 +92,8 @@ export default function Home() {
 
   const motionInitial = ozilcutsPageEnterInitial(reduceMotion);
 
+  const profilePending = profile.kind === "loading";
+
   const heroTitle =
     profile.kind === "ready"
       ? `Welcome back, ${profile.user.name.split(" ")[0] ?? profile.user.name}`
@@ -133,6 +135,7 @@ export default function Home() {
             heroTitle={heroTitle}
             heroDescription={heroDescription}
             profileGuest={profile.kind === "none"}
+            profilePending={profilePending}
             profileReady={profile.kind === "ready"}
             servicesPreview={
               catalogPreview.kind === "ok" ? catalogPreview.services : []

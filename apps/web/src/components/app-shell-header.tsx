@@ -1,5 +1,6 @@
 "use client";
 
+import { AppShellHeaderAccountSkeleton } from "@/components/header-session-chrome";
 import { NotificationsBell } from "@/components/notifications-bell";
 import { NotificationsToaster } from "@/components/notifications-toaster";
 import { SiteAccountMenu } from "@/components/site-account-menu";
@@ -90,6 +91,7 @@ export function AppShellHeader({
           <nav
             className="flex shrink-0 items-center gap-1.5 sm:gap-2"
             aria-label="Account"
+            suppressHydrationWarning
           >
             {profile.kind === "none" ? (
               <Link
@@ -100,13 +102,7 @@ export function AppShellHeader({
               </Link>
             ) : null}
             {profile.kind === "loading" ? (
-              <span
-                className="px-2 text-xs text-muted-foreground"
-                aria-live="polite"
-                aria-busy="true"
-              >
-                …
-              </span>
+              <AppShellHeaderAccountSkeleton />
             ) : null}
             {profile.kind === "error" ? (
               <Button

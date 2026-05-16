@@ -40,6 +40,7 @@ type PublicHomeViewProps = {
   heroTitle: string;
   heroDescription: ReactNode;
   profileGuest: boolean;
+  profilePending?: boolean;
   profileReady: boolean;
   servicesPreview: ServiceSummary[];
   barbersPreview: BarberProfilePublic[];
@@ -59,6 +60,7 @@ function PublicHomeViewInner({
   heroTitle,
   heroDescription,
   profileGuest,
+  profilePending = false,
   profileReady,
   servicesPreview,
   barbersPreview,
@@ -78,15 +80,31 @@ function PublicHomeViewInner({
               <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-muted-foreground">
                 {OZILCUTS_APP_NAME}
               </p>
-              <h1
-                id="home-hero-heading"
-                className="mt-4 text-balance text-[2.35rem] font-semibold leading-[1.06] tracking-[-0.03em] text-foreground sm:mt-5 sm:text-5xl sm:tracking-tight md:text-6xl lg:text-[3.45rem]"
-              >
-                {heroTitle}
-              </h1>
-              <div className="mt-5 max-w-xl text-pretty text-base leading-snug text-muted-foreground sm:mt-6 sm:text-lg sm:leading-relaxed">
-                {heroDescription}
-              </div>
+              {profilePending ? (
+                <div
+                  className="mt-4 space-y-4 sm:mt-5"
+                  aria-busy="true"
+                  aria-labelledby="home-hero-heading"
+                >
+                  <h1 id="home-hero-heading" className="sr-only">
+                    {OZILCUTS_APP_NAME}
+                  </h1>
+                  <Skeleton className="h-12 w-[min(100%,22rem)] rounded-lg sm:h-14" />
+                  <Skeleton className="h-20 w-full max-w-xl rounded-lg" />
+                </div>
+              ) : (
+                <>
+                  <h1
+                    id="home-hero-heading"
+                    className="mt-4 text-balance text-[2.35rem] font-semibold leading-[1.06] tracking-[-0.03em] text-foreground sm:mt-5 sm:text-5xl sm:tracking-tight md:text-6xl lg:text-[3.45rem]"
+                  >
+                    {heroTitle}
+                  </h1>
+                  <div className="mt-5 max-w-xl text-pretty text-base leading-snug text-muted-foreground sm:mt-6 sm:text-lg sm:leading-relaxed">
+                    {heroDescription}
+                  </div>
+                </>
+              )}
             </div>
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center md:flex-col md:items-stretch">
               <Button

@@ -2,6 +2,10 @@
 
 import { AdminOnboardingResumeBar } from "@/components/admin-onboarding-resume-bar";
 import { AccountMenuLinkInner } from "@/components/account-menu-link-inner";
+import {
+  HeaderAccountSkeleton,
+  HeaderPrimaryNavSkeleton,
+} from "@/components/header-session-chrome";
 import { ModeToggle } from "@/components/mode-toggle";
 import { NotificationsBell } from "@/components/notifications-bell";
 import { NotificationsToaster } from "@/components/notifications-toaster";
@@ -113,6 +117,7 @@ export function SiteHeader({ profile, onSignOut }: SiteHeaderProps) {
             <nav
               aria-label="Primary"
               className="hidden flex-wrap items-center gap-x-0.5 gap-y-1 md:flex"
+              suppressHydrationWarning
             >
               {navSections.flatMap((section) =>
                 section.links.map((link) =>
@@ -138,6 +143,7 @@ export function SiteHeader({ profile, onSignOut }: SiteHeaderProps) {
                   ),
                 ),
               )}
+              {profile.kind === "loading" ? <HeaderPrimaryNavSkeleton /> : null}
             </nav>
           </div>
           <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-3">
@@ -148,6 +154,7 @@ export function SiteHeader({ profile, onSignOut }: SiteHeaderProps) {
             <nav
               className="order-1 flex flex-wrap items-center gap-2 text-sm sm:gap-3 md:order-2"
               aria-label="Account"
+              suppressHydrationWarning
             >
               {profile.kind === "none" ? (
                 <div className="flex flex-wrap items-center gap-2 sm:gap-3">
@@ -168,15 +175,7 @@ export function SiteHeader({ profile, onSignOut }: SiteHeaderProps) {
                   </Link>
                 </div>
               ) : null}
-              {profile.kind === "loading" ? (
-                <span
-                  className="text-muted-foreground"
-                  aria-live="polite"
-                  aria-busy="true"
-                >
-                  Loading account…
-                </span>
-              ) : null}
+              {profile.kind === "loading" ? <HeaderAccountSkeleton /> : null}
               {profile.kind === "error" ? (
                 <>
                   <span className="text-destructive" role="status">
@@ -263,6 +262,25 @@ export function SiteHeader({ profile, onSignOut }: SiteHeaderProps) {
                   </ul>
                 </li>
               ))}
+              {profile.kind === "loading" ? (
+                <li aria-hidden>
+                  <p className="mb-2 px-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    Your studio
+                  </p>
+                  <ul className="space-y-1" aria-busy="true">
+                    <li>
+                      <div className="flex min-h-12 items-center px-3">
+                        <span className="h-5 w-28 animate-pulse rounded-md bg-muted" />
+                      </div>
+                    </li>
+                    <li>
+                      <div className="flex min-h-12 items-center px-3">
+                        <span className="h-5 w-36 animate-pulse rounded-md bg-muted" />
+                      </div>
+                    </li>
+                  </ul>
+                </li>
+              ) : null}
               {profile.kind === "ready"
                 ? accountMenuGroups.map((group) => (
                     <li key={`account-${group.id}`}>
