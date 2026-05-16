@@ -19,6 +19,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 
 import { GoogleSignInButton } from "@/components/google-sign-in-button";
+import { PrivacyConsentFields } from "@/components/privacy";
 import { setStoredAuthToken } from "@/lib/auth-token";
 import { safeNextPath } from "@/lib/safe-next-path";
 
@@ -36,6 +37,9 @@ function RegisterForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [passwordConfirmation, setPasswordConfirmation] = useState("");
+  const [acceptTerms, setAcceptTerms] = useState(false);
+  const [acceptPrivacy, setAcceptPrivacy] = useState(false);
+  const [marketingOptIn, setMarketingOptIn] = useState(false);
   const [loading, setLoading] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -51,6 +55,9 @@ function RegisterForm() {
         email,
         password,
         password_confirmation: passwordConfirmation,
+        accept_terms: acceptTerms,
+        accept_privacy: acceptPrivacy,
+        marketing_opt_in: marketingOptIn,
       });
       setStoredAuthToken(token);
       router.push(nextAfterAuth);
@@ -154,6 +161,15 @@ function RegisterForm() {
               </p>
             ) : null}
           </div>
+          <PrivacyConsentFields
+            acceptTerms={acceptTerms}
+            acceptPrivacy={acceptPrivacy}
+            marketingOptIn={marketingOptIn}
+            onAcceptTermsChange={setAcceptTerms}
+            onAcceptPrivacyChange={setAcceptPrivacy}
+            onMarketingOptInChange={setMarketingOptIn}
+            fieldErrors={fieldErrors}
+          />
           {formError ? (
             <p className="text-sm text-destructive" role="alert">
               {formError}

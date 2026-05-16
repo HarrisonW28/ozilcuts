@@ -24,6 +24,9 @@ export function AccountSubnav({ isCustomer }: AccountSubnavProps) {
         ] as const)
       : []),
     { href: "/profile/notifications" as const, label: "Alerts" },
+    ...(isCustomer
+      ? ([{ href: "/profile/privacy" as const, label: "Privacy" }] as const)
+      : []),
   ];
 
   return (

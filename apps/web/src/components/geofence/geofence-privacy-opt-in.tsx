@@ -42,10 +42,10 @@ export function GeofencePrivacyOptIn({
               </span>{" "}
               in{" "}
               <Link
-                href="/profile"
+                href="/profile/privacy#location"
                 className="font-medium text-primary underline-offset-4 hover:underline"
               >
-                your profile
+                Privacy settings
               </Link>{" "}
               for optional nearby alerts and automatic check-in. We never store
               your GPS on the booking — only coarse, infrequent pings inside
