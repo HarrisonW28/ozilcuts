@@ -28,6 +28,12 @@ export {
 } from "./auth";
 export { getApiBaseUrl } from "./base";
 export {
+  deleteShopHeroVideo,
+  fetchPublicHomeMarketing,
+  uploadShopHeroPoster,
+  uploadShopHeroVideo,
+} from "./publicHomeMarketing";
+export {
   fetchBarberAnalytics,
   fetchBarberAnalyticsCompare,
 } from "./barberAnalytics";

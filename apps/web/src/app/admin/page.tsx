@@ -1,5 +1,6 @@
 "use client";
 
+import { AdminHomeMarketingPanel } from "@/components/admin/admin-home-marketing-panel";
 import { PageSessionSkeleton } from "@/components/loading";
 import { ShopOperationalIntelligenceBoard } from "@/components/shop-operational";
 import { SiteHeader } from "@/components/site-header";
@@ -142,7 +143,7 @@ function HubCard({
 }
 
 export default function AdminDashboardPage() {
-  const { profile, signOut } = useSessionProfile();
+  const { profile, signOut, refreshProfile } = useSessionProfile();
 
   const isAdmin =
     profile.kind === "ready" && profile.user.role.slug === "admin";
@@ -212,6 +213,12 @@ export default function AdminDashboardPage() {
           />
 
           <ShopOperationalIntelligenceBoard className="rounded-2xl border border-border/50 bg-card/30 p-4 sm:p-5 dark:bg-card/20" />
+
+          <AdminHomeMarketingPanel
+            hasHeroVideo={Boolean(sa?.shop_hero_video_path)}
+            hasHeroPoster={Boolean(sa?.shop_hero_poster_path)}
+            onUpdated={() => void refreshProfile()}
+          />
 
           {setupIncomplete ? (
             <Card className="border-primary/30 bg-primary/[0.06] dark:border-primary/35 dark:bg-primary/10">

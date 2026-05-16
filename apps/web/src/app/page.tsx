@@ -7,7 +7,9 @@ import {
   ozilcutsPageEnterTransition,
 } from "@/lib/motion";
 import { useSessionProfile } from "@/lib/use-session-profile";
-import { fetchApiHealth, fetchBarbers, fetchServices } from "@ozilcuts/api";
+import { resolveHomeVideoSources } from "@/lib/home-video-config";
+import { fetchApiHealth, fetchBarbers, fetchPublicHomeMarketing, fetchServices } from "@ozilcuts/api";
+import type { PublicHomeMarketing } from "@ozilcuts/types";
 import type { BarberProfilePublic, ServiceSummary } from "@ozilcuts/types";
 import { OZILCUTS_APP_NAME } from "@ozilcuts/types";
 import { motion, useReducedMotion } from "framer-motion";
@@ -43,6 +45,9 @@ export default function Home() {
   const [catalogPreview, setCatalogPreview] = useState<CatalogPreviewState>({
     kind: "loading",
   });
+  const [homeMarketing, setHomeMarketing] = useState<PublicHomeMarketing | null>(
+    null,
+  );
 
   const fetchHealthOnce = useCallback((isCancelled: () => boolean) => {
     setHealth({ kind: "loading" });
@@ -137,6 +142,7 @@ export default function Home() {
             profileGuest={profile.kind === "none"}
             profilePending={profilePending}
             profileReady={profile.kind === "ready"}
+            videoSources={resolveHomeVideoSources(homeMarketing)}
             servicesPreview={
               catalogPreview.kind === "ok" ? catalogPreview.services : []
             }

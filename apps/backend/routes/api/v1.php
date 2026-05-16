@@ -35,6 +35,10 @@ use App\Http\Controllers\Api\V1\AppointmentWalkInStoreController;
 use App\Http\Controllers\Api\V1\AdminAuditLogIndexController;
 use App\Http\Controllers\Api\V1\AdminProductionSecurityController;
 use App\Http\Controllers\Api\V1\AdminSecurityReviewController;
+use App\Http\Controllers\Api\V1\AdminShopHeroPosterStoreController;
+use App\Http\Controllers\Api\V1\AdminShopHeroVideoDestroyController;
+use App\Http\Controllers\Api\V1\AdminShopHeroVideoStoreController;
+use App\Http\Controllers\Api\V1\PublicHomeMarketingController;
 use App\Http\Controllers\Api\V1\Auth\GoogleOAuthCallbackController;
 use App\Http\Controllers\Api\V1\Auth\GoogleOAuthRedirectController;
 use App\Http\Controllers\Api\V1\Auth\LoginController;
@@ -113,6 +117,8 @@ use App\Http\Controllers\Api\V1\UserShowController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/health', HealthController::class);
+Route::get('/public/home-marketing', PublicHomeMarketingController::class)
+    ->middleware('throttle:public-api');
 Route::get('/payments/config', PaymentConfigController::class)
     ->middleware('throttle:public-api');
 Route::post('/stripe/webhook', StripeWebhookController::class)
@@ -294,6 +300,12 @@ Route::middleware(['auth:sanctum', 'throttle:authenticated-api'])->group(functio
         ->middleware('throttle:30,1');
     Route::get('/admin/production-security', AdminProductionSecurityController::class)
         ->middleware('throttle:20,1');
+    Route::post('/admin/marketing/hero-video', AdminShopHeroVideoStoreController::class)
+        ->middleware('throttle:10,1');
+    Route::post('/admin/marketing/hero-poster', AdminShopHeroPosterStoreController::class)
+        ->middleware('throttle:10,1');
+    Route::delete('/admin/marketing/hero-video', AdminShopHeroVideoDestroyController::class)
+        ->middleware('throttle:10,1');
     Route::get('/admin/reports/revenue', RevenueReportController::class)
         ->middleware('throttle:60,1');
     Route::get('/admin/reports/revenue.csv', RevenueReportCsvController::class)

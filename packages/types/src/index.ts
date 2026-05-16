@@ -522,6 +522,14 @@ export type ShopAdminState = {
   shop_tap_to_pay_later: boolean;
   /** Shop-wide template; new barbers start with these hours until edited per chair. */
   shop_default_hours: BarberAvailabilityPayload | null;
+  shop_hero_video_path: string | null;
+  shop_hero_poster_path: string | null;
+};
+
+export type PublicHomeMarketing = {
+  hero_mp4: string | null;
+  hero_webm: string | null;
+  hero_poster: string | null;
 };
 
 export type PatchShopOnboardingInput = {

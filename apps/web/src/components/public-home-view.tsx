@@ -14,8 +14,10 @@ import {
   SocialLinksStrip,
   SocialProofBand,
 } from "@/components/social";
+import type { HomeVideoSources } from "@/lib/home-video-config";
 import { formatGbp } from "@/lib/format-gbp";
 import { publicReviewQuotes } from "@/lib/public-site-copy";
+import { hasStoredAuthSession } from "@/lib/use-session-profile";
 import {
   Button,
   Card,
@@ -46,6 +48,7 @@ type PublicHomeViewProps = {
   barbersPreview: BarberProfilePublic[];
   previewsLoading: boolean;
   health: HealthCopy;
+  videoSources?: HomeVideoSources;
 };
 
 export function PublicHomeView(props: PublicHomeViewProps) {
@@ -66,18 +69,23 @@ function PublicHomeViewInner({
   barbersPreview,
   previewsLoading,
   health,
+  videoSources,
 }: PublicHomeViewProps) {
+  const showGuestActions =
+    profileGuest || (profilePending && !hasStoredAuthSession());
+  const showMemberActions =
+    profileReady || (profilePending && hasStoredAuthSession());
+
   return (
-    <div className="mx-auto w-full max-w-6xl space-y-16 md:space-y-24 lg:space-y-28">
-      {/* Hero — visual-first panel, minimal copy, instant book */}
+    <div className="space-y-16 md:space-y-24 lg:space-y-28">
       <section
-        className="motion-enter scroll-mt-28"
+        className="home-hero-bleed motion-enter scroll-mt-28"
         aria-labelledby="home-hero-heading"
       >
-        <HomeCinematicHero>
-          <div className="grid gap-8 px-5 py-11 sm:gap-10 sm:px-9 sm:py-14 md:grid-cols-[minmax(0,1fr)_minmax(11.5rem,14rem)] md:items-end md:gap-12 md:px-11 md:py-16 lg:grid-cols-[minmax(0,1fr)_minmax(13rem,16rem)] lg:gap-16 lg:px-14 lg:pb-20 lg:pt-[4.25rem]">
+        <HomeCinematicHero videoSources={videoSources}>
+          <div className="home-cinematic-hero-content grid gap-8 px-5 py-11 sm:gap-10 sm:px-9 sm:py-14 md:grid-cols-[minmax(0,1fr)_minmax(11.5rem,14rem)] md:items-end md:gap-12 md:px-11 md:py-16 lg:grid-cols-[minmax(0,1fr)_minmax(13rem,16rem)] lg:gap-16 lg:px-14 lg:pb-20 lg:pt-[4.25rem] xl:px-20">
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-muted-foreground">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-white/70">
                 {OZILCUTS_APP_NAME}
               </p>
               {profilePending ? (
@@ -114,13 +122,13 @@ function PublicHomeViewInner({
               >
                 <Link href="/book">Book now</Link>
               </Button>
-              {profileGuest ? (
+              {showGuestActions ? (
                 <>
                   <Button
                     asChild
                     variant="outline"
                     size="lg"
-                    className="h-12 w-full backdrop-blur-sm sm:h-[3.25rem] md:w-full"
+                    className="h-12 w-full border-white/35 bg-white/10 text-white backdrop-blur-sm hover:bg-white/20 hover:text-white sm:h-[3.25rem] md:w-full"
                   >
                     <Link href="/register">Create account</Link>
                   </Button>
@@ -128,18 +136,18 @@ function PublicHomeViewInner({
                     asChild
                     variant="ghost"
                     size="lg"
-                    className="h-12 w-full sm:h-[3.25rem] md:w-full"
+                    className="h-12 w-full text-white hover:bg-white/15 hover:text-white sm:h-[3.25rem] md:w-full"
                   >
                     <Link href="/login">Sign in</Link>
                   </Button>
                 </>
               ) : null}
-              {profileReady ? (
+              {showMemberActions ? (
                 <Button
                   asChild
                   variant="outline"
                   size="lg"
-                  className="h-12 w-full backdrop-blur-sm sm:h-[3.25rem] md:w-full"
+                  className="h-12 w-full border-white/35 bg-white/10 text-white backdrop-blur-sm hover:bg-white/20 hover:text-white sm:h-[3.25rem] md:w-full"
                 >
                   <Link href="/appointments">My appointments</Link>
                 </Button>
@@ -147,13 +155,16 @@ function PublicHomeViewInner({
             </div>
           </div>
         </HomeCinematicHero>
-        {profileGuest ? (
-          <div className="mt-8 max-w-md border-t border-border/40 pt-8 dark:border-border/35">
-            <GoogleSignInButton />
+        {showGuestActions ? (
+          <div className="mx-auto mt-8 max-w-md px-5 sm:px-9 md:px-11">
+            <div className="border-t border-border/40 pt-8 dark:border-border/35">
+              <GoogleSignInButton />
+            </div>
           </div>
         ) : null}
       </section>
 
+      <div className="mx-auto w-full max-w-6xl space-y-16 md:space-y-24 lg:space-y-28">
       {/* Quick booking — high-conversion band */}
       <HomeMotionSection
         id="quick-book"
@@ -504,6 +515,7 @@ function PublicHomeViewInner({
           ) : null}
         </div>
       </footer>
+      </div>
     </div>
   );
 }

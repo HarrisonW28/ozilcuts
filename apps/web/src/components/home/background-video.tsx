@@ -2,7 +2,10 @@
 
 import { HomeVideoStaticFallback } from "@/components/home/static-fallback";
 import { useHomeVideoAutoplay } from "@/hooks/use-home-video-autoplay";
-import { getHomeVideoSources } from "@/lib/home-video-config";
+import {
+  getHomeVideoSources,
+  type HomeVideoSources,
+} from "@/lib/home-video-config";
 import { cn } from "@ozilcuts/ui";
 import { useMemo } from "react";
 
@@ -14,6 +17,7 @@ type HomeBackgroundVideoProps = {
   enabled?: boolean;
   /** Share one observer/play session with a parent (e.g. cinematic hero shell). */
   autoplay?: HomeVideoAutoplayState;
+  sources?: HomeVideoSources;
 };
 
 /**
@@ -25,8 +29,12 @@ export function HomeBackgroundVideo({
   className,
   enabled = true,
   autoplay,
+  sources: sourcesProp,
 }: HomeBackgroundVideoProps) {
-  const sources = useMemo(() => getHomeVideoSources(), []);
+  const sources = useMemo(
+    () => sourcesProp ?? getHomeVideoSources(),
+    [sourcesProp],
+  );
   const mp4 = variant === "hero" ? sources.heroMp4 : sources.ambientMp4;
   const webm = variant === "hero" ? sources.heroWebm : sources.ambientWebm;
   const poster = variant === "hero" ? sources.heroPoster : undefined;
@@ -78,8 +86,8 @@ export function HomeBackgroundVideo({
           onCanPlay={onCanPlay}
           onWaiting={onWaiting}
         >
-          <source src={webm} type="video/webm" />
-          <source src={mp4} type="video/mp4" />
+          {webm ? <source src={webm} type="video/webm" /> : null}
+          {mp4 ? <source src={mp4} type="video/mp4" /> : null}
         </video>
       ) : null}
 

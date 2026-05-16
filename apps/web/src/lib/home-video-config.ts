@@ -1,3 +1,5 @@
+import type { PublicHomeMarketing } from "@ozilcuts/types";
+
 /**
  * Homepage cinematic video sources.
  *
@@ -41,5 +43,30 @@ export function getHomeVideoSources(): HomeVideoSources {
     ambientMp4,
     ambientWebm,
     heroPoster: trimUrl(process.env.NEXT_PUBLIC_HOME_HERO_VIDEO_POSTER),
+  };
+}
+
+/** Admin-uploaded shop media overrides env defaults when present. */
+export function resolveHomeVideoSources(
+  marketing?: PublicHomeMarketing | null,
+): HomeVideoSources {
+  const defaults = getHomeVideoSources();
+  if (marketing === null || marketing === undefined) {
+    return defaults;
+  }
+
+  const uploadedMp4 = trimUrl(marketing.hero_mp4 ?? undefined);
+  const uploadedWebm = trimUrl(marketing.hero_webm ?? undefined);
+  const uploadedPoster = trimUrl(marketing.hero_poster ?? undefined);
+
+  const heroMp4 = uploadedMp4 ?? uploadedWebm ?? defaults.heroMp4;
+  const heroWebm = uploadedWebm ?? uploadedMp4 ?? defaults.heroWebm;
+
+  return {
+    heroMp4,
+    heroWebm,
+    ambientMp4: heroMp4,
+    ambientWebm: heroWebm,
+    heroPoster: uploadedPoster ?? defaults.heroPoster,
   };
 }
