@@ -32,6 +32,9 @@ use App\Http\Controllers\Api\V1\AppointmentRunningLateController;
 use App\Http\Controllers\Api\V1\AppointmentShowController;
 use App\Http\Controllers\Api\V1\AppointmentStoreController;
 use App\Http\Controllers\Api\V1\AppointmentWalkInStoreController;
+use App\Http\Controllers\Api\V1\AdminAuditLogIndexController;
+use App\Http\Controllers\Api\V1\AdminProductionSecurityController;
+use App\Http\Controllers\Api\V1\AdminSecurityReviewController;
 use App\Http\Controllers\Api\V1\Auth\GoogleOAuthCallbackController;
 use App\Http\Controllers\Api\V1\Auth\GoogleOAuthRedirectController;
 use App\Http\Controllers\Api\V1\Auth\LoginController;
@@ -60,6 +63,10 @@ use App\Http\Controllers\Api\V1\CustomerNoteDestroyController;
 use App\Http\Controllers\Api\V1\CustomerNoteIndexController;
 use App\Http\Controllers\Api\V1\CustomerNoteStoreController;
 use App\Http\Controllers\Api\V1\CustomerNoteUpdateController;
+use App\Http\Controllers\Api\V1\CustomerPrivacyDeleteController;
+use App\Http\Controllers\Api\V1\CustomerPrivacyExportController;
+use App\Http\Controllers\Api\V1\CustomerPrivacyShowController;
+use App\Http\Controllers\Api\V1\CustomerPrivacyUpdateController;
 use App\Http\Controllers\Api\V1\CustomerProfileShowController;
 use App\Http\Controllers\Api\V1\CustomerProfileUpdateController;
 use App\Http\Controllers\Api\V1\CustomerRelationshipShowController;
@@ -107,11 +114,11 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/health', HealthController::class);
 Route::get('/payments/config', PaymentConfigController::class)
-    ->middleware('throttle:60,1');
+    ->middleware('throttle:public-api');
 Route::post('/stripe/webhook', StripeWebhookController::class)
     ->middleware('throttle:120,1');
 Route::get('/services', ServiceIndexController::class)
-    ->middleware('throttle:60,1');
+    ->middleware('throttle:public-api');
 Route::get('/barbers', BarberIndexController::class)
     ->middleware('throttle:60,1');
 Route::get('/barbers/{user}', BarberShowController::class)
@@ -128,9 +135,9 @@ Route::get('/barbers/{user}/trust', BarberTrustController::class)
     ->middleware('throttle:60,1');
 
 Route::post('/auth/register', RegisterController::class)
-    ->middleware('throttle:10,1');
+    ->middleware('throttle:auth');
 Route::post('/auth/login', LoginController::class)
-    ->middleware('throttle:10,1');
+    ->middleware('throttle:auth');
 
 Route::get('/auth/google/redirect', GoogleOAuthRedirectController::class)
     ->middleware('throttle:20,1');
@@ -149,11 +156,19 @@ Route::get('/haircut-photos/{photo}', HaircutPhotoShowController::class)
     ->middleware(['signed', 'throttle:60,1'])
     ->name('haircut-photos.show');
 
-Route::middleware('auth:sanctum')->group(function (): void {
+Route::middleware(['auth:sanctum', 'throttle:authenticated-api'])->group(function (): void {
     Route::get('/user', CurrentUserController::class);
-    Route::post('/auth/logout', LogoutController::class);
+    Route::post('/auth/logout', LogoutController::class)
+        ->middleware('throttle:auth');
     Route::get('/customer/profile', CustomerProfileShowController::class);
     Route::get('/customer/relationship', CustomerSelfRelationshipController::class);
+    Route::get('/customer/privacy', CustomerPrivacyShowController::class);
+    Route::patch('/customer/privacy', CustomerPrivacyUpdateController::class)
+        ->middleware('throttle:30,1');
+    Route::get('/customer/privacy/export', CustomerPrivacyExportController::class)
+        ->middleware('throttle:6,1');
+    Route::post('/customer/privacy/delete-account', CustomerPrivacyDeleteController::class)
+        ->middleware('throttle:3,1');
     Route::patch('/customer/profile', CustomerProfileUpdateController::class)
         ->middleware('throttle:30,1');
     Route::get('/customer/next-visit', CustomerNextVisitController::class)
@@ -273,6 +288,12 @@ Route::middleware('auth:sanctum')->group(function (): void {
         ->middleware('throttle:30,1');
     Route::post('/appointments/{appointment}/rebook-nudge/snooze', AppointmentRebookNudgeSnoozeController::class)
         ->middleware('throttle:30,1');
+    Route::get('/admin/audit-logs', AdminAuditLogIndexController::class)
+        ->middleware('throttle:60,1');
+    Route::get('/admin/security-review', AdminSecurityReviewController::class)
+        ->middleware('throttle:30,1');
+    Route::get('/admin/production-security', AdminProductionSecurityController::class)
+        ->middleware('throttle:20,1');
     Route::get('/admin/reports/revenue', RevenueReportController::class)
         ->middleware('throttle:60,1');
     Route::get('/admin/reports/revenue.csv', RevenueReportCsvController::class)

@@ -24,7 +24,7 @@ class StoreHaircutPhotoRequest extends FormRequest
                 'file',
                 'image',
                 'mimes:jpeg,jpg,png,webp',
-                'max:5120',
+                'max:'.(int) config('security.uploads.max_kilobytes', 5120),
             ],
             'kind' => ['required', Rule::in(HaircutPhoto::KINDS)],
             'caption' => ['sometimes', 'nullable', 'string', 'max:140'],

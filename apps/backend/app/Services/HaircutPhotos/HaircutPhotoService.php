@@ -5,6 +5,7 @@ namespace App\Services\HaircutPhotos;
 use App\Models\Appointment;
 use App\Models\HaircutPhoto;
 use App\Models\User;
+use App\Services\Security\SecureUploadValidator;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -32,6 +33,8 @@ final class HaircutPhotoService
                 'Photo limit reached ('.self::PHOTO_MAX_PER_APPOINTMENT.'). Remove one before adding another.'
             );
         }
+
+        $this->uploadValidator->assertValidImage($file);
 
         $extension = strtolower((string) ($file->extension() ?: $file->getClientOriginalExtension()));
         $extension = $extension !== '' ? $extension : 'jpg';

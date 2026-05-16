@@ -66,6 +66,8 @@ class EmailTemplatesTest extends TestCase
             'email' => 'sam.welcome@example.com',
             'password' => 'password123',
             'password_confirmation' => 'password123',
+            'accept_terms' => true,
+            'accept_privacy' => true,
         ])->assertCreated();
 
         Mail::assertQueued(

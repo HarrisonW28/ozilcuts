@@ -23,7 +23,7 @@ class StoreHairProfilePhotoRequest extends FormRequest
                 'file',
                 'image',
                 'mimes:jpeg,jpg,png,webp',
-                'max:5120',
+                'max:'.(int) config('security.uploads.max_kilobytes', 5120),
             ],
             'caption' => ['sometimes', 'nullable', 'string', 'max:140'],
         ];

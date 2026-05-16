@@ -5,7 +5,11 @@ namespace App\Providers;
 use App\Services\Payments\PaymentService;
 use App\Services\Payments\StripeApiGateway;
 use App\Services\Payments\StripeGateway;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Validation\Rules\Password;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -34,6 +38,28 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        Password::defaults(static function (): Password {
+            return Password::min(8)
+                ->letters()
+                ->numbers();
+        });
+
+        $authLimit = max(5, (int) config('security.rate_limits.auth', 10));
+        $authenticatedLimit = max(60, (int) config('security.rate_limits.authenticated_api', 240));
+        $publicLimit = max(30, (int) config('security.rate_limits.public_api', 120));
+
+        RateLimiter::for('auth', static function (Request $request) use ($authLimit) {
+            return Limit::perMinute($authLimit)->by($request->ip() ?? 'unknown');
+        });
+
+        RateLimiter::for('authenticated-api', static function (Request $request) use ($authenticatedLimit) {
+            $key = $request->user()?->id ?? $request->ip() ?? 'guest';
+
+            return Limit::perMinute($authenticatedLimit)->by((string) $key);
+        });
+
+        RateLimiter::for('public-api', static function (Request $request) use ($publicLimit) {
+            return Limit::perMinute($publicLimit)->by($request->ip() ?? 'unknown');
+        });
     }
 }

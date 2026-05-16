@@ -6,6 +6,7 @@ use App\Models\HairProfile;
 use App\Models\HairProfilePhoto;
 use App\Models\Role;
 use App\Models\User;
+use App\Services\Security\SecureUploadValidator;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -13,6 +14,10 @@ use RuntimeException;
 
 final class HairProfileService
 {
+    public function __construct(
+        private readonly SecureUploadValidator $uploadValidator,
+    ) {}
+
     public const PHOTO_DISK = 'local';
 
     public const PHOTO_MAX_PER_PROFILE = 8;
@@ -65,6 +70,8 @@ final class HairProfileService
 
     public function addPhoto(HairProfile $profile, UploadedFile $file, ?string $caption): HairProfilePhoto
     {
+        $this->uploadValidator->assertValidImage($file);
+
         if ($profile->photos()->count() >= self::PHOTO_MAX_PER_PROFILE) {
             throw new RuntimeException(
                 'You\'ve reached the photo limit ('.self::PHOTO_MAX_PER_PROFILE.'). Remove one before uploading another.'
