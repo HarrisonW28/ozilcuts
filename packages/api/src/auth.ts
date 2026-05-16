@@ -2,6 +2,7 @@ import type {
   AuthSuccessResponse,
   AuthUser,
   LaravelValidationPayload,
+  RegisterUserInput,
 } from "@ozilcuts/types";
 
 import { getApiBaseUrl } from "./base";
@@ -50,12 +51,9 @@ const jsonHeaders = {
   "Content-Type": "application/json",
 } as const;
 
-export async function registerUser(input: {
-  name: string;
-  email: string;
-  password: string;
-  password_confirmation: string;
-}): Promise<AuthSuccessResponse> {
+export async function registerUser(
+  input: RegisterUserInput,
+): Promise<AuthSuccessResponse> {
   const res = await fetch(`${getApiBaseUrl()}/api/v1/auth/register`, {
     method: "POST",
     headers: jsonHeaders,

@@ -100,11 +100,12 @@ export async function postAppointmentThreadMessage(
         payload as LaravelValidationPayload,
       );
     }
-    throw new ApiError(
-      "Failed to send visit message",
-      res.status,
-      payload,
-    );
+    const abuse = payload as { message?: string };
+    const message =
+      res.status === 429 && typeof abuse.message === "string"
+        ? abuse.message
+        : "Failed to send visit message";
+    throw new ApiError(message, res.status, payload);
   }
 
   return payload as { message: AppointmentThreadMessage };

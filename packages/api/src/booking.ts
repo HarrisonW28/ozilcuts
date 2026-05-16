@@ -132,7 +132,12 @@ export async function createAppointment(
         payload as LaravelValidationPayload,
       );
     }
-    throw new ApiError("Failed to book appointment", res.status, payload);
+    const abuse = payload as { message?: string };
+    const message =
+      res.status === 429 && typeof abuse.message === "string"
+        ? abuse.message
+        : "Failed to book appointment";
+    throw new ApiError(message, res.status, payload);
   }
 
   return payload as CreateAppointmentResponse;

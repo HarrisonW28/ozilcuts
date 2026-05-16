@@ -16,6 +16,7 @@ export {
   rejectAppointmentAdjustmentRequest,
   withdrawAppointmentAdjustmentRequest,
 } from "./appointmentAdjustments";
+export { isApiUnauthorizedError } from "./api-security";
 export {
   ApiError,
   ApiValidationError,
@@ -74,6 +75,12 @@ export {
   markNotificationRead,
   updateNotificationPreferences,
 } from "./notifications";
+export {
+  fetchAdminAuditLogs,
+  fetchAdminSecurityReview,
+} from "./adminAudit";
+export { fetchProductionSecurityReview } from "./productionSecurity";
+export type { FetchAuditLogsParams } from "./adminAudit";
 export { fetchOperationalInsights } from "./operationalInsights";
 export { fetchShopOperationalLive } from "./shopOperationalIntelligence";
 export { fetchRetentionReport } from "./retentionReport";
@@ -91,6 +98,12 @@ export {
   fetchCustomerProfile,
   updateCustomerProfile,
 } from "./customerProfile";
+export {
+  deleteCustomerAccount,
+  exportCustomerData,
+  fetchCustomerPrivacy,
+  updateCustomerPrivacy,
+} from "./customerPrivacy";
 export {
   fetchCustomerRelationship,
   fetchSelfCustomerRelationship,

@@ -251,6 +251,46 @@ export type UpdateCustomerProfileInput = {
   arrival_location_opt_in?: boolean;
 };
 
+export type CustomerPrivacyConsents = {
+  terms_accepted_at: string | null;
+  privacy_policy_accepted_at: string | null;
+  marketing_opt_in: boolean;
+  arrival_location_opt_in: boolean;
+  retention_paused: boolean;
+};
+
+export type CustomerPrivacySnapshot = {
+  consents: CustomerPrivacyConsents;
+  notifications: {
+    enabled_count: number;
+    total_count: number;
+  };
+  data_rights: {
+    can_export: boolean;
+    can_delete_account: boolean;
+  };
+};
+
+export type UpdateCustomerPrivacyInput = {
+  marketing_opt_in?: boolean;
+  arrival_location_opt_in?: boolean;
+  retention_paused?: boolean;
+};
+
+export type DeleteCustomerAccountInput = {
+  confirmation: "DELETE";
+};
+
+export type RegisterUserInput = {
+  name: string;
+  email: string;
+  password: string;
+  password_confirmation: string;
+  accept_terms: boolean;
+  accept_privacy: boolean;
+  marketing_opt_in?: boolean;
+};
+
 export const HAIR_TYPE_OPTIONS = [
   "straight",
   "wavy",
@@ -1405,4 +1445,91 @@ export type CustomerRetentionSummary = {
   predicted: CustomerRetentionPredictedCut | null;
   signals: CustomerRetentionSignals;
   nudge: CustomerRetentionNudge;
+};
+
+export type AuditLogCategory = "security" | "privileged" | "operational";
+
+export type AuditLogSeverity = "info" | "warning" | "critical";
+
+export type AuditLogActorRef = {
+  id: number;
+  name: string;
+  email: string;
+};
+
+export type AuditLogEntry = {
+  id: number;
+  action: string;
+  category: AuditLogCategory;
+  severity: AuditLogSeverity;
+  subject_type: string | null;
+  subject_id: number | null;
+  ip_address: string | null;
+  created_at: string | null;
+  metadata: Record<string, unknown>;
+  actor: AuditLogActorRef | null;
+  target_user: AuditLogActorRef | null;
+};
+
+export type AuditLogIndexMeta = {
+  current_page: number;
+  last_page: number;
+  per_page: number;
+  total: number;
+};
+
+export type AuditLogIndexResponse = {
+  data: AuditLogEntry[];
+  meta: AuditLogIndexMeta;
+};
+
+export type AdminSecurityReviewHighlight = {
+  id: number;
+  action: string;
+  category: AuditLogCategory;
+  severity: AuditLogSeverity;
+  created_at: string | null;
+  actor: AuditLogActorRef | null;
+  target_user: AuditLogActorRef | null;
+  metadata: Record<string, unknown>;
+};
+
+export type ProductionReadinessStatus = "pass" | "warn" | "fail";
+
+export type ProductionReadinessItem = {
+  id: string;
+  label: string;
+  status: ProductionReadinessStatus;
+  detail: string;
+};
+
+export type ProductionReadinessSection = {
+  id: string;
+  title: string;
+  status: ProductionReadinessStatus;
+  items: ProductionReadinessItem[];
+};
+
+export type ProductionSecurityReview = {
+  generated_at: string;
+  environment: string;
+  overall_status: ProductionReadinessStatus;
+  sections: ProductionReadinessSection[];
+  manual_review: {
+    penetration_checklist: string;
+    deployment_guide: string;
+  };
+};
+
+export type AdminSecurityReview = {
+  generated_at: string;
+  role_counts: { admin: number; barber: number; customer: number };
+  window_hours: number;
+  privileged_actions_24h: number;
+  security_events_24h: number;
+  failed_logins_24h: number;
+  staff_logins_24h: number;
+  role_escalations_7d: AdminSecurityReviewHighlight[];
+  categories_7d: Array<{ category: string; count: number }>;
+  recent_highlights: AdminSecurityReviewHighlight[];
 };
