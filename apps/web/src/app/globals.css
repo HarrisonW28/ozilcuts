@@ -1,4 +1,9 @@
 @import "../styles/ozilcuts-brand-tokens.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 @import "../styles/content-photography.css";
 @import "../styles/home-video.css";
 @import "../styles/social-content.css";
@@ -10,10 +15,6 @@
 @import "../styles/queue-intelligence.css";
 @import "../styles/readiness.css";
 @import "../styles/presence.css";
-
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
 
 @layer base {
   :root {
