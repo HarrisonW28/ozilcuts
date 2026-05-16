@@ -7,6 +7,7 @@ use App\Models\BarberProfile;
 use App\Models\Role;
 use App\Models\Service;
 use App\Models\User;
+use App\Services\Abuse\AbuseProtectionService;
 use App\Support\WalkInGuest;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
@@ -14,6 +15,10 @@ use RuntimeException;
 
 final class BookingService
 {
+    public function __construct(
+        private readonly AbuseProtectionService $abuse,
+    ) {}
+
     /**
      * Compute available slot start times (ISO 8601, naive local) for a barber + service on a date.
      *
@@ -158,6 +163,10 @@ final class BookingService
             isset($data['customer_user_id'])
             && (int) $data['customer_user_id'] > 0;
 
+        if (! $staffAssisted) {
+            $this->abuse->assertCustomerCanBook($customer, (int) $barber->id, $start);
+        }
+
         return DB::transaction(function () use (
             $service,
             $barber,
@@ -173,7 +182,7 @@ final class BookingService
                 ? 0
                 : $this->depositForBooking($service, $customer);
 
-            return Appointment::query()->create([
+            $appointment = Appointment::query()->create([
                 'service_id' => $service->id,
                 'barber_user_id' => $barber->id,
                 'customer_user_id' => $customer->id,
@@ -186,6 +195,12 @@ final class BookingService
                     ? Appointment::PAYMENT_REQUIRES_PAYMENT
                     : Appointment::PAYMENT_NOT_REQUIRED,
             ]);
+
+            if (! $staffAssisted) {
+                $this->abuse->recordCustomerBooking($customer);
+            }
+
+            return $appointment;
         });
     }
 

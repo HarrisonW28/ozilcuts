@@ -2,13 +2,16 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Exceptions\AbuseBlockedException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreAppointmentRequest;
 use App\Http\Resources\AppointmentResource;
 use App\Mail\AppointmentConfirmedMail;
 use App\Models\Appointment;
 use App\Notifications\NotificationEvents;
+use App\Services\Audit\AuditLogService;
 use App\Services\Booking\BookingService;
+use App\Support\AuditAction;
 use App\Services\Notifications\AppointmentNotificationPayload;
 use App\Services\Notifications\AppointmentStaffAlertService;
 use App\Services\Notifications\NotificationService;
@@ -43,6 +46,23 @@ final class AppointmentStoreController extends Controller
             }
 
             $appointment = $booking->book($user, $payload);
+
+            if ($customerUserId !== null) {
+                $audit->record(
+                    action: AuditAction::APPOINTMENT_BOOKED_BY_STAFF,
+                    actor: $user,
+                    request: $request,
+                    subjectType: 'appointment',
+                    subjectId: $appointment->id,
+                    targetUserId: (int) $customerUserId,
+                    metadata: [
+                        'barber_user_id' => $appointment->barber_user_id,
+                        'starts_at' => (string) $appointment->starts_at,
+                    ],
+                );
+            }
+        } catch (AbuseBlockedException $e) {
+            throw $e;
         } catch (RuntimeException $e) {
             return response()->json([
                 'message' => $e->getMessage(),

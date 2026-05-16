@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Appointment;
 use App\Models\AppointmentMessage;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -11,7 +12,10 @@ class AppointmentMessageStoreRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user() !== null;
+        $appointment = $this->route('appointment');
+
+        return $appointment instanceof Appointment
+            && $this->user()?->can('sendMessages', $appointment) === true;
     }
 
     /**

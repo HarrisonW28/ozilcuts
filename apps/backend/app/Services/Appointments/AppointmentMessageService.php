@@ -8,6 +8,7 @@ use App\Models\AppointmentMessageRead;
 use App\Models\User;
 use App\Notifications\NotificationEvents;
 use App\Policies\AppointmentPolicy;
+use App\Services\Abuse\AbuseProtectionService;
 use App\Services\Notifications\AppointmentNotificationPayload;
 use App\Services\Notifications\NotificationService;
 use Carbon\CarbonImmutable;
@@ -21,6 +22,7 @@ final class AppointmentMessageService
 {
     public function __construct(
         private readonly NotificationService $notifications,
+        private readonly AbuseProtectionService $abuse,
     ) {}
 
     /** @var array<string, string> */
@@ -338,6 +340,11 @@ final class AppointmentMessageService
         ?string $operationalKey,
         ?string $presetKey = null,
     ): AppointmentMessage {
+        if ($kind === AppointmentMessage::KIND_NOTE) {
+            $normalized = mb_strtolower(trim((string) $body));
+            $this->abuse->assertCanSendThreadNote($sender, $appointment, $normalized);
+        }
+
         $resolvedBody = match ($kind) {
             AppointmentMessage::KIND_OPERATIONAL => $this->resolveOperationalBody(
                 $appointment,
@@ -366,6 +373,14 @@ final class AppointmentMessageService
             'body' => $resolvedBody,
         ]);
         $row->save();
+
+        if ($kind === AppointmentMessage::KIND_NOTE) {
+            $this->abuse->recordThreadNote(
+                $sender,
+                $appointment,
+                mb_strtolower(trim($resolvedBody)),
+            );
+        }
 
         $this->notifyVisitThreadPartner($appointment, $sender, $row);
 
