@@ -127,6 +127,7 @@ function formatIsoDate(date: string): string {
 }
 
 function BookingFlow() {
+  const pathname = usePathname();
   const search = useSearchParams();
   const router = useRouter();
   const today = todayIso();

@@ -18,7 +18,6 @@ import {
 } from "@/lib/site-primary-nav";
 import type { ProfileState } from "@/lib/use-session-profile";
 import { Button, buttonVariants, cn } from "@ozilcuts/ui";
-import { OZILCUTS_APP_NAME } from "@ozilcuts/types";
 import { Menu, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
