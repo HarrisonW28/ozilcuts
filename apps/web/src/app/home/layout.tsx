@@ -11,7 +11,7 @@ export default function CustomerHomeLayout({
   children,
 }: Readonly<{ children: ReactNode }>) {
   return (
-    <ShellSectionLayout variant="customer" header="compact">
+    <ShellSectionLayout variant="customer" header="none">
       {children}
     </ShellSectionLayout>
   );

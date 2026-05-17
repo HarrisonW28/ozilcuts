@@ -11,6 +11,7 @@ import { getStoredAuthToken } from "@/lib/auth-token";
 import {
   addDays,
   applyBookingsToSchedule,
+  bookingPrivacyForRole,
   buildWeekDaysFromAvailability,
   formatMonthDay,
   formatShortWeekday,
@@ -93,8 +94,15 @@ export default function BarberCalendarPage() {
       applyBookingsToSchedule(
         buildWeekDaysFromAvailability(weekStart, availability),
         bookings,
+        {
+          privacy: bookingPrivacyForRole(
+            profile.kind === "ready" ? profile.user.role.slug : null,
+          ),
+          viewerUserId:
+            profile.kind === "ready" ? profile.user.id : undefined,
+        },
       ),
-    [weekStart, availability, bookings],
+    [weekStart, availability, bookings, profile],
   );
 
   const load = useCallback(async (opts?: { silent?: boolean }) => {

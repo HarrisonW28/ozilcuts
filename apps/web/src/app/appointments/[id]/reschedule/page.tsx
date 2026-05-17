@@ -203,17 +203,17 @@ export default function ReschedulePage() {
 
   const isReady = profile.kind === "ready";
 
-  const { useCompactShellHeader } = useShellPageChrome();
+  const { inAppShell } = useShellPageChrome();
 
   return (
     <>
-      {!useCompactShellHeader ? (
+      {!inAppShell ? (
         <SiteHeader profile={profile} onSignOut={signOut} />
       ) : null}
       <main id="main-content" className="page-main app-shell-scroll flex-1">
         <div className="mx-auto w-full max-w-2xl page-stack">
           <ScreenTitle
-            eyebrow={OZILCUTS_APP_NAME}
+            eyebrow={inAppShell ? undefined : OZILCUTS_APP_NAME}
             title="Reschedule appointment"
             description="Pick a new open time. Your existing slot is shown as available so you can keep it if needed."
           />

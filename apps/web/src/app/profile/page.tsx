@@ -167,7 +167,6 @@ export default function ProfilePage() {
           <div className="flex flex-col gap-6">
             <ScreenTitle
               className="gap-3"
-              eyebrow={OZILCUTS_APP_NAME}
               title="Your profile"
               description="Keep your contact details and haircut preferences ready for future bookings."
             />

@@ -115,17 +115,17 @@ export default function AppointmentCheckInPage() {
 
   const token = getStoredAuthToken();
 
-  const { useCompactShellHeader } = useShellPageChrome();
+  const { inAppShell } = useShellPageChrome();
 
   return (
     <>
-      {!useCompactShellHeader ? (
+      {!inAppShell ? (
         <SiteHeader profile={profile} onSignOut={signOut} />
       ) : null}
       <main id="main-content" className="page-main app-shell-scroll flex-1">
         <div className="mx-auto w-full max-w-lg page-stack">
           <ScreenTitle
-            eyebrow={OZILCUTS_APP_NAME}
+            eyebrow={inAppShell ? undefined : OZILCUTS_APP_NAME}
             title="Check-in"
             description="Tap when you walk in, scan the QR at the desk, or let auto check-in handle it when you are nearby. Calm visit pings (parking, outside, ETA) live in the thread below — no need for a separate chat."
           />

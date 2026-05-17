@@ -3,7 +3,8 @@ import type { ReactNode } from "react";
 import { cn } from "./lib/utils";
 
 type ScreenTitleProps = {
-  eyebrow: string;
+  /** Omit on native app-shell routes (bottom tab bar carries wayfinding). */
+  eyebrow?: string;
   title: string;
   description?: ReactNode;
   className?: string;
@@ -17,9 +18,11 @@ export function ScreenTitle({
 }: ScreenTitleProps) {
   return (
     <header className={cn("motion-enter flex flex-col gap-4", className)}>
-      <p className="text-caption font-semibold uppercase tracking-widecaps text-muted-foreground">
-        {eyebrow}
-      </p>
+      {eyebrow ? (
+        <p className="text-caption font-semibold uppercase tracking-widecaps text-muted-foreground">
+          {eyebrow}
+        </p>
+      ) : null}
       <h1 className="text-display font-semibold tracking-display text-foreground">
         {title}
       </h1>

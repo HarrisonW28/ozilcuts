@@ -445,17 +445,17 @@ export default function AppointmentsPage() {
     }
   }
 
-  const { useCompactShellHeader } = useShellPageChrome();
+  const { inAppShell } = useShellPageChrome();
 
   return (
     <>
-      {!useCompactShellHeader ? (
+      {!inAppShell ? (
         <SiteHeader profile={profile} onSignOut={signOut} />
       ) : null}
       <main id="main-content" className="page-main app-shell-scroll flex-1">
         <div className="mx-auto w-full max-w-3xl page-stack">
           <ScreenTitle
-            eyebrow={OZILCUTS_APP_NAME}
+            eyebrow={inAppShell ? undefined : OZILCUTS_APP_NAME}
             title="My appointments"
             description="Customers see their bookings; barbers see incoming bookings; admins see everything."
           />

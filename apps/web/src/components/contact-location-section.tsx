@@ -1,7 +1,8 @@
 "use client";
 
 import { SocialLinksStrip } from "@/components/social";
-import { publicShopHoursLines, publicStudioLocationCopy } from "@/lib/public-site-copy";
+import { WeeklyHoursDisplay } from "@/components/weekly-hours-display";
+import { publicShopHoursRows, publicStudioLocationCopy } from "@/lib/public-site-copy";
 import { Button } from "@ozilcuts/ui";
 import { Clock, MapPin } from "lucide-react";
 import Link from "next/link";
@@ -60,16 +61,10 @@ export function ContactLocationSection() {
                 Hours
               </h3>
             </div>
-            <ul className="mt-3 list-none space-y-2.5" aria-label="Studio hours">
-              {publicShopHoursLines.map((line) => (
-                <li
-                  key={line}
-                  className="rounded-xl border border-border/45 bg-card/65 px-4 py-3.5 text-sm font-medium text-foreground shadow-xs dark:bg-card/40 sm:text-[0.9375rem]"
-                >
-                  {line}
-                </li>
-              ))}
-            </ul>
+            <WeeklyHoursDisplay
+              className="mt-3"
+              rows={publicShopHoursRows}
+            />
           </div>
         </div>
 

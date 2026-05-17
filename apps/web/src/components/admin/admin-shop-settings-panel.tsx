@@ -21,7 +21,8 @@ import {
   Input,
   Label,
 } from "@ozilcuts/ui";
-import { Film, ImageIcon, Instagram, Store, Trash2 } from "lucide-react";
+import { InstagramIcon } from "@/components/social/instagram-icon";
+import { Film, ImageIcon, Store, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 type AdminShopSettingsPanelProps = {
@@ -267,7 +268,7 @@ export function AdminShopSettingsPanel({
       <Card className="h-full lg:col-span-2">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
-            <Instagram className="size-5 text-primary" aria-hidden />
+            <InstagramIcon className="size-5 text-primary" />
             Instagram
           </CardTitle>
           <CardDescription>

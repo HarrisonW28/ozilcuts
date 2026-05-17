@@ -521,7 +521,7 @@ function BookingFlow() {
     barberId !== null &&
     selectedSlot !== null &&
     (!isStaffBooker || selectedCustomer !== null);
-  const { useCompactShellHeader } = useShellPageChrome();
+  const { inAppShell, useCompactShellHeader } = useShellPageChrome();
   const needsMobileBookPadding =
     bookingSelectionComplete && !useCompactShellHeader;
 
@@ -541,7 +541,7 @@ function BookingFlow() {
 
   return (
     <>
-      {!useCompactShellHeader ? (
+      {!inAppShell ? (
         <SiteHeader profile={profile} onSignOut={signOut} />
       ) : null}
       <main id="main-content" className="page-main app-shell-scroll flex-1">
@@ -553,7 +553,7 @@ function BookingFlow() {
           )}
         >
           <ScreenTitle
-            eyebrow={OZILCUTS_APP_NAME}
+            eyebrow={inAppShell ? undefined : OZILCUTS_APP_NAME}
             title={isStaffBooker ? "Book for a customer" : "Reserve your chair"}
             description={
               isStaffBooker

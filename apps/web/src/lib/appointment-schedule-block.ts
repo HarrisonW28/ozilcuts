@@ -40,3 +40,20 @@ export function appointmentScheduleBlockClassName(
     "dark:border-border/35 dark:bg-card/95",
   );
 }
+
+/** Blocked slot for guests — time visible, no PII on the card face. */
+export function appointmentScheduleRedactedBlockClassName(
+  variant: AppointmentScheduleBlockVariant = "timeline",
+): string {
+  const size =
+    variant === "timeline"
+      ? "rounded-xl px-2 py-1.5 text-xs leading-snug sm:text-sm"
+      : "rounded-lg px-1.5 py-1 text-[0.65rem] font-semibold leading-tight sm:px-2 sm:text-[11px]";
+
+  return cn(
+    size,
+    "cursor-default border border-border/50 bg-muted/55 text-muted-foreground shadow-none",
+    "bg-[repeating-linear-gradient(135deg,transparent,transparent_5px,color-mix(in_oklab,var(--border)_28%,transparent)_5px,color-mix(in_oklab,var(--border)_28%,transparent)_10px)]",
+    "dark:border-border/45 dark:bg-muted/40",
+  );
+}

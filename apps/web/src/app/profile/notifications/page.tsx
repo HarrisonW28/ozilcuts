@@ -143,7 +143,6 @@ export default function NotificationPreferencesPage() {
           <div className="flex flex-col gap-6">
             <ScreenTitle
               className="gap-3"
-              eyebrow={OZILCUTS_APP_NAME}
               title="Notification preferences"
               description="Choose which updates we send by email and which appear in your in-app inbox."
             />

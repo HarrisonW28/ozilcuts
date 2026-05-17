@@ -16,8 +16,7 @@ import {
   placeBookings,
   timeToMinutes,
 } from "@/lib/calendar-week";
-import { appointmentScheduleBlockClassName } from "@/lib/appointment-schedule-block";
-import Link from "next/link";
+import { AppointmentScheduleBookingBlock } from "@/components/appointment-schedule-booking-block";
 
 const GRID_START_MIN = CALENDAR_GRID_START_MIN;
 const GRID_END_MIN = CALENDAR_GRID_END_MIN;
@@ -210,24 +209,19 @@ function DayColumn({
             return null;
           }
           return (
-            <Link
+            <AppointmentScheduleBookingBlock
               key={b.id}
-              href={b.href}
+              booking={b}
+              variant="week"
+              className="z-[15]"
               onClick={(e) => e.stopPropagation()}
-              aria-label={`${b.label}, ${formatShortWeekday(day.date)} ${formatMonthDay(day.date)}`}
-              className={cn(
-                "absolute z-[15] flex items-start overflow-hidden px-0.5",
-                appointmentScheduleBlockClassName(b.status, "week"),
-              )}
               style={{
                 ...blockStyle(clipped.start, clipped.end, {
                   minHeightPct: columnCount > 1 ? 5 : 7,
                 }),
                 ...bookingLaneStyle(column, columnCount),
               }}
-            >
-              <span className="line-clamp-2 leading-snug">{b.label}</span>
-            </Link>
+            />
           );
         })}
 

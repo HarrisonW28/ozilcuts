@@ -12,7 +12,9 @@ import type { CSSProperties } from "react";
  * no access to the runtime CSS theme.
  */
 export const BRAND_ICON_BG = "#0a0a0a";
-export const BRAND_ICON_FG = "#ffffff";
+/** Gold accent aligned with `--brand-accent` (oklch 0.72 0.11 55). */
+export const BRAND_ICON_GOLD = "#d4af37";
+export const BRAND_ICON_GOLD_DIM = "#a88628";
 
 export type BrandIconJsxProps = {
   size: number;
@@ -20,11 +22,80 @@ export type BrandIconJsxProps = {
   maskable?: boolean;
 };
 
+function BarberScissorsMark({ markSize }: { markSize: number }) {
+  const stroke = Math.max(2, markSize * 0.052);
+
+  return (
+    <svg
+      width={markSize}
+      height={markSize}
+      viewBox="0 0 100 100"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      {/* Pivot */}
+      <circle cx="50" cy="44" r="4.5" fill={BRAND_ICON_GOLD} />
+      <circle cx="50" cy="44" r="2" fill={BRAND_ICON_BG} />
+
+      {/* Blades — open upward */}
+      <path
+        d="M50 42 L18 11 L32 20 L50 42 Z"
+        fill={BRAND_ICON_GOLD}
+      />
+      <path
+        d="M50 42 L82 11 L68 20 L50 42 Z"
+        fill={BRAND_ICON_GOLD}
+      />
+      <path
+        d="M50 42 L18 11 M50 42 L82 11"
+        stroke={BRAND_ICON_GOLD_DIM}
+        strokeWidth={stroke * 0.35}
+        strokeLinecap="round"
+      />
+
+      {/* Arms */}
+      <path
+        d="M50 48 L36 64 L28 78"
+        stroke={BRAND_ICON_GOLD}
+        strokeWidth={stroke}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M50 48 L64 64 L72 78"
+        stroke={BRAND_ICON_GOLD}
+        strokeWidth={stroke}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+
+      {/* Handles at bottom */}
+      <circle
+        cx="26"
+        cy="86"
+        r="11"
+        stroke={BRAND_ICON_GOLD}
+        strokeWidth={stroke}
+        fill="none"
+      />
+      <circle
+        cx="74"
+        cy="86"
+        r="11"
+        stroke={BRAND_ICON_GOLD}
+        strokeWidth={stroke}
+        fill="none"
+      />
+      <circle cx="26" cy="86" r="4" fill={BRAND_ICON_GOLD_DIM} opacity={0.5} />
+      <circle cx="74" cy="86" r="4" fill={BRAND_ICON_GOLD_DIM} opacity={0.5} />
+    </svg>
+  );
+}
+
 export function BrandIconJsx({ size, maskable = false }: BrandIconJsxProps) {
   const radius = Math.round(size * 0.22);
-  const safeFraction = maskable ? 0.78 : 1;
-  const inner = Math.round(size * safeFraction);
-  const fontSize = Math.round(inner * 0.46);
+  const safeFraction = maskable ? 0.76 : 0.88;
+  const markSize = Math.round(size * safeFraction);
 
   const wrapStyle: CSSProperties = {
     width: size,
@@ -36,24 +107,9 @@ export function BrandIconJsx({ size, maskable = false }: BrandIconJsxProps) {
     justifyContent: "center",
   };
 
-  const markStyle: CSSProperties = {
-    width: inner,
-    height: inner,
-    background: BRAND_ICON_BG,
-    borderRadius: maskable ? Math.round(inner * 0.28) : 0,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    color: BRAND_ICON_FG,
-    fontSize,
-    fontWeight: 700,
-    letterSpacing: -fontSize * 0.04,
-    fontFamily: "ui-sans-serif, system-ui, -apple-system, sans-serif",
-  };
-
   return (
     <div style={wrapStyle}>
-      <div style={markStyle}>OC</div>
+      <BarberScissorsMark markSize={markSize} />
     </div>
   );
 }

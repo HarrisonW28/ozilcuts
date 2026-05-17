@@ -8,8 +8,7 @@ import { useSessionProfile } from "@/lib/use-session-profile";
 import { usePathname } from "next/navigation";
 
 /**
- * Whether the page should omit SiteHeader because the section layout renders
- * AppShellHeader (customer compact chrome).
+ * Native app-shell routes: omit marketing SiteHeader and page-level Ozilcuts eyebrow.
  */
 export function useShellPageChrome() {
   const pathname = usePathname();
@@ -17,13 +16,23 @@ export function useShellPageChrome() {
   const roleSlug =
     profile.kind === "ready" ? profile.user.role.slug : null;
 
+  const inAppShell = Boolean(
+    roleSlug && shouldShowAppShellDock(pathname, roleSlug),
+  );
+
+  /** @deprecated Prefer `inAppShell`. */
   const useCompactShellHeader =
-    roleSlug === "customer" && shouldShowAppShellDock(pathname, "customer");
+    roleSlug === "customer" && inAppShell;
 
   const hideSiteHeaderMobileMenu = shouldHideMobileDrawerNav(
     pathname,
     roleSlug,
   );
 
-  return { useCompactShellHeader, hideSiteHeaderMobileMenu, roleSlug };
+  return {
+    inAppShell,
+    useCompactShellHeader,
+    hideSiteHeaderMobileMenu,
+    roleSlug,
+  };
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { SiteHeader } from "@/components/site-header";
+import { WeeklyHoursDisplay } from "@/components/weekly-hours-display";
 import { WeekAvailabilityCalendar } from "@/components/week-availability-calendar";
 import {
   buildWeekDaysFromAvailability,
@@ -32,7 +33,6 @@ import type {
   BarberTrustSummary,
   HaircutPhoto,
 } from "@ozilcuts/types";
-import { BARBER_WEEKDAY_LABELS } from "@ozilcuts/types";
 import { motion, useReducedMotion } from "framer-motion";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -337,25 +337,9 @@ export default function BarberDetailPage() {
                 </div>
                 {state.availability && state.availability.weekdays.length > 0 ? (
                   <>
-                    <ul className="space-y-4 text-sm text-muted-foreground">
-                      {state.availability.weekdays.map((day) => (
-                        <li key={day.weekday}>
-                          <span className="font-medium text-foreground">
-                            {BARBER_WEEKDAY_LABELS[day.weekday] ??
-                              `Day ${day.weekday}`}
-                          </span>
-                          <ul className="mt-2 list-inside list-disc space-y-1">
-                            {day.windows.map((w) => (
-                              <li
-                                key={`${day.weekday}-${w.starts_at}-${w.ends_at}`}
-                              >
-                                {w.starts_at} – {w.ends_at}
-                              </li>
-                            ))}
-                          </ul>
-                        </li>
-                      ))}
-                    </ul>
+                    <WeeklyHoursDisplay
+                      weekdays={state.availability.weekdays}
+                    />
                     <div>
                       <h3 className="mb-3 text-sm font-semibold text-foreground">
                         This week

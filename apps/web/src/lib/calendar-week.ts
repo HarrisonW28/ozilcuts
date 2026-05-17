@@ -17,14 +17,38 @@ export type AvailabilityWindow = {
   ends_at: string;
 };
 
+export type BookingPrivacy = "staff" | "redacted";
+
+export function bookingPrivacyForRole(
+  roleSlug: string | null | undefined,
+): BookingPrivacy {
+  return roleSlug === "barber" || roleSlug === "admin" ? "staff" : "redacted";
+}
+
+export type ApplyBookingsOptions = {
+  /** Staff see customer names; everyone else gets blocked slots with hover details only. */
+  privacy?: BookingPrivacy;
+  /** When redacted, the viewer's own booking can still show "Your visit". */
+  viewerUserId?: number;
+};
+
 export type BookingBlock = {
   id: number;
   /** Minute-of-day [0..1440]. */
   startMin: number;
   endMin: number;
   status: AppointmentStatus;
+  /** Primary line on the card (service + guest for staff; time-only when redacted). */
   label: string;
+  /** Time range line (always safe to show). */
+  timeLabel: string;
+  /** Native tooltip — never includes other guests' names when redacted. */
+  hoverTitle: string;
+  /** Accessible name for the block. */
+  ariaLabel: string;
   href: string;
+  redacted: boolean;
+  isOwn: boolean;
 };
 
 export type WeekDaySchedule = {
@@ -129,11 +153,73 @@ export function parseYmdToDate(value: string | null | undefined): Date | null {
   return date;
 }
 
-function bookingLabel(record: AppointmentRecord): string {
-  const service = record.service?.name;
-  const customer = record.customer?.name;
-  if (service && customer) return `${service} · ${customer}`;
-  return service ?? customer ?? "Appointment";
+export function formatBookingMinuteRange(
+  startMin: number,
+  endMin: number,
+): string {
+  const fmt = (m: number) => {
+    const h = Math.floor(m / 60);
+    const min = m % 60;
+    const d = new Date(2000, 0, 1, h, min);
+    return d.toLocaleTimeString(undefined, {
+      hour: "numeric",
+      minute: "2-digit",
+    });
+  };
+
+  return `${fmt(startMin)} – ${fmt(endMin)}`;
+}
+
+function buildBookingBlock(
+  appt: AppointmentRecord,
+  startMin: number,
+  endMin: number,
+  options: ApplyBookingsOptions,
+): BookingBlock {
+  const timeLabel = formatBookingMinuteRange(startMin, endMin);
+  const service = appt.service?.name?.trim() || "Service";
+  const customer = appt.customer?.name?.trim();
+  const isOwn = Boolean(
+    options.viewerUserId != null &&
+      appt.customer?.id != null &&
+      appt.customer.id === options.viewerUserId,
+  );
+  const privacy = options.privacy ?? "redacted";
+
+  if (privacy === "staff" || isOwn) {
+    const guestLabel = isOwn && privacy === "redacted" ? "Your visit" : customer;
+    const label =
+      guestLabel != null && guestLabel !== ""
+        ? `${service} · ${guestLabel}`
+        : service;
+    return {
+      id: appt.id,
+      startMin,
+      endMin,
+      status: appt.status,
+      label,
+      timeLabel,
+      hoverTitle: `${timeLabel} · ${label}`,
+      ariaLabel: `${label}, ${timeLabel}`,
+      href: `/appointments/${appt.id}/confirmation`,
+      redacted: false,
+      isOwn,
+    };
+  }
+
+  return {
+    id: appt.id,
+    startMin,
+    endMin,
+    status: appt.status,
+    label: timeLabel,
+    timeLabel,
+    hoverTitle: `${timeLabel} · ${service}`,
+    ariaLabel: `Booked, ${timeLabel}`,
+    href: `/appointments/${appt.id}/confirmation`,
+    redacted: true,
+    isOwn: false,
+  };
 }
 
 /**
@@ -219,6 +305,7 @@ export function placeBookings(bookings: BookingBlock[]): {
 export function applyBookingsToSchedule(
   schedule: WeekDaySchedule[],
   appointments: AppointmentRecord[],
+  options: ApplyBookingsOptions = {},
 ): WeekDaySchedule[] {
   const byDay = new Map<string, BookingBlock[]>();
   for (const appt of appointments) {
@@ -249,14 +336,7 @@ export function applyBookingsToSchedule(
 
     if (endMin <= startMin) continue;
 
-    const block: BookingBlock = {
-      id: appt.id,
-      startMin,
-      endMin,
-      status: appt.status,
-      label: bookingLabel(appt),
-      href: `/appointments/${appt.id}/confirmation`,
-    };
+    const block = buildBookingBlock(appt, startMin, endMin, options);
 
     const list = byDay.get(key);
     if (list) {

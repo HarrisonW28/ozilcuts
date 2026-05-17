@@ -16,8 +16,7 @@ import {
   placeBookings,
   timeToMinutes,
 } from "@/lib/calendar-week";
-import { appointmentScheduleBlockClassName } from "@/lib/appointment-schedule-block";
-import Link from "next/link";
+import { AppointmentScheduleBookingBlock } from "@/components/appointment-schedule-booking-block";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 
 const GRID_START_MIN = CALENDAR_GRID_START_MIN;
@@ -300,32 +299,18 @@ export function DayTimelineCalendar({
               const gapPx = 3;
 
               return (
-                <Link
+                <AppointmentScheduleBookingBlock
                   key={b.id}
-                  href={b.href}
-                  className={cn(
-                    "absolute flex flex-col justify-start overflow-hidden",
-                    "min-h-12 touch-manipulation text-left sm:min-h-11",
-                    "focus-visible:z-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-                    "active:opacity-[0.92]",
-                    appointmentScheduleBlockClassName(b.status, "timeline"),
-                    activeBookingId === b.id &&
-                      "z-30 ring-2 ring-inset ring-primary",
-                  )}
+                  booking={b}
+                  variant="timeline"
+                  active={activeBookingId === b.id}
                   style={{
                     top,
                     height,
                     left: `calc(${leftPct}% + ${gapPx / 2}px)`,
                     width: `calc(${colW}% - ${gapPx}px)`,
                   }}
-                >
-                  <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-                    {formatBlockTimeRange(clipped.start, clipped.end)}
-                  </span>
-                  <span className="mt-0.5 line-clamp-2 text-xs font-semibold leading-snug sm:text-sm">
-                    {b.label}
-                  </span>
-                </Link>
+                />
               );
             })}
           </div>
@@ -346,17 +331,3 @@ export function DayTimelineCalendar({
   );
 }
 
-function formatBlockTimeRange(startMin: number, endMin: number): string {
-  const fmt = (m: number) => {
-    const h = Math.floor(m / 60);
-    const min = m % 60;
-    const d = new Date(2000, 0, 1, h, min);
-
-    return d.toLocaleTimeString(undefined, {
-      hour: "numeric",
-      minute: "2-digit",
-    });
-  };
-
-  return `${fmt(startMin)} – ${fmt(endMin)}`;
-}

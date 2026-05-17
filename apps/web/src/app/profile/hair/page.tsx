@@ -243,7 +243,6 @@ export default function HairProfilePage() {
           <div className="flex flex-col gap-6">
             <ScreenTitle
               className="gap-3"
-              eyebrow={OZILCUTS_APP_NAME}
               title="Hair profile"
               description="Help your barber pick the right approach. Add photos of recent cuts or styles you love."
             />

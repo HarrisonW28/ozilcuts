@@ -5,10 +5,20 @@ export const publicStudioLocationCopy = {
   body: "Appointment-only seating. Address, arrival notes, and door or parking details are included in your confirmation and reminders—no public listing until you are on the calendar.",
 } as const;
 
-export const publicShopHoursLines = [
-  "Tuesday — Saturday · 9am — 7pm",
-  "Sunday — Monday · By appointment",
-] as const;
+import type { WeeklyHoursRow } from "@/lib/weekly-hours-display";
+
+export const publicShopHoursRows: WeeklyHoursRow[] = [
+  {
+    dayLabel: "Tuesday – Saturday",
+    hoursLabel: "9:00 AM – 7:00 PM",
+    isClosed: false,
+  },
+  {
+    dayLabel: "Sunday – Monday",
+    hoursLabel: "By appointment",
+    isClosed: false,
+  },
+];
 
 export const publicReviewQuotes = [
   {
