@@ -97,133 +97,170 @@ export function SiteHeader({ profile, onSignOut }: SiteHeaderProps) {
     }
   }, []);
 
+  const logoLinkClass =
+    "motion-interactive flex shrink-0 items-center rounded-md touch-manipulation outline-none focus-visible:ring-2 focus-visible:ring-ring/45 focus-visible:ring-offset-2 focus-visible:ring-offset-background";
+
+  const desktopNav = (
+    <nav
+      aria-label="Primary"
+      className="hidden flex-wrap items-center gap-x-0.5 gap-y-1 md:flex"
+      suppressHydrationWarning
+    >
+      {navSections.flatMap((section) =>
+        section.links.map((link) =>
+          link.href === "/book" ? (
+            <Link
+              key={`${section.id}-${link.href}`}
+              href={link.href}
+              className={cn(buttonVariants({ size: "sm" }), "shadow-sm")}
+            >
+              {link.label}
+            </Link>
+          ) : (
+            <Link
+              key={`${section.id}-${link.href}`}
+              href={link.href}
+              className={desktopNavLinkClass}
+            >
+              {link.label}
+            </Link>
+          ),
+        ),
+      )}
+      {profile.kind === "loading" ? <HeaderPrimaryNavSkeleton /> : null}
+    </nav>
+  );
+
+  const accountNav = (
+    <nav
+      className="flex flex-wrap items-center justify-end gap-2 text-sm sm:gap-3"
+      aria-label="Account"
+      suppressHydrationWarning
+    >
+      {profile.kind === "none" ? (
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+          <Link
+            href="/login"
+            className={cn(
+              buttonVariants({ variant: "ghost", size: "sm" }),
+              "px-2",
+            )}
+          >
+            Sign in
+          </Link>
+          <Link
+            href="/register"
+            className={cn(buttonVariants({ size: "sm" }))}
+          >
+            Register
+          </Link>
+        </div>
+      ) : null}
+      {profile.kind === "loading" ? <HeaderAccountSkeleton /> : null}
+      {profile.kind === "error" ? (
+        <>
+          <span className="text-destructive" role="status">
+            Session expired
+          </span>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => void onSignOut()}
+          >
+            Sign out
+          </Button>
+        </>
+      ) : null}
+      {profile.kind === "ready" ? (
+        <>
+          <NotificationsBell enabled />
+          <SiteAccountMenu profile={profile} onSignOut={onSignOut} />
+        </>
+      ) : null}
+    </nav>
+  );
+
+  const mobileMenuButton = !hideMobileDrawerNav ? (
+    <Button
+      ref={menuButtonRef}
+      type="button"
+      variant="outline"
+      size="icon"
+      className="md:hidden"
+      aria-expanded={mobileNavOpen}
+      aria-controls={menuId}
+      onClick={() => setMobileNavOpen((open) => !open)}
+    >
+      {mobileNavOpen ? (
+        <X className="size-5" aria-hidden />
+      ) : (
+        <Menu className="size-5" aria-hidden />
+      )}
+      <span className="sr-only">
+        {mobileNavOpen ? "Close main menu" : "Open main menu"}
+      </span>
+    </Button>
+  ) : null;
+
   return (
     <>
       <header
         className={cn(
           "sticky top-0 z-50 border-b border-border/40 bg-background/90 shadow-[0_1px_0_0_oklch(0.2_0.04_264/0.04)] backdrop-blur-2xl supports-[backdrop-filter]:bg-background/75 dark:border-border/35 dark:shadow-[0_1px_0_0_oklch(0_0_0/0.2)] dark:supports-[backdrop-filter]:bg-background/70",
-          isHome && "site-header--over-hero",
+          isHome && "site-header--home",
         )}
       >
-        <div className="flex flex-wrap items-center justify-between gap-2 px-4 pt-[max(0.75rem,env(safe-area-inset-top,0px))] pb-3 sm:gap-3 sm:px-6 sm:pt-6 sm:pb-5 md:px-8">
-          <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-4">
-            <Link
-              href="/"
-              aria-label="Home"
-              className="motion-interactive -mx-1 flex shrink-0 items-center rounded-md px-1 touch-manipulation outline-none focus-visible:ring-2 focus-visible:ring-ring/45 focus-visible:ring-offset-2 focus-visible:ring-offset-background md:-mx-0 md:px-0"
-            >
-              <SiteBrandMark variant="site" />
-            </Link>
-            <nav
-              aria-label="Primary"
-              className="hidden flex-wrap items-center gap-x-0.5 gap-y-1 md:flex"
-              suppressHydrationWarning
-            >
-              {navSections.flatMap((section) =>
-                section.links.map((link) =>
-                  link.href === "/book" ? (
-                    <Link
-                      key={`${section.id}-${link.href}`}
-                      href={link.href}
-                      className={cn(
-                        buttonVariants({ size: "sm" }),
-                        "shadow-sm",
-                      )}
-                    >
-                      {link.label}
-                    </Link>
-                  ) : (
-                    <Link
-                      key={`${section.id}-${link.href}`}
-                      href={link.href}
-                      className={desktopNavLinkClass}
-                    >
-                      {link.label}
-                    </Link>
-                  ),
-                ),
-              )}
-              {profile.kind === "loading" ? <HeaderPrimaryNavSkeleton /> : null}
-            </nav>
-          </div>
-          <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-3">
-            {/* Desktop: theme first; hidden on small screens (theme lives in mobile menu). */}
-            <div className="hidden md:order-1 md:flex md:items-center">
-              <ModeToggle />
-            </div>
-            <nav
-              className="order-1 flex flex-wrap items-center gap-2 text-sm sm:gap-3 md:order-2"
-              aria-label="Account"
-              suppressHydrationWarning
-            >
-              {profile.kind === "none" ? (
-                <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-                  <Link
-                    href="/login"
-                    className={cn(
-                      buttonVariants({ variant: "ghost", size: "sm" }),
-                      "px-2",
-                    )}
-                  >
-                    Sign in
-                  </Link>
-                  <Link
-                    href="/register"
-                    className={cn(buttonVariants({ size: "sm" }))}
-                  >
-                    Register
-                  </Link>
+        <div
+          className={cn(
+            "site-header-bar",
+            "px-4 pt-[max(0.75rem,env(safe-area-inset-top,0px))] pb-3 sm:px-6 md:px-8",
+            isHome
+              ? "sm:pb-4"
+              : "flex flex-wrap items-center justify-between gap-2 sm:gap-3 sm:pt-6 sm:pb-5",
+          )}
+        >
+          {isHome ? (
+            <>
+              <div className="flex min-w-0 items-center gap-2 justify-self-start sm:gap-3">
+                {mobileMenuButton}
+                {desktopNav}
+              </div>
+              <Link
+                href="/"
+                aria-label="Home"
+                className={cn(logoLinkClass, "site-header-logo justify-self-center px-1")}
+              >
+                <SiteBrandMark variant="site" size="large" />
+              </Link>
+              <div className="flex items-center justify-end gap-2 justify-self-end sm:gap-3">
+                <div className="hidden md:flex md:items-center">
+                  <ModeToggle />
                 </div>
-              ) : null}
-              {profile.kind === "loading" ? <HeaderAccountSkeleton /> : null}
-              {profile.kind === "error" ? (
-                <>
-                  <span className="text-destructive" role="status">
-                    Session expired
-                  </span>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => void onSignOut()}
-                  >
-                    Sign out
-                  </Button>
-                </>
-              ) : null}
-              {profile.kind === "ready" ? (
-                <>
-                  <div className="order-1 md:order-1">
-                    <NotificationsBell enabled />
-                  </div>
-                  <div className="order-2 md:order-2">
-                    <SiteAccountMenu profile={profile} onSignOut={onSignOut} />
-                  </div>
-                </>
-              ) : null}
-            </nav>
-            {!hideMobileDrawerNav ? (
-            <Button
-              ref={menuButtonRef}
-              type="button"
-              variant="outline"
-              size="icon"
-              className="order-3 md:hidden"
-              aria-expanded={mobileNavOpen}
-              aria-controls={menuId}
-              onClick={() => setMobileNavOpen((open) => !open)}
-            >
-              {mobileNavOpen ? (
-                <X className="size-5" aria-hidden />
-              ) : (
-                <Menu className="size-5" aria-hidden />
-              )}
-              <span className="sr-only">
-                {mobileNavOpen ? "Close main menu" : "Open main menu"}
-              </span>
-            </Button>
-            ) : null}
-          </div>
+                {accountNav}
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-4">
+                <Link
+                  href="/"
+                  aria-label="Home"
+                  className={cn(logoLinkClass, "-mx-1 px-1 md:mx-0 md:px-0")}
+                >
+                  <SiteBrandMark variant="site" />
+                </Link>
+                {desktopNav}
+              </div>
+              <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-3">
+                <div className="hidden md:flex md:items-center">
+                  <ModeToggle />
+                </div>
+                {accountNav}
+                {mobileMenuButton}
+              </div>
+            </>
+          )}
         </div>
 
         <AdminOnboardingResumeBar profile={profile} />

@@ -68,7 +68,13 @@ function SlotVideo({
   preload,
 }: SlotVideoProps) {
   return (
-    <div className={cn("absolute inset-0", visibilityClass)} aria-hidden>
+    <div
+      className={cn(
+        "absolute inset-0 size-full min-h-full min-w-full overflow-hidden",
+        visibilityClass,
+      )}
+      aria-hidden
+    >
       {showStaticFallback ? (
         <HomeVideoStaticFallback
           variant="hero"

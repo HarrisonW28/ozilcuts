@@ -21,17 +21,19 @@ export function HomeVideoStaticFallback({
 
   if (poster && variant === "hero") {
     return (
-      <Image
-        src={poster}
-        alt=""
-        fill
-        className={cn(
-          "object-cover object-center motion-safe:scale-[1.04]",
-          className,
-        )}
-        sizes="100vw"
-        priority
-      />
+      <div
+        className={cn("absolute inset-0 size-full min-h-full min-w-full", className)}
+        aria-hidden
+      >
+        <Image
+          src={poster}
+          alt=""
+          fill
+          className="object-cover object-center motion-safe:scale-[1.02]"
+          sizes="100vw"
+          priority
+        />
+      </div>
     );
   }
 

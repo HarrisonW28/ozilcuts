@@ -57,7 +57,9 @@ export function HomeCinematicHero({
         ) : null}
       </div>
 
-      <div className="home-cinematic-hero-foreground">{children}</div>
+      <div className="home-cinematic-hero-foreground flex min-h-0 flex-1 flex-col">
+        {children}
+      </div>
     </div>
   );
 }
