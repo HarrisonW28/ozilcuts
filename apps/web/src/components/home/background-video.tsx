@@ -57,7 +57,7 @@ export function HomeBackgroundVideo({
   const layerClass =
     variant === "hero"
       ? autoplay
-        ? "pointer-events-none absolute inset-0 -z-30 overflow-hidden"
+        ? "home-cinematic-hero-media"
         : "home-video-layer -z-30"
       : "relative h-full w-full";
 

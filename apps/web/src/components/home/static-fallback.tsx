@@ -22,7 +22,10 @@ export function HomeVideoStaticFallback({
   if (poster) {
     return (
       <div
-        className={cn("home-video-layer relative", className)}
+        className={cn(
+          variant === "hero" ? "home-cinematic-hero-media" : "home-video-layer relative",
+          className,
+        )}
         aria-hidden
       >
         <Image
@@ -30,14 +33,9 @@ export function HomeVideoStaticFallback({
           alt=""
           fill
           className={cn(
-            variant === "hero" ? "home-video-hero" : "home-video-ambient",
-            "object-cover",
+            variant === "hero" ? "object-cover motion-safe:scale-[1.04]" : "home-video-ambient",
           )}
-          sizes={
-            variant === "hero"
-              ? "(max-width: 768px) 100vw, 72rem"
-              : "(max-width: 640px) 50vw, 16rem"
-          }
+          sizes={variant === "hero" ? "100vw" : "(max-width: 640px) 50vw, 16rem"}
           priority={variant === "hero"}
         />
       </div>

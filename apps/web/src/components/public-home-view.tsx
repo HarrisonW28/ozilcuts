@@ -155,7 +155,7 @@ export function PublicHomeView({
         ) : null}
       </section>
 
-      <div className="mx-auto w-full max-w-6xl space-y-16 md:space-y-24 lg:space-y-28">
+      <div className="mx-auto w-full max-w-6xl space-y-16 px-4 sm:px-6 md:space-y-24 md:px-8 lg:space-y-28">
       {/* Quick booking — high-conversion band */}
       <HomeMotionSection
         id="quick-book"

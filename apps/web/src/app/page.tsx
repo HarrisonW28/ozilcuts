@@ -129,7 +129,7 @@ export default function Home() {
   return (
     <div className="flex min-h-dvh flex-1 flex-col">
       <SiteHeader profile={profile} onSignOut={signOut} />
-      <main id="main-content" className="page-main">
+      <main id="main-content" className="page-main page-main--home">
         <motion.div
           initial={motionInitial}
           animate={{ opacity: 1, y: 0 }}
