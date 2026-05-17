@@ -4,6 +4,7 @@ import { getStoredAuthToken } from "@/lib/auth-token";
 import { useShopBranding } from "@/lib/shop-branding-context";
 import {
   ApiError,
+  deleteShopHeroPoster,
   deleteShopHeroVideo,
   deleteShopLogo,
   updateShopInstagramHandle,
@@ -11,6 +12,7 @@ import {
   uploadShopHeroVideo,
   uploadShopLogo,
 } from "@ozilcuts/api";
+import type { HeroMediaVariant } from "@ozilcuts/types";
 import {
   Button,
   Card,
@@ -22,13 +24,15 @@ import {
   Label,
 } from "@ozilcuts/ui";
 import { InstagramIcon } from "@/components/social/instagram-icon";
-import { Film, ImageIcon, Store, Trash2 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { Film, ImageIcon, Monitor, Smartphone, Store, Trash2 } from "lucide-react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 
 type AdminShopSettingsPanelProps = {
   hasLogo: boolean;
-  hasHeroVideo: boolean;
-  hasHeroPoster: boolean;
+  hasHeroVideoDesktop: boolean;
+  hasHeroVideoMobile: boolean;
+  hasHeroPosterDesktop: boolean;
+  hasHeroPosterMobile: boolean;
   instagramHandle: string | null;
   onUpdated: () => void;
 };
@@ -36,18 +40,144 @@ type AdminShopSettingsPanelProps = {
 type BusyKind =
   | "logo"
   | "logo-remove"
-  | "video"
-  | "poster"
-  | "remove"
+  | `video-${HeroMediaVariant}`
+  | `poster-${HeroMediaVariant}`
+  | `video-remove-${HeroMediaVariant}`
+  | `poster-remove-${HeroMediaVariant}`
   | "instagram"
   | null;
 
 const DEFAULT_INSTAGRAM = "ozil.cuts";
 
+type HeroMediaSlotProps = {
+  variant: HeroMediaVariant;
+  label: string;
+  icon: ReactNode;
+  hasVideo: boolean;
+  hasPoster: boolean;
+  busy: BusyKind;
+  onRun: (action: () => Promise<void>, kind: BusyKind) => void;
+};
+
+function HeroMediaSlot({
+  variant,
+  label,
+  icon,
+  hasVideo,
+  hasPoster,
+  busy,
+  onRun,
+}: HeroMediaSlotProps) {
+  const videoInputRef = useRef<HTMLInputElement>(null);
+  const posterInputRef = useRef<HTMLInputElement>(null);
+  const videoBusy = busy === `video-${variant}`;
+  const posterBusy = busy === `poster-${variant}`;
+  const removeVideoBusy = busy === `video-remove-${variant}`;
+  const removePosterBusy = busy === `poster-remove-${variant}`;
+  return (
+    <div className="space-y-3 rounded-xl border border-border/50 bg-muted/15 p-4 dark:bg-muted/10">
+      <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+        {icon}
+        {label}
+      </div>
+      <p className="text-sm text-muted-foreground">
+        {hasVideo
+          ? "Video is live for this breakpoint."
+          : "No video — the homepage shows a gradient until you upload."}
+        {hasPoster ? " Poster image is set." : null}
+      </p>
+      <div className="flex flex-wrap gap-2">
+        <input
+          ref={videoInputRef}
+          type="file"
+          accept="video/mp4,video/webm"
+          className="sr-only"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            e.target.value = "";
+            if (!file) return;
+            void onRun(async () => {
+              await uploadShopHeroVideo(tokenFromStorage(), file, variant);
+            }, `video-${variant}`);
+          }}
+        />
+        <input
+          ref={posterInputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          className="sr-only"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            e.target.value = "";
+            if (!file) return;
+            void onRun(async () => {
+              await uploadShopHeroPoster(tokenFromStorage(), file, variant);
+            }, `poster-${variant}`);
+          }}
+        />
+        <Button
+          type="button"
+          size="sm"
+          disabled={busy !== null}
+          onClick={() => videoInputRef.current?.click()}
+        >
+          {videoBusy ? "Uploading…" : "Upload video"}
+        </Button>
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          disabled={busy !== null}
+          onClick={() => posterInputRef.current?.click()}
+        >
+          <ImageIcon className="mr-1.5 size-4" aria-hidden />
+          {posterBusy ? "Uploading…" : "Poster"}
+        </Button>
+        {hasVideo ? (
+          <Button
+            type="button"
+            size="sm"
+            variant="ghost"
+            className="text-destructive hover:text-destructive"
+            disabled={busy !== null}
+            onClick={() =>
+              void onRun(async () => {
+                await deleteShopHeroVideo(tokenFromStorage(), variant);
+              }, `video-remove-${variant}`)
+            }
+          >
+            <Trash2 className="mr-1.5 size-4" aria-hidden />
+            {removeVideoBusy ? "Removing…" : "Remove video"}
+          </Button>
+        ) : null}
+        {hasPoster ? (
+          <Button
+            type="button"
+            size="sm"
+            variant="ghost"
+            className="text-destructive hover:text-destructive"
+            disabled={busy !== null}
+            onClick={() =>
+              void onRun(async () => {
+                await deleteShopHeroPoster(tokenFromStorage(), variant);
+              }, `poster-remove-${variant}`)
+            }
+          >
+            <Trash2 className="mr-1.5 size-4" aria-hidden />
+            {removePosterBusy ? "Removing…" : "Remove poster"}
+          </Button>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
 export function AdminShopSettingsPanel({
   hasLogo,
-  hasHeroVideo,
-  hasHeroPoster,
+  hasHeroVideoDesktop,
+  hasHeroVideoMobile,
+  hasHeroPosterDesktop,
+  hasHeroPosterMobile,
   instagramHandle,
   onUpdated,
 }: AdminShopSettingsPanelProps) {
@@ -58,8 +188,6 @@ export function AdminShopSettingsPanel({
     setLogoPreviewFailed(false);
   }, [logoUrl]);
   const logoInputRef = useRef<HTMLInputElement>(null);
-  const videoInputRef = useRef<HTMLInputElement>(null);
-  const posterInputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState<BusyKind>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -82,19 +210,21 @@ export function AdminShopSettingsPanel({
     setMessage(null);
     try {
       await action();
-      setMessage(
-        kind === "logo-remove"
-          ? "Shop logo removed."
-          : kind === "logo"
-            ? "Logo uploaded. It appears in the site header and app chrome."
-            : kind === "instagram"
-              ? "Instagram handle saved."
-              : kind === "remove"
-                ? "Homepage hero video removed."
-                : kind === "video"
-                  ? "Hero video uploaded. It appears on the public homepage."
-                  : "Hero poster uploaded.",
-      );
+      if (kind === "logo-remove") {
+        setMessage("Shop logo removed.");
+      } else if (kind === "logo") {
+        setMessage("Logo uploaded. It appears in the site header and app chrome.");
+      } else if (kind === "instagram") {
+        setMessage("Instagram handle saved.");
+      } else if (typeof kind === "string" && kind.startsWith("video-remove-")) {
+        setMessage("Hero video removed.");
+      } else if (typeof kind === "string" && kind.startsWith("poster-remove-")) {
+        setMessage("Hero poster removed.");
+      } else if (typeof kind === "string" && kind.startsWith("video-")) {
+        setMessage("Hero video uploaded. It appears on the public homepage.");
+      } else if (typeof kind === "string" && kind.startsWith("poster-")) {
+        setMessage("Hero poster uploaded.");
+      }
       onUpdated();
     } catch (e: unknown) {
       setError(e instanceof ApiError ? e.message : "Upload failed. Try again.");
@@ -120,6 +250,7 @@ export function AdminShopSettingsPanel({
           <div className="flex flex-wrap items-center gap-4">
             <div className="flex size-16 items-center justify-center overflow-hidden rounded-xl border border-border/60 bg-muted/30 p-1">
               {logoUrl && !logoPreviewFailed ? (
+                // eslint-disable-next-line @next/next/no-img-element -- admin-uploaded logo URL
                 <img
                   src={logoUrl}
                   alt=""
@@ -135,7 +266,7 @@ export function AdminShopSettingsPanel({
             <p className="min-w-0 flex-1 text-sm text-muted-foreground">
               {hasLogo
                 ? "A custom logo is live across the public site."
-                : "No custom logo — visitors see the default Ozilcuts wordmark."}
+                : "No custom logo — visitors see the default studio mark."}
             </p>
           </div>
 
@@ -185,83 +316,34 @@ export function AdminShopSettingsPanel({
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
             <Film className="size-5 text-primary" aria-hidden />
-            Homepage hero video
+            Homepage hero media
           </CardTitle>
           <CardDescription>
-            Full-width background on the public landing page. Use a short, muted
-            loop (MP4 or WebM, max 50&nbsp;MB). A dark overlay keeps text readable.
+            Full-width background on the landing page. Upload separate loops for
+            desktop (md and up) and mobile. Short, muted MP4 or WebM (max
+            50&nbsp;MB each). If only desktop is set, mobile visitors use that
+            clip.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <p className="text-sm text-muted-foreground">
-            {hasHeroVideo
-              ? "A custom hero video is live on the homepage."
-              : "No custom video yet — visitors see the default sample loop."}
-            {hasHeroPoster ? " Custom poster image is set." : null}
-          </p>
-
-          <div className="flex flex-wrap gap-2">
-            <input
-              ref={videoInputRef}
-              type="file"
-              accept="video/mp4,video/webm"
-              className="sr-only"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                e.target.value = "";
-                if (!file) return;
-                void run(async () => {
-                  await uploadShopHeroVideo(tokenFromStorage(), file);
-                }, "video");
-              }}
-            />
-            <input
-              ref={posterInputRef}
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              className="sr-only"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                e.target.value = "";
-                if (!file) return;
-                void run(async () => {
-                  await uploadShopHeroPoster(tokenFromStorage(), file);
-                }, "poster");
-              }}
-            />
-            <Button
-              type="button"
-              disabled={busy !== null}
-              onClick={() => videoInputRef.current?.click()}
-            >
-              {busy === "video" ? "Uploading…" : "Upload video"}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              disabled={busy !== null}
-              onClick={() => posterInputRef.current?.click()}
-            >
-              <ImageIcon className="mr-1.5 size-4" aria-hidden />
-              {busy === "poster" ? "Uploading…" : "Poster image"}
-            </Button>
-            {hasHeroVideo ? (
-              <Button
-                type="button"
-                variant="ghost"
-                className="text-destructive hover:text-destructive"
-                disabled={busy !== null}
-                onClick={() =>
-                  void run(async () => {
-                    await deleteShopHeroVideo(tokenFromStorage());
-                  }, "remove")
-                }
-              >
-                <Trash2 className="mr-1.5 size-4" aria-hidden />
-                {busy === "remove" ? "Removing…" : "Remove video"}
-              </Button>
-            ) : null}
-          </div>
+          <HeroMediaSlot
+            variant="desktop"
+            label="Desktop"
+            icon={<Monitor className="size-4 text-primary" aria-hidden />}
+            hasVideo={hasHeroVideoDesktop}
+            hasPoster={hasHeroPosterDesktop}
+            busy={busy}
+            onRun={run}
+          />
+          <HeroMediaSlot
+            variant="mobile"
+            label="Mobile"
+            icon={<Smartphone className="size-4 text-primary" aria-hidden />}
+            hasVideo={hasHeroVideoMobile}
+            hasPoster={hasHeroPosterMobile}
+            busy={busy}
+            onRun={run}
+          />
         </CardContent>
       </Card>
 

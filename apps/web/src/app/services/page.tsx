@@ -85,7 +85,7 @@ export default function ServicesPage() {
           <ScreenTitle
             eyebrow={OZILCUTS_APP_NAME}
             title="The menu"
-            description="Duration, price, deposit—then book in one flow."
+            description="Time, price, and what to expect — then book in one flow."
             className="gap-5 pb-1 sm:gap-6"
           />
 

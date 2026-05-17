@@ -76,7 +76,7 @@ export default function AdminSiteSettingsPage() {
           <ScreenTitle
             eyebrow={OZILCUTS_APP_NAME}
             title="Site settings"
-            description="Client-facing branding for your public site. Catalog, team, and hours are under Manage shop on the dashboard."
+            description="Logo, homepage look, and Instagram — what guests see before they book. Catalog and hours live on the dashboard."
           />
 
           <section
@@ -100,8 +100,10 @@ export default function AdminSiteSettingsPage() {
 
             <AdminShopSettingsPanel
               hasLogo={Boolean(sa?.shop_logo_path)}
-              hasHeroVideo={Boolean(sa?.shop_hero_video_path)}
-              hasHeroPoster={Boolean(sa?.shop_hero_poster_path)}
+              hasHeroVideoDesktop={Boolean(sa?.shop_hero_video_path)}
+              hasHeroVideoMobile={Boolean(sa?.shop_hero_video_mobile_path)}
+              hasHeroPosterDesktop={Boolean(sa?.shop_hero_poster_path)}
+              hasHeroPosterMobile={Boolean(sa?.shop_hero_poster_mobile_path)}
               instagramHandle={sa?.shop_instagram_handle ?? null}
               onUpdated={handleUpdated}
             />

@@ -54,6 +54,7 @@ export function SiteHeader({ profile, onSignOut }: SiteHeaderProps) {
   const roleSlug =
     profile.kind === "ready" ? profile.user.role.slug : null;
   const hideMobileDrawerNav = shouldHideMobileDrawerNav(pathname, roleSlug);
+  const isHome = pathname === "/";
 
   useEffect(() => {
     setMobileNavOpen(false);
@@ -99,12 +100,17 @@ export function SiteHeader({ profile, onSignOut }: SiteHeaderProps) {
 
   return (
     <>
-      <header className="sticky top-0 z-50 border-b border-border/40 bg-background/90 shadow-[0_1px_0_0_oklch(0.2_0.04_264/0.04)] backdrop-blur-2xl supports-[backdrop-filter]:bg-background/75 dark:border-border/35 dark:shadow-[0_1px_0_0_oklch(0_0_0/0.2)] dark:supports-[backdrop-filter]:bg-background/70">
+      <header
+        className={cn(
+          "sticky top-0 z-50 border-b border-border/40 bg-background/90 shadow-[0_1px_0_0_oklch(0.2_0.04_264/0.04)] backdrop-blur-2xl supports-[backdrop-filter]:bg-background/75 dark:border-border/35 dark:shadow-[0_1px_0_0_oklch(0_0_0/0.2)] dark:supports-[backdrop-filter]:bg-background/70",
+          isHome && "site-header--over-hero",
+        )}
+      >
         <div className="flex flex-wrap items-center justify-between gap-2 px-4 pt-[max(0.75rem,env(safe-area-inset-top,0px))] pb-3 sm:gap-3 sm:px-6 sm:pt-6 sm:pb-5 md:px-8">
           <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-4">
             <Link
               href="/"
-              aria-label={`${OZILCUTS_APP_NAME} — Home`}
+              aria-label="Home"
               className="motion-interactive -mx-1 flex shrink-0 items-center rounded-md px-1 touch-manipulation outline-none focus-visible:ring-2 focus-visible:ring-ring/45 focus-visible:ring-offset-2 focus-visible:ring-offset-background md:-mx-0 md:px-0"
             >
               <SiteBrandMark variant="site" />
@@ -174,7 +180,7 @@ export function SiteHeader({ profile, onSignOut }: SiteHeaderProps) {
               {profile.kind === "error" ? (
                 <>
                   <span className="text-destructive" role="status">
-                    Session issue
+                    Session expired
                   </span>
                   <Button
                     type="button"

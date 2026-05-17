@@ -16,7 +16,6 @@ import type {
   CustomerProfile,
   HairProfile,
 } from "@ozilcuts/types";
-import { OZILCUTS_APP_NAME } from "@ozilcuts/types";
 import {
   Button,
   Card,

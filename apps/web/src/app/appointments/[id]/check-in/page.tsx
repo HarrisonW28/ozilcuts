@@ -5,6 +5,7 @@ import { AppointmentContextThread } from "@/components/appointment-context-threa
 import { BarberReadinessPanel } from "@/components/barber-readiness-panel";
 import { CheckInPageSkeleton } from "@/components/loading";
 import { SiteHeader } from "@/components/site-header";
+import { PAGE_DESCRIPTIONS } from "@/lib/user-facing-copy";
 import { useShellPageChrome } from "@/lib/use-shell-page-chrome";
 import { getStoredAuthToken } from "@/lib/auth-token";
 import { useSessionProfile } from "@/lib/use-session-profile";
@@ -19,7 +20,6 @@ import {
   CardHeader,
   CardTitle,
   ScreenTitle,
-  Skeleton,
 } from "@ozilcuts/ui";
 import Link from "next/link";
 import { useParams, usePathname, useRouter } from "next/navigation";
@@ -127,7 +127,7 @@ export default function AppointmentCheckInPage() {
           <ScreenTitle
             eyebrow={inAppShell ? undefined : OZILCUTS_APP_NAME}
             title="Check-in"
-            description="Tap when you walk in, scan the QR at the desk, or let auto check-in handle it when you are nearby. Calm visit pings (parking, outside, ETA) live in the thread below — no need for a separate chat."
+            description={PAGE_DESCRIPTIONS.checkIn}
           />
 
           {profile.kind === "loading" ? (

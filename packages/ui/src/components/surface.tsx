@@ -1,10 +1,11 @@
 import { cva, type VariantProps } from "class-variance-authority";
 import type { ComponentPropsWithoutRef } from "react";
 
+import { uiMotionTransition } from "../lib/motion-classes";
 import { cn } from "../lib/utils";
 
 const surfaceVariants = cva(
-  "rounded-xl border transition-[border-color,box-shadow,background-color] motion-safe:duration-[var(--motion-duration-base)] motion-safe:ease-[var(--motion-ease-standard)]",
+  `rounded-xl border transition-[border-color,box-shadow,background-color] ${uiMotionTransition}`,
   {
     variants: {
       elevation: {

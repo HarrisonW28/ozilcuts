@@ -13,7 +13,11 @@ import {
   SocialLinksStrip,
   SocialProofBand,
 } from "@/components/social";
-import type { HomeVideoSources } from "@/lib/home-video-config";
+import {
+  heroBundleHasVideo,
+  resolveAmbientBundle,
+  type HomeVideoSources,
+} from "@/lib/home-video-config";
 import { formatGbp } from "@/lib/format-gbp";
 import { publicReviewQuotes } from "@/lib/public-site-copy";
 import { hasStoredAuthSession } from "@/lib/use-session-profile";
@@ -27,12 +31,11 @@ import {
   cn,
 } from "@ozilcuts/ui";
 import type { BarberProfilePublic, ServiceSummary } from "@ozilcuts/types";
-import { OZILCUTS_APP_NAME } from "@ozilcuts/types";
 import Link from "next/link";
 import { useMemo, type ReactNode } from "react";
 
 type HealthCopy = {
-  line: ReactNode;
+  line: ReactNode | null;
   showRetry: boolean;
   onRetry: () => void;
 };
@@ -71,6 +74,11 @@ export function PublicHomeView({
         : undefined,
     [instagramHandle],
   );
+  const showAmbientVideo = useMemo(() => {
+    if (!videoSources) return false;
+    const bundle = resolveAmbientBundle(videoSources);
+    return bundle !== null && heroBundleHasVideo(bundle);
+  }, [videoSources]);
   const showGuestActions =
     profileGuest || (profilePending && !hasStoredAuthSession());
   const showMemberActions =
@@ -83,19 +91,16 @@ export function PublicHomeView({
         aria-labelledby="home-hero-heading"
       >
         <HomeCinematicHero videoSources={videoSources}>
-          <div className="home-cinematic-hero-content grid gap-8 px-5 py-11 sm:gap-10 sm:px-9 sm:py-14 md:grid-cols-[minmax(0,1fr)_minmax(11.5rem,14rem)] md:items-end md:gap-12 md:px-11 md:py-16 lg:grid-cols-[minmax(0,1fr)_minmax(13rem,16rem)] lg:gap-16 lg:px-14 lg:pb-20 lg:pt-[4.25rem] xl:px-20">
+          <div className="home-cinematic-hero-content relative z-10 grid gap-8 px-5 py-11 sm:gap-10 sm:px-9 sm:py-14 md:grid-cols-[minmax(0,1fr)_minmax(11.5rem,14rem)] md:items-end md:gap-12 md:px-11 md:py-16 lg:grid-cols-[minmax(0,1fr)_minmax(13rem,16rem)] lg:gap-16 lg:px-14 lg:pb-20 lg:pt-[5.5rem] xl:px-20">
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-white/70">
-                {OZILCUTS_APP_NAME}
-              </p>
               {profilePending ? (
                 <div
-                  className="mt-4 space-y-4 sm:mt-5"
+                  className="space-y-4"
                   aria-busy="true"
                   aria-labelledby="home-hero-heading"
                 >
                   <h1 id="home-hero-heading" className="sr-only">
-                    {OZILCUTS_APP_NAME}
+                    Home
                   </h1>
                   <Skeleton className="h-12 w-[min(100%,22rem)] rounded-lg sm:h-14" />
                   <Skeleton className="h-20 w-full max-w-xl rounded-lg" />
@@ -104,7 +109,7 @@ export function PublicHomeView({
                 <>
                   <h1
                     id="home-hero-heading"
-                    className="mt-4 text-balance text-[2.35rem] font-semibold leading-[1.06] tracking-[-0.03em] text-foreground sm:mt-5 sm:text-5xl sm:tracking-tight md:text-6xl lg:text-[3.45rem]"
+                    className="text-balance text-[2.35rem] font-semibold leading-[1.06] tracking-[-0.03em] text-foreground sm:text-5xl sm:tracking-tight md:text-6xl lg:text-[3.45rem]"
                   >
                     {heroTitle}
                   </h1>
@@ -352,8 +357,8 @@ export function PublicHomeView({
           ) : null}
           {!previewsLoading
             ? barbersPreview.map((row) => (
-                <li key={row.id}>
-                  <Card className="h-full overflow-hidden border-border/55 shadow-none transition-shadow hover:shadow-md">
+                <li key={row.id} className="min-w-0">
+                  <Card className="h-full min-w-0 overflow-hidden border-border/55 shadow-none transition-shadow hover:shadow-md">
                     <div className="border-b border-border/40 bg-gradient-to-b from-muted/50 to-muted/20 px-5 py-8 dark:from-muted/25 dark:to-muted/10">
                       <p className="text-3xl font-semibold tabular-nums tracking-tight text-foreground/90">
                         {initialsFromName(row.barber.name)}
@@ -377,11 +382,20 @@ export function PublicHomeView({
                         </p>
                       ) : null}
                     </CardHeader>
-                    <CardFooter className="flex flex-col gap-2 border-t border-border/45 pt-4 sm:flex-row">
-                      <Button asChild variant="outline" size="sm" className="w-full">
+                    <CardFooter className="grid grid-cols-2 gap-2 border-t border-border/45 p-4 pt-4">
+                      <Button
+                        asChild
+                        variant="outline"
+                        size="sm"
+                        className="h-9 min-w-0 px-2 text-xs sm:text-sm"
+                      >
                         <Link href={`/barbers/${row.barber.id}`}>Profile</Link>
                       </Button>
-                      <Button asChild size="sm" className="w-full">
+                      <Button
+                        asChild
+                        size="sm"
+                        className="h-9 min-w-0 px-2 text-xs sm:text-sm"
+                      >
                         <Link href={`/barbers/${row.barber.id}/portfolio`}>
                           Portfolio
                         </Link>
@@ -416,17 +430,22 @@ export function PublicHomeView({
           </Button>
         </div>
         <div className="mt-8 grid grid-cols-2 gap-3 sm:mt-10 sm:grid-cols-4 sm:gap-4 md:gap-5">
-          <div
-            className={cn(
-              "motion-enter relative aspect-[3/4] overflow-hidden rounded-2xl ring-1 ring-border/50 transition-[transform,box-shadow] motion-safe:duration-300",
-              "hover:ring-primary/35 motion-safe:hover:scale-[1.02] motion-safe:active:scale-[0.99]",
-            )}
-          >
-            <HomeAmbientVideoPanel className="h-full w-full min-h-[8rem]" />
-            <span className="pointer-events-none absolute inset-x-3 bottom-3 z-10 text-[10px] font-medium uppercase tracking-wider text-foreground/55">
-              Ambient loop
-            </span>
-          </div>
+          {showAmbientVideo ? (
+            <div
+              className={cn(
+                "motion-enter relative aspect-[3/4] overflow-hidden rounded-2xl ring-1 ring-border/50 transition-[transform,box-shadow] motion-safe:duration-300",
+                "hover:ring-primary/35 motion-safe:hover:scale-[1.02] motion-safe:active:scale-[0.99]",
+              )}
+            >
+              <HomeAmbientVideoPanel
+                sources={videoSources}
+                className="h-full w-full min-h-[8rem]"
+              />
+              <span className="pointer-events-none absolute inset-x-3 bottom-3 z-10 text-[10px] font-medium uppercase tracking-wider text-foreground/55">
+                Ambient loop
+              </span>
+            </div>
+          ) : null}
           {[
             "from-muted/55 to-muted/20 dark:from-muted/35 dark:to-muted/10",
             "from-primary/[0.07] to-muted/25 dark:from-primary/[0.12] dark:to-muted/15",
@@ -494,26 +513,34 @@ export function PublicHomeView({
 
       <footer className="border-t border-border/45 pt-8 md:pt-10">
         <SocialLinksStrip className="mb-6" socialOverrides={socialOverrides} />
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <p
-            className="max-w-xl text-xs leading-relaxed text-muted-foreground"
-            role="status"
-            aria-live="polite"
-          >
-            {health.line}
-          </p>
-          {health.showRetry ? (
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              className="shrink-0 self-start"
-              onClick={health.onRetry}
-            >
-              Retry connection
-            </Button>
-          ) : null}
-        </div>
+        {health.line || health.showRetry ? (
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            {health.line ? (
+              <p
+                className="max-w-xl text-xs leading-relaxed text-muted-foreground"
+                role="status"
+                aria-live="polite"
+              >
+                {health.line}
+              </p>
+            ) : (
+              <span className="sr-only" role="status">
+                Connection issue
+              </span>
+            )}
+            {health.showRetry ? (
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                className="shrink-0 self-start"
+                onClick={health.onRetry}
+              >
+                Try again
+              </Button>
+            ) : null}
+          </div>
+        ) : null}
       </footer>
       </div>
     </div>

@@ -8,10 +8,13 @@ import {
 } from "@/lib/motion";
 import { useSessionProfile } from "@/lib/use-session-profile";
 import { resolveHomeVideoSources } from "@/lib/home-video-config";
+import {
+  HEALTH_COPY,
+  homeSignedInGreeting,
+} from "@/lib/user-facing-copy";
 import { fetchApiHealth, fetchBarbers, fetchPublicHomeMarketing, fetchServices } from "@ozilcuts/api";
 import type { PublicHomeMarketing } from "@ozilcuts/types";
 import type { BarberProfilePublic, ServiceSummary } from "@ozilcuts/types";
-import { OZILCUTS_APP_NAME } from "@ozilcuts/types";
 import { motion, useReducedMotion } from "framer-motion";
 import { useCallback, useEffect, useState } from "react";
 
@@ -24,17 +27,6 @@ type HealthState =
 type CatalogPreviewState =
   | { kind: "loading" }
   | { kind: "ok"; services: ServiceSummary[]; barbers: BarberProfilePublic[] };
-
-function roleTagline(roleSlug: string): string {
-  switch (roleSlug) {
-    case "admin":
-      return "Shop administration and team tools are on the roadmap—this home base will grow with your role.";
-    case "barber":
-      return "Chair-side scheduling and client management are coming next—your dashboard will start here.";
-    default:
-      return "Booking your next cut and managing visits will land here soon—thanks for being an early customer.";
-  }
-}
 
 const PREVIEW_COUNT = 3;
 
@@ -95,6 +87,20 @@ export default function Home() {
     };
   }, []);
 
+  useEffect(() => {
+    let cancelled = false;
+    void fetchPublicHomeMarketing()
+      .then((data) => {
+        if (!cancelled) setHomeMarketing(data);
+      })
+      .catch(() => {
+        if (!cancelled) setHomeMarketing(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const motionInitial = ozilcutsPageEnterInitial(reduceMotion);
 
   const profilePending = profile.kind === "loading";
@@ -106,25 +112,19 @@ export default function Home() {
 
   const heroDescription =
     profile.kind === "ready" ? (
-      <>
-        <p className="mb-3 text-foreground/90">{roleTagline(profile.user.role.slug)}</p>
-        <p className="text-sm text-muted-foreground">
-          Signed in as{" "}
-          <span className="font-medium text-foreground">
-            {profile.user.email}
-          </span>
-        </p>
-      </>
+      <p className="text-foreground/90">
+        {homeSignedInGreeting(profile.user.role.slug)}
+      </p>
     ) : (
       <>Professional cuts. One calm place to book.</>
     );
 
   const healthLine =
     health.kind === "loading" || health.kind === "idle"
-      ? "Checking connection to the studio API…"
-      : health.kind === "ok"
-        ? "API connected — appointments sync in real time."
-        : `API unavailable (${health.message}). Start the Laravel API on port 8000 or set NEXT_PUBLIC_API_URL.`;
+      ? HEALTH_COPY.checking
+      : health.kind === "error"
+        ? HEALTH_COPY.offline
+        : null;
 
   return (
     <div className="flex min-h-dvh flex-1 flex-col">
@@ -152,12 +152,9 @@ export default function Home() {
             }
             previewsLoading={catalogPreview.kind === "loading"}
             health={{
-              line: (
-                <>
-                  <span className="font-medium text-foreground">{OZILCUTS_APP_NAME}</span>
-                  <span className="text-muted-foreground"> · {healthLine}</span>
-                </>
-              ),
+              line: healthLine ? (
+                <span className="text-muted-foreground">{healthLine}</span>
+              ) : null,
               showRetry: health.kind === "error",
               onRetry: retryHealth,
             }}

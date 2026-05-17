@@ -63,7 +63,7 @@ export function PortfolioPreviewStrip({
               <EditorialImageFrame
                 ratio="portrait"
                 tone="elevated"
-                className="motion-safe:transition-transform motion-safe:duration-base motion-safe:ease-brand motion-safe:group-hover:scale-[1.02] motion-safe:group-active:scale-[0.99]"
+                className="motion-safe:transition-transform motion-safe:duration-brand motion-safe:ease-brand motion-safe:group-hover:scale-[1.02] motion-safe:group-active:scale-[0.99]"
                 label={label}
               >
                 <Image

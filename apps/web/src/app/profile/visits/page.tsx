@@ -6,7 +6,6 @@ import { getStoredAuthToken } from "@/lib/auth-token";
 import { useSessionProfile } from "@/lib/use-session-profile";
 import { ApiError, fetchMyVisitsSummary } from "@ozilcuts/api";
 import type { CustomerAnalyticsResponse } from "@ozilcuts/types";
-import { OZILCUTS_APP_NAME } from "@ozilcuts/types";
 import {
   Button,
   Card,
@@ -28,7 +27,7 @@ type LoadState =
   | { kind: "error"; message: string };
 
 export default function MyVisitsPage() {
-  const { profile, signOut } = useSessionProfile();
+  const { profile } = useSessionProfile();
   const [state, setState] = useState<LoadState>({ kind: "idle" });
 
   const isCustomer =

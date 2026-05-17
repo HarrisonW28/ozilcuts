@@ -8,13 +8,19 @@
     @apply pointer-events-none absolute inset-0 overflow-hidden;
   }
 
+  /** Break out of page gutters to true viewport width. */
   .home-hero-bleed {
-    @apply relative w-full overflow-hidden;
+    @apply relative overflow-hidden;
+    width: 100vw;
+    max-width: 100vw;
+    margin-top: -4.75rem;
+    margin-left: calc(50% - 50vw);
+    margin-right: calc(50% - 50vw);
   }
 
   .home-cinematic-hero-shell {
-    @apply relative w-full max-w-none overflow-hidden rounded-none border-0 shadow-none ring-0;
-    min-height: min(88vh, 52rem);
+    @apply relative isolate w-full max-w-none overflow-hidden rounded-none border-0 shadow-none ring-0;
+    min-height: min(100svh, 56rem);
   }
 
   /** Video + overlays: pinned to shell bounds, behind foreground. */
@@ -24,8 +30,8 @@
 
   /** Text / CTAs — defines hero height; stacks above backdrop. */
   .home-cinematic-hero-foreground {
-    @apply relative z-10 w-full;
-    min-height: min(88vh, 52rem);
+    @apply relative z-20 w-full isolate;
+    min-height: min(100svh, 56rem);
   }
 
   /** Same rectangle as backdrop; video fills this layer. */
@@ -79,5 +85,31 @@
 
   .home-cinematic-hero-gradient-floor {
     @apply pointer-events-none absolute -left-16 bottom-0 z-[2] h-48 w-[120%] bg-gradient-to-t from-background via-background/45 to-transparent dark:from-background dark:via-background/60 sm:h-56;
+  }
+
+  /** Homepage: header floats over full-bleed hero video. */
+  .site-header--over-hero {
+    @apply border-white/10 bg-black/25 text-white shadow-none backdrop-blur-md supports-[backdrop-filter]:bg-black/20;
+  }
+
+  .site-header--over-hero .text-muted-foreground {
+    @apply text-white/75;
+  }
+
+  .site-header--over-hero .text-foreground {
+    @apply text-white;
+  }
+
+  .site-header--over-hero .border-border\/40,
+  .site-header--over-hero .border-border\/35 {
+    @apply border-white/15;
+  }
+
+  .site-header--over-hero a[class*="hover:bg-muted"] {
+    @apply hover:bg-white/10 hover:text-white;
+  }
+
+  .site-header--over-hero .site-brand-mark-tagline {
+    @apply text-white/70;
   }
 }

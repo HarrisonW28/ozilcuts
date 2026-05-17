@@ -15,7 +15,6 @@ import {
   updateCustomerProfile,
 } from "@ozilcuts/api";
 import type { BarberProfilePublic, CustomerProfile } from "@ozilcuts/types";
-import { OZILCUTS_APP_NAME } from "@ozilcuts/types";
 import {
   Button,
   Card,
@@ -49,7 +48,7 @@ function fieldErrors(err: ApiValidationError): Record<string, string> {
 }
 
 export default function ProfilePage() {
-  const { profile: session, signOut } = useSessionProfile();
+  const { profile: session } = useSessionProfile();
   const [state, setState] = useState<LoadState>({ kind: "idle" });
   const [phone, setPhone] = useState("");
   const [dateOfBirth, setDateOfBirth] = useState("");

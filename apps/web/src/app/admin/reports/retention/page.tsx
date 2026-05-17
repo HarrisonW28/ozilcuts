@@ -81,7 +81,7 @@ export default function AdminRetentionReportPage() {
           <ScreenTitle
             eyebrow={OZILCUTS_APP_NAME}
             title="Retention preview"
-            description="Customers who match due-soon or inactivity rules right now. This is a read-only snapshot — the scheduler still controls actual sends."
+            description="Guests who may be due for a cut soon or haven't visited in a while — a snapshot for your team."
           />
 
           {!isAdmin ? (

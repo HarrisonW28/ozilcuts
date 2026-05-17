@@ -2,6 +2,7 @@
 
 import { NotificationInboxList } from "@/components/notifications";
 import { SiteHeader } from "@/components/site-header";
+import { AUTH_COPY, PAGE_DESCRIPTIONS } from "@/lib/user-facing-copy";
 import { useShellPageChrome } from "@/lib/use-shell-page-chrome";
 import { NotificationListSkeleton } from "@/components/load-empty";
 import { getStoredAuthToken } from "@/lib/auth-token";
@@ -192,7 +193,7 @@ export default function NotificationsPage() {
           <ScreenTitle
             eyebrow={inAppShell ? undefined : OZILCUTS_APP_NAME}
             title="Notifications"
-            description="A calm inbox for reminders, booking updates, and shop alerts — grouped by day."
+            description={PAGE_DESCRIPTIONS.notifications}
           />
 
           {profile.kind === "loading" ? (
@@ -210,9 +211,9 @@ export default function NotificationsPage() {
           {profile.kind === "none" ? (
             <Card>
               <CardHeader>
-                <CardTitle>Sign in required</CardTitle>
+                <CardTitle>{AUTH_COPY.signInRequiredTitle}</CardTitle>
                 <CardDescription>
-                  Sign in to see your notifications.
+                  {AUTH_COPY.signInRequiredDescription}
                 </CardDescription>
               </CardHeader>
               <CardFooter>

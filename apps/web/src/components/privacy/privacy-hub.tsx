@@ -26,7 +26,6 @@ import {
   Input,
   Label,
   Skeleton,
-  cn,
 } from "@ozilcuts/ui";
 import { Bell, Download, MapPin, Shield, Trash2 } from "lucide-react";
 import Link from "next/link";

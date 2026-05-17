@@ -1,6 +1,6 @@
 "use client";
 
-import { resolveShopAssetUrl } from "@/lib/shop-asset-url";
+import { resolvePublicHomeMarketingUrls } from "@/lib/resolve-marketing-urls";
 import { fetchPublicHomeMarketing } from "@ozilcuts/api";
 import type { PublicHomeMarketing } from "@ozilcuts/types";
 import {
@@ -29,13 +29,7 @@ function withResolvedUrls(
   data: PublicHomeMarketing | null,
 ): PublicHomeMarketing | null {
   if (!data) return null;
-  return {
-    ...data,
-    logo_url: resolveShopAssetUrl(data.logo_url),
-    hero_mp4: resolveShopAssetUrl(data.hero_mp4),
-    hero_webm: resolveShopAssetUrl(data.hero_webm),
-    hero_poster: resolveShopAssetUrl(data.hero_poster),
-  };
+  return resolvePublicHomeMarketingUrls(data);
 }
 
 type ShopBrandingProviderProps = {

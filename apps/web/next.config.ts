@@ -57,6 +57,20 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: imageRemotePatterns,
   },
+  webpack(config) {
+    const existing = Array.isArray(config.ignoreWarnings)
+      ? config.ignoreWarnings
+      : [];
+    config.ignoreWarnings = [
+      ...existing,
+      /postcss-import: @import must precede all other statements/,
+      (warning: { message?: string }) =>
+        String(warning.message ?? "").includes(
+          "postcss-import: @import must precede",
+        ),
+    ];
+    return config;
+  },
   async headers() {
     return [
       {

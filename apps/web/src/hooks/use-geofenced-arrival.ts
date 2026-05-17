@@ -151,7 +151,7 @@ export function useGeofencedArrival({
       document.removeEventListener("visibilitychange", onVis);
     };
   }, [
-    appointment.id,
+    appointment,
     arrivalLocationOptIn,
     enabled,
     handleProximityResult,

@@ -1,5 +1,11 @@
 "use client";
 
+import {
+  applyAuthSession,
+  resolvePostAuthPath,
+  takeStashedAuthNextPath,
+} from "@/lib/auth-redirect";
+import { fetchCurrentUser } from "@ozilcuts/api";
 import { setStoredAuthToken } from "@/lib/auth-token";
 import {
   Button,
@@ -65,14 +71,26 @@ export default function AuthCallbackPage() {
 
       return;
     }
-    setStoredAuthToken(token);
+
+    const stashedNext = takeStashedAuthNextPath();
     window.history.replaceState(
       null,
       "",
       window.location.pathname + window.location.search,
     );
-    router.replace("/");
-    router.refresh();
+
+    void (async () => {
+      try {
+        const user = await fetchCurrentUser(token);
+        applyAuthSession(token, user);
+        router.replace(resolvePostAuthPath(stashedNext, user));
+        router.refresh();
+      } catch {
+        setStoredAuthToken(token);
+        router.replace(stashedNext ?? "/home");
+        router.refresh();
+      }
+    })();
   }, [router]);
 
   if (phase === "error") {
@@ -82,9 +100,12 @@ export default function AuthCallbackPage() {
           <CardTitle>Could not sign in</CardTitle>
           <CardDescription>{oauthErrorMessage(errorCode)}</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="flex flex-col gap-2">
           <Button asChild className="w-full">
             <Link href="/login">Back to sign in</Link>
+          </Button>
+          <Button asChild variant="outline" className="w-full">
+            <Link href="/">Home</Link>
           </Button>
         </CardContent>
       </Card>

@@ -18,7 +18,7 @@ export function appointmentScheduleBlockClassName(
 
   const interactive = cn(
     "motion-interactive border shadow-xs",
-    "transition-[transform,box-shadow,background-color,border-color] duration-[var(--motion-duration-base)] ease-[var(--motion-ease-standard)]",
+    "transition-[transform,box-shadow,background-color,border-color] duration-brand ease-brand",
     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
     "motion-safe:active:scale-[0.99] max-sm:motion-safe:active:scale-[0.985]",
   );

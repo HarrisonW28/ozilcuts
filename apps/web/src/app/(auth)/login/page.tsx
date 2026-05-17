@@ -5,35 +5,30 @@ import {
   loginUser,
 } from "@ozilcuts/api";
 import {
+  applyAuthSession,
+  resolvePostAuthPath,
+} from "@/lib/auth-redirect";
+import { useSessionProfile } from "@/lib/use-session-profile";
+import {
   Button,
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
   Input,
   Label,
-  buttonVariants,
-  cn,
 } from "@ozilcuts/ui";
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 
 import { GoogleSignInButton } from "@/components/google-sign-in-button";
-import { setStoredAuthToken } from "@/lib/auth-token";
-import { safeNextPath } from "@/lib/safe-next-path";
 
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const nextAfterAuth =
-    safeNextPath(searchParams.get("next")) ?? "/";
-  const registerHref =
-    nextAfterAuth !== "/"
-      ? `/register?next=${encodeURIComponent(nextAfterAuth)}`
-      : "/register";
+  const { profile } = useSessionProfile();
+  const nextParam = searchParams.get("next");
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -41,15 +36,21 @@ function LoginForm() {
   const [formError, setFormError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
+  useEffect(() => {
+    if (profile.kind !== "ready") return;
+    router.replace(resolvePostAuthPath(nextParam, profile.user));
+  }, [profile, nextParam, router]);
+
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     setFormError(null);
     setFieldErrors({});
     try {
-      const { token } = await loginUser({ email, password });
-      setStoredAuthToken(token);
-      router.push(nextAfterAuth);
+      const { token, user } = await loginUser({ email, password });
+      applyAuthSession(token, user);
+      const destination = resolvePostAuthPath(nextParam, user);
+      router.replace(destination);
       router.refresh();
     } catch (err) {
       if (err instanceof ApiValidationError) {
@@ -66,6 +67,18 @@ function LoginForm() {
     } finally {
       setLoading(false);
     }
+  }
+
+  if (profile.kind === "ready") {
+    return (
+      <Card>
+        <CardContent className="pt-6">
+          <p className="text-center text-sm text-muted-foreground" role="status">
+            You&apos;re already signed in. Taking you to your account…
+          </p>
+        </CardContent>
+      </Card>
+    );
   }
 
   return (
@@ -130,20 +143,8 @@ function LoginForm() {
             <span className="bg-card px-2 text-muted-foreground">Or</span>
           </div>
         </div>
-        <GoogleSignInButton disabled={loading} />
+        <GoogleSignInButton disabled={loading} returnPath={nextParam} />
       </CardContent>
-      <CardFooter className="flex flex-col gap-2 text-center text-sm text-muted-foreground sm:flex-row sm:justify-center">
-        <span>No account?</span>
-        <Link
-          href={registerHref}
-          className={cn(
-            buttonVariants({ variant: "link" }),
-            "h-auto min-h-0 px-0",
-          )}
-        >
-          Create one
-        </Link>
-      </CardFooter>
     </Card>
   );
 }

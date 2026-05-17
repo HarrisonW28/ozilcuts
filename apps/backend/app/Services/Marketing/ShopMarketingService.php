@@ -9,9 +9,14 @@ use App\Services\Security\SecureUploadValidator;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use RuntimeException;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 final class ShopMarketingService
 {
+    public const HERO_VARIANT_DESKTOP = 'desktop';
+
+    public const HERO_VARIANT_MOBILE = 'mobile';
+
     public function __construct(
         private readonly MarketingVideoValidator $videoValidator,
         private readonly SecureUploadValidator $imageValidator,
@@ -20,9 +25,12 @@ final class ShopMarketingService
     /**
      * @return array{
      *     logo_url: string|null,
-     *     hero_mp4: string|null,
-     *     hero_webm: string|null,
-     *     hero_poster: string|null,
+     *     hero_desktop_mp4: string|null,
+     *     hero_desktop_webm: string|null,
+     *     hero_desktop_poster: string|null,
+     *     hero_mobile_mp4: string|null,
+     *     hero_mobile_webm: string|null,
+     *     hero_mobile_poster: string|null,
      *     instagram_handle: string|null,
      *     instagram_url: string|null,
      * }
@@ -31,27 +39,78 @@ final class ShopMarketingService
     {
         $admin = $this->shopAdmin();
         if ($admin === null) {
-            return [
-                'logo_url' => null,
-                'hero_mp4' => null,
-                'hero_webm' => null,
-                'hero_poster' => null,
-                'instagram_handle' => $this->defaultInstagramHandle(),
-                'instagram_url' => $this->instagramProfileUrl($this->defaultInstagramHandle()),
-            ];
+            return $this->emptyPublicMarketing();
         }
 
-        $videoUrl = $this->publicUrl($admin->shop_hero_video_path);
-        $extension = $this->extensionFromPath($admin->shop_hero_video_path);
         $instagramHandle = $this->effectiveInstagramHandle($admin);
 
         return [
             'logo_url' => $this->publicUrl($admin->shop_logo_path),
-            'hero_mp4' => $extension === 'mp4' ? $videoUrl : null,
-            'hero_webm' => $extension === 'webm' ? $videoUrl : null,
-            'hero_poster' => $this->publicUrl($admin->shop_hero_poster_path),
+            ...$this->heroSlotPublicUrls(
+                $admin->shop_hero_video_path,
+                $admin->shop_hero_poster_path,
+                'desktop',
+            ),
+            ...$this->heroSlotPublicUrls(
+                $admin->shop_hero_video_mobile_path,
+                $admin->shop_hero_poster_mobile_path,
+                'mobile',
+            ),
             'instagram_handle' => $instagramHandle,
             'instagram_url' => $this->instagramProfileUrl($instagramHandle),
+        ];
+    }
+
+    /**
+     * @return array{
+     *     logo_url: string|null,
+     *     hero_desktop_mp4: string|null,
+     *     hero_desktop_webm: string|null,
+     *     hero_desktop_poster: string|null,
+     *     hero_mobile_mp4: string|null,
+     *     hero_mobile_webm: string|null,
+     *     hero_mobile_poster: string|null,
+     *     instagram_handle: string|null,
+     *     instagram_url: string|null,
+     * }
+     */
+    private function emptyPublicMarketing(): array
+    {
+        $handle = $this->defaultInstagramHandle();
+
+        return [
+            'logo_url' => null,
+            'hero_desktop_mp4' => null,
+            'hero_desktop_webm' => null,
+            'hero_desktop_poster' => null,
+            'hero_mobile_mp4' => null,
+            'hero_mobile_webm' => null,
+            'hero_mobile_poster' => null,
+            'instagram_handle' => $handle,
+            'instagram_url' => $this->instagramProfileUrl($handle),
+        ];
+    }
+
+    /**
+     * @return array{
+     *     hero_{variant}_mp4: string|null,
+     *     hero_{variant}_webm: string|null,
+     *     hero_{variant}_poster: string|null,
+     * }
+     */
+    private function heroSlotPublicUrls(
+        ?string $videoPath,
+        ?string $posterPath,
+        string $variant,
+    ): array {
+        $videoUrl = $this->publicUrl($videoPath);
+        $extension = $this->extensionFromPath($videoPath);
+        $prefix = 'hero_'.$variant;
+
+        return [
+            $prefix.'_mp4' => $extension === 'mp4' ? $videoUrl : null,
+            $prefix.'_webm' => $extension === 'webm' ? $videoUrl : null,
+            $prefix.'_poster' => $this->publicUrl($posterPath),
         ];
     }
 
@@ -105,59 +164,104 @@ final class ShopMarketingService
         return $admin->fresh(['role']);
     }
 
-    public function storeHeroVideo(User $admin, UploadedFile $file): User
+    public function storeHeroVideo(User $admin, UploadedFile $file, string $variant): User
     {
         $this->assertShopAdmin($admin);
+        $this->assertHeroVariant($variant);
         $this->videoValidator->assertValidHeroVideo($file);
 
-        if ($admin->shop_hero_video_path !== null) {
-            Storage::disk('public')->delete($admin->shop_hero_video_path);
+        $column = $variant === self::HERO_VARIANT_MOBILE
+            ? 'shop_hero_video_mobile_path'
+            : 'shop_hero_video_path';
+
+        $existing = $admin->{$column};
+        if ($existing !== null) {
+            Storage::disk('public')->delete($existing);
         }
 
         $extension = strtolower((string) ($file->extension() ?: $file->getClientOriginalExtension()));
         $path = $file->storeAs(
             'marketing/hero',
-            'hero-'.now()->format('YmdHis').'.'.$extension,
+            'hero-'.$variant.'-'.now()->format('YmdHis').'.'.$extension,
             'public',
         );
 
-        $admin->shop_hero_video_path = $path;
+        $admin->{$column} = $path;
         $admin->save();
 
         return $admin->fresh(['role']);
     }
 
-    public function storeHeroPoster(User $admin, UploadedFile $file): User
+    public function storeHeroPoster(User $admin, UploadedFile $file, string $variant): User
     {
         $this->assertShopAdmin($admin);
+        $this->assertHeroVariant($variant);
         $this->imageValidator->assertValidImage($file);
 
-        if ($admin->shop_hero_poster_path !== null) {
-            Storage::disk('public')->delete($admin->shop_hero_poster_path);
+        $column = $variant === self::HERO_VARIANT_MOBILE
+            ? 'shop_hero_poster_mobile_path'
+            : 'shop_hero_poster_path';
+
+        $existing = $admin->{$column};
+        if ($existing !== null) {
+            Storage::disk('public')->delete($existing);
         }
 
         $extension = strtolower((string) ($file->extension() ?: $file->getClientOriginalExtension()));
         $path = $file->storeAs(
             'marketing/hero',
-            'hero-poster-'.now()->format('YmdHis').'.'.$extension,
+            'hero-poster-'.$variant.'-'.now()->format('YmdHis').'.'.$extension,
             'public',
         );
 
-        $admin->shop_hero_poster_path = $path;
+        $admin->{$column} = $path;
         $admin->save();
 
         return $admin->fresh(['role']);
     }
 
-    public function clearHeroVideo(User $admin): User
+    public function clearHeroVideo(User $admin, ?string $variant = null): User
     {
         $this->assertShopAdmin($admin);
 
-        if ($admin->shop_hero_video_path !== null) {
-            Storage::disk('public')->delete($admin->shop_hero_video_path);
-            $admin->shop_hero_video_path = null;
-            $admin->save();
+        if ($variant === null || $variant === self::HERO_VARIANT_DESKTOP) {
+            if ($admin->shop_hero_video_path !== null) {
+                Storage::disk('public')->delete($admin->shop_hero_video_path);
+                $admin->shop_hero_video_path = null;
+            }
         }
+
+        if ($variant === null || $variant === self::HERO_VARIANT_MOBILE) {
+            if ($admin->shop_hero_video_mobile_path !== null) {
+                Storage::disk('public')->delete($admin->shop_hero_video_mobile_path);
+                $admin->shop_hero_video_mobile_path = null;
+            }
+        }
+
+        $admin->save();
+
+        return $admin->fresh(['role']);
+    }
+
+    public function clearHeroPoster(User $admin, ?string $variant = null): User
+    {
+        $this->assertShopAdmin($admin);
+
+        if ($variant === null || $variant === self::HERO_VARIANT_DESKTOP) {
+            if ($admin->shop_hero_poster_path !== null) {
+                Storage::disk('public')->delete($admin->shop_hero_poster_path);
+                $admin->shop_hero_poster_path = null;
+            }
+        }
+
+        if ($variant === null || $variant === self::HERO_VARIANT_MOBILE) {
+            if ($admin->shop_hero_poster_mobile_path !== null) {
+                Storage::disk('public')->delete($admin->shop_hero_poster_mobile_path);
+                $admin->shop_hero_poster_mobile_path = null;
+            }
+        }
+
+        $admin->save();
 
         return $admin->fresh(['role']);
     }
@@ -177,13 +281,42 @@ final class ShopMarketingService
         }
     }
 
+    private function assertHeroVariant(string $variant): void
+    {
+        if (! in_array($variant, [self::HERO_VARIANT_DESKTOP, self::HERO_VARIANT_MOBILE], true)) {
+            throw new RuntimeException('Invalid hero media variant.');
+        }
+    }
+
+    public function streamPublicAsset(string $path): StreamedResponse
+    {
+        if (! $this->isPublicMarketingPath($path)) {
+            abort(404);
+        }
+
+        if (! Storage::disk('public')->exists($path)) {
+            abort(404);
+        }
+
+        return Storage::disk('public')->response($path);
+    }
+
     private function publicUrl(?string $path): ?string
     {
         if ($path === null || $path === '') {
             return null;
         }
 
-        return Storage::disk('public')->url($path);
+        return url('/api/v1/public/marketing/asset?f='.rawurlencode($path));
+    }
+
+    private function isPublicMarketingPath(string $path): bool
+    {
+        if ($path === '' || str_contains($path, '..') || str_starts_with($path, '/')) {
+            return false;
+        }
+
+        return str_starts_with($path, 'marketing/');
     }
 
     private function extensionFromPath(?string $path): ?string

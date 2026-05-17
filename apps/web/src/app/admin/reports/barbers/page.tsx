@@ -137,7 +137,7 @@ export default function AdminBarberComparePage() {
           <ScreenTitle
             eyebrow={OZILCUTS_APP_NAME}
             title="Barber compare"
-            description="Side-by-side league table across every barber for the period, ranked by booked revenue."
+            description="How each chair did this period — bookings and revenue side by side."
           />
 
           {profile.kind === "loading" || profile.kind === "none" ? (

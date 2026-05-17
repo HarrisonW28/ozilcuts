@@ -5,6 +5,13 @@ import {
   buildBookFromAppointmentRow,
   buildBookFromRebookHint,
 } from "@/lib/booking-url";
+import { authPathWithNext } from "@/lib/auth-redirect";
+import {
+  appointmentsPageDescription,
+  appointmentsPageTitle,
+  AUTH_COPY,
+} from "@/lib/user-facing-copy";
+import { usePathname } from "next/navigation";
 import { useShellPageChrome } from "@/lib/use-shell-page-chrome";
 import {
   AppointmentListSkeleton,
@@ -200,6 +207,7 @@ function PaymentBadge({
 }
 
 export default function AppointmentsPage() {
+  const pathname = usePathname();
   const { profile, signOut } = useSessionProfile();
   const isMaxMd = useMediaQuery("(max-width: 767px)");
   const [state, setState] = useState<ListState>({ kind: "idle" });
@@ -227,7 +235,7 @@ export default function AppointmentsPage() {
     ) => {
       const token = getStoredAuthToken();
       if (!token) {
-        setState({ kind: "error", message: "Sign in required." });
+        setState({ kind: "error", message: AUTH_COPY.signInRequiredShort });
 
         return;
       }
@@ -456,11 +464,19 @@ export default function AppointmentsPage() {
         <div className="mx-auto w-full max-w-3xl page-stack">
           <ScreenTitle
             eyebrow={inAppShell ? undefined : OZILCUTS_APP_NAME}
-            title="My appointments"
-            description="Customers see their bookings; barbers see incoming bookings; admins see everything."
+            title={
+              profile.kind === "ready"
+                ? appointmentsPageTitle(profile.user.role.slug)
+                : "Appointments"
+            }
+            description={
+              profile.kind === "ready"
+                ? appointmentsPageDescription(profile.user.role.slug)
+                : "Your upcoming visits and booking history."
+            }
           />
 
-          {profile.kind === "loading" || profile.kind === "none" ? (
+          {profile.kind === "loading" ? (
             <PageSessionSkeleton
               className="max-w-3xl"
               statusLabel="Loading appointments"
@@ -470,17 +486,19 @@ export default function AppointmentsPage() {
           {profile.kind === "none" ? (
             <Card>
               <CardHeader>
-                <CardTitle>Sign in required</CardTitle>
+                <CardTitle>{AUTH_COPY.signInRequiredTitle}</CardTitle>
                 <CardDescription>
-                  Create an account or sign in to view your appointments.
+                  {AUTH_COPY.signInRequiredDescription}
                 </CardDescription>
               </CardHeader>
               <CardFooter className="flex flex-wrap gap-2">
                 <Button asChild>
-                  <Link href="/login">Sign in</Link>
+                  <Link href={authPathWithNext("/login", pathname)}>Sign in</Link>
                 </Button>
                 <Button asChild variant="outline">
-                  <Link href="/register">Create account</Link>
+                  <Link href={authPathWithNext("/register", pathname)}>
+                    Create account
+                  </Link>
                 </Button>
               </CardFooter>
             </Card>
@@ -681,7 +699,7 @@ export default function AppointmentsPage() {
                     const appointmentCard = (
                       <Card
                         className={cn(
-                          "border-border/55 shadow-sm transition-[box-shadow,transform] duration-[var(--motion-duration-base)] ease-[var(--motion-ease-standard)] hover:shadow-md motion-safe:hover:-translate-y-px",
+                          "border-border/55 shadow-sm transition-[box-shadow,transform] duration-brand ease-brand hover:shadow-md motion-safe:hover:-translate-y-px",
                           swipeEnabled
                             ? "border-0 shadow-none ring-0"
                             : null,

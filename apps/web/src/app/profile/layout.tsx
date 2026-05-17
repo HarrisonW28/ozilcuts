@@ -5,7 +5,7 @@ export default function ProfileSectionLayout({
   children,
 }: Readonly<{ children: ReactNode }>) {
   return (
-    <ShellSectionLayout variant="customer" header="none">
+    <ShellSectionLayout variant="customer" header="none" siteHeader>
       {children}
     </ShellSectionLayout>
   );

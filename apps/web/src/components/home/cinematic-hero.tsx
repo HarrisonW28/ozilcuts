@@ -2,7 +2,10 @@
 
 import { HomeBackgroundVideo } from "@/components/home/background-video";
 import { useHomeVideoAutoplay } from "@/hooks/use-home-video-autoplay";
-import type { HomeVideoSources } from "@/lib/home-video-config";
+import {
+  hasHeroVideo,
+  type HomeVideoSources,
+} from "@/lib/home-video-config";
 import { cn } from "@ozilcuts/ui";
 import type { ReactNode } from "react";
 
@@ -14,31 +17,39 @@ type HomeCinematicHeroProps = {
 
 /**
  * Full-bleed hero shell: video backdrop (same bounds as shell) with text/CTAs above.
+ * No video layer when the shop has not uploaded hero media.
  */
 export function HomeCinematicHero({
   children,
   className,
   videoSources,
 }: HomeCinematicHeroProps) {
-  const autoplay = useHomeVideoAutoplay({ enabled: true });
+  const showVideo = hasHeroVideo(
+    videoSources ?? { desktop: null, mobile: null },
+  );
+  const autoplay = useHomeVideoAutoplay({ enabled: showVideo });
   const { allowMotion } = autoplay;
 
   return (
     <div
-      ref={autoplay.containerRef}
+      ref={showVideo ? autoplay.containerRef : undefined}
       className={cn("home-cinematic-hero-shell", className)}
     >
       <div className="home-cinematic-hero-backdrop" aria-hidden>
-        <HomeBackgroundVideo
-          variant="hero"
-          autoplay={autoplay}
-          sources={videoSources}
-        />
+        {showVideo ? (
+          <HomeBackgroundVideo
+            variant="hero"
+            autoplay={autoplay}
+            sources={videoSources}
+          />
+        ) : (
+          <div className="home-video-fallback-hero" />
+        )}
         <div className="home-cinematic-hero-overlay" />
         <div className="home-cinematic-hero-gradient-main" />
         <div className="home-cinematic-hero-gradient-glow" />
         <div className="home-cinematic-hero-gradient-floor" />
-        {!allowMotion ? (
+        {showVideo && !allowMotion ? (
           <p className="sr-only">
             Background motion is off — reduced motion, data saver, or a slow
             connection is active.

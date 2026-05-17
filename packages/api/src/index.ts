@@ -28,6 +28,7 @@ export {
 } from "./auth";
 export { getApiBaseUrl } from "./base";
 export {
+  deleteShopHeroPoster,
   deleteShopHeroVideo,
   deleteShopLogo,
   fetchPublicHomeMarketing,

@@ -31,7 +31,7 @@ export function RoleAwareShellLayout({ children }: { children: ReactNode }) {
   }
 
   return (
-    <ShellSectionLayout variant={variant} header="none">
+    <ShellSectionLayout variant={variant} header="none" siteHeader>
       {children}
     </ShellSectionLayout>
   );

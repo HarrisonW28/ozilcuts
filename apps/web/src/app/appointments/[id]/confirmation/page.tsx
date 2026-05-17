@@ -459,7 +459,7 @@ export default function ConfirmationPage() {
           ) : null}
 
           {isReady && appointment ? (
-            <Card className="border-border/55 shadow-md transition-shadow duration-[var(--motion-duration-base)] ease-[var(--motion-ease-standard)] hover:shadow-md">
+            <Card className="border-border/55 shadow-md transition-shadow duration-brand ease-brand hover:shadow-md">
               <CardHeader className="space-y-1 border-b border-border/35 pb-4">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div className="min-w-0 space-y-1">

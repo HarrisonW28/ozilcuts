@@ -20,9 +20,12 @@ class ShopHomeMarketingTest extends TestCase
         $this->getJson('/api/v1/public/home-marketing')
             ->assertOk()
             ->assertJsonPath('data.logo_url', null)
-            ->assertJsonPath('data.hero_mp4', null)
-            ->assertJsonPath('data.hero_webm', null)
-            ->assertJsonPath('data.hero_poster', null)
+            ->assertJsonPath('data.hero_desktop_mp4', null)
+            ->assertJsonPath('data.hero_desktop_webm', null)
+            ->assertJsonPath('data.hero_desktop_poster', null)
+            ->assertJsonPath('data.hero_mobile_mp4', null)
+            ->assertJsonPath('data.hero_mobile_webm', null)
+            ->assertJsonPath('data.hero_mobile_poster', null)
             ->assertJsonPath('data.instagram_handle', 'ozil.cuts')
             ->assertJsonPath('data.instagram_url', 'https://www.instagram.com/ozil.cuts/');
     }
@@ -61,12 +64,17 @@ class ShopHomeMarketingTest extends TestCase
         $this->assertNotNull($admin->shop_logo_path);
         Storage::disk('public')->assertExists($admin->shop_logo_path);
 
-        $this->getJson('/api/v1/public/home-marketing')
+        $home = $this->getJson('/api/v1/public/home-marketing')
             ->assertOk()
-            ->assertJsonPath('data.logo_url', fn ($url) => is_string($url) && str_contains($url, 'logo'));
+            ->assertJsonPath('data.logo_url', fn ($url) => is_string($url) && str_contains($url, 'marketing/asset'))
+            ->json('data');
+
+        $logoUrl = $home['logo_url'] ?? '';
+        $this->assertIsString($logoUrl);
+        $this->get($logoUrl)->assertOk();
     }
 
-    public function test_admin_can_upload_hero_video_and_public_endpoint_serves_url(): void
+    public function test_admin_can_upload_desktop_hero_video_and_public_endpoint_serves_url(): void
     {
         Storage::fake('public');
 
@@ -75,6 +83,7 @@ class ShopHomeMarketingTest extends TestCase
         $this->actingAs($admin, 'sanctum')
             ->post('/api/v1/admin/marketing/hero-video', [
                 'video' => UploadedFile::fake()->create('hero.mp4', 128, 'video/mp4'),
+                'variant' => 'desktop',
             ])
             ->assertOk();
 
@@ -84,7 +93,31 @@ class ShopHomeMarketingTest extends TestCase
 
         $this->getJson('/api/v1/public/home-marketing')
             ->assertOk()
-            ->assertJsonPath('data.hero_mp4', fn ($url) => is_string($url) && str_contains($url, 'hero'));
+            ->assertJsonPath('data.hero_desktop_mp4', fn ($url) => is_string($url) && str_contains($url, 'hero'))
+            ->assertJsonPath('data.hero_mobile_mp4', null);
+    }
+
+    public function test_admin_can_upload_mobile_hero_video(): void
+    {
+        Storage::fake('public');
+
+        $admin = User::factory()->admin()->create();
+
+        $this->actingAs($admin, 'sanctum')
+            ->post('/api/v1/admin/marketing/hero-video', [
+                'video' => UploadedFile::fake()->create('hero-mobile.mp4', 128, 'video/mp4'),
+                'variant' => 'mobile',
+            ])
+            ->assertOk();
+
+        $admin->refresh();
+        $this->assertNotNull($admin->shop_hero_video_mobile_path);
+        Storage::disk('public')->assertExists($admin->shop_hero_video_mobile_path);
+
+        $this->getJson('/api/v1/public/home-marketing')
+            ->assertOk()
+            ->assertJsonPath('data.hero_mobile_mp4', fn ($url) => is_string($url) && str_contains($url, 'hero'))
+            ->assertJsonPath('data.hero_desktop_mp4', null);
     }
 
     public function test_customer_cannot_upload_hero_video(): void

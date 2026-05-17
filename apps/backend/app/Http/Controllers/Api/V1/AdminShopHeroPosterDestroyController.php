@@ -10,7 +10,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
-final class AdminShopHeroVideoDestroyController extends Controller
+final class AdminShopHeroPosterDestroyController extends Controller
 {
     public function __invoke(Request $request, ShopMarketingService $marketing): JsonResponse
     {
@@ -25,7 +25,7 @@ final class AdminShopHeroVideoDestroyController extends Controller
             ? $validated['variant']
             : null;
 
-        $updated = $marketing->clearHeroVideo($admin, $variant);
+        $updated = $marketing->clearHeroPoster($admin, $variant);
 
         return response()->json((new UserResource($updated))->toArray($request));
     }

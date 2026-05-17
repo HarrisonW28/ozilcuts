@@ -1,4 +1,4 @@
-import type { PublicHomeMarketing } from "@ozilcuts/types";
+import type { HeroMediaVariant, PublicHomeMarketing } from "@ozilcuts/types";
 
 import { getApiBaseUrl } from "./base";
 
@@ -23,9 +23,11 @@ export async function fetchPublicHomeMarketing(): Promise<PublicHomeMarketing> {
 export async function uploadShopHeroVideo(
   token: string,
   video: File,
+  variant: HeroMediaVariant = "desktop",
 ): Promise<void> {
   const body = new FormData();
   body.append("video", video);
+  body.append("variant", variant);
 
   const res = await fetch(`${getApiBaseUrl()}/api/v1/admin/marketing/hero-video`, {
     method: "POST",
@@ -52,9 +54,11 @@ export async function uploadShopHeroVideo(
 export async function uploadShopHeroPoster(
   token: string,
   poster: File,
+  variant: HeroMediaVariant = "desktop",
 ): Promise<void> {
   const body = new FormData();
   body.append("poster", poster);
+  body.append("variant", variant);
 
   const res = await fetch(`${getApiBaseUrl()}/api/v1/admin/marketing/hero-poster`, {
     method: "POST",
@@ -70,17 +74,44 @@ export async function uploadShopHeroPoster(
   }
 }
 
-export async function deleteShopHeroVideo(token: string): Promise<void> {
-  const res = await fetch(`${getApiBaseUrl()}/api/v1/admin/marketing/hero-video`, {
-    method: "DELETE",
-    headers: {
-      Accept: "application/json",
-      Authorization: `Bearer ${token}`,
+export async function deleteShopHeroVideo(
+  token: string,
+  variant?: HeroMediaVariant,
+): Promise<void> {
+  const query = variant ? `?variant=${encodeURIComponent(variant)}` : "";
+  const res = await fetch(
+    `${getApiBaseUrl()}/api/v1/admin/marketing/hero-video${query}`,
+    {
+      method: "DELETE",
+      headers: {
+        Accept: "application/json",
+        Authorization: `Bearer ${token}`,
+      },
     },
-  });
+  );
 
   if (!res.ok) {
     throw new Error("Unable to remove hero video.");
+  }
+}
+
+export async function deleteShopHeroPoster(
+  token: string,
+  variant: HeroMediaVariant,
+): Promise<void> {
+  const res = await fetch(
+    `${getApiBaseUrl()}/api/v1/admin/marketing/hero-poster?variant=${encodeURIComponent(variant)}`,
+    {
+      method: "DELETE",
+      headers: {
+        Accept: "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    },
+  );
+
+  if (!res.ok) {
+    throw new Error("Unable to remove hero poster.");
   }
 }
 

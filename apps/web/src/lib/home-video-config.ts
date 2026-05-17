@@ -1,72 +1,83 @@
 import type { PublicHomeMarketing } from "@ozilcuts/types";
 
-/**
- * Homepage cinematic video sources.
- *
- * Defaults use MDN’s CC0 sample clips (small, widely cached) so the UI works
- * out of the box. For production, self-host short H.264 + WebM loops under
- * `/public/marketing/` and point env vars at those URLs for full control and
- * CSP compatibility.
- */
-const MDN_FLOWER_MP4 =
-  "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4";
-const MDN_FLOWER_WEBM =
-  "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.webm";
-
-function trimUrl(value: string | undefined): string | undefined {
-  const v = value?.trim();
-  return v && v.length > 0 ? v : undefined;
-}
-
-export type HomeVideoSources = {
-  heroMp4: string;
-  heroWebm: string;
-  ambientMp4: string;
-  ambientWebm: string;
-  /** Optional absolute or same-origin poster image for LCP-friendly paint. */
-  heroPoster: string | undefined;
+export type HeroMediaBundle = {
+  mp4: string | null;
+  webm: string | null;
+  poster: string | null;
 };
 
-export function getHomeVideoSources(): HomeVideoSources {
-  const heroMp4 =
-    trimUrl(process.env.NEXT_PUBLIC_HOME_HERO_VIDEO_MP4) ?? MDN_FLOWER_MP4;
-  const heroWebm =
-    trimUrl(process.env.NEXT_PUBLIC_HOME_HERO_VIDEO_WEBM) ?? MDN_FLOWER_WEBM;
-  const ambientMp4 =
-    trimUrl(process.env.NEXT_PUBLIC_HOME_AMBIENT_VIDEO_MP4) ?? heroMp4;
-  const ambientWebm =
-    trimUrl(process.env.NEXT_PUBLIC_HOME_AMBIENT_VIDEO_WEBM) ?? heroWebm;
+export type HomeVideoSources = {
+  desktop: HeroMediaBundle | null;
+  mobile: HeroMediaBundle | null;
+};
+
+function trimUrl(value: string | null | undefined): string | null {
+  const v = value?.trim();
+  return v && v.length > 0 ? v : null;
+}
+
+function bundleFromMarketing(
+  mp4: string | null | undefined,
+  webm: string | null | undefined,
+  poster: string | null | undefined,
+): HeroMediaBundle | null {
+  const resolvedMp4 = trimUrl(mp4);
+  const resolvedWebm = trimUrl(webm);
+  const resolvedPoster = trimUrl(poster);
+
+  if (!resolvedMp4 && !resolvedWebm && !resolvedPoster) {
+    return null;
+  }
 
   return {
-    heroMp4,
-    heroWebm,
-    ambientMp4,
-    ambientWebm,
-    heroPoster: trimUrl(process.env.NEXT_PUBLIC_HOME_HERO_VIDEO_POSTER),
+    mp4: resolvedMp4,
+    webm: resolvedWebm,
+    poster: resolvedPoster,
   };
 }
 
-/** Admin-uploaded shop media overrides env defaults when present. */
+export function heroBundleHasVideo(bundle: HeroMediaBundle | null): boolean {
+  if (!bundle) return false;
+  return Boolean(bundle.mp4 || bundle.webm);
+}
+
+/** True when any uploaded hero video exists (desktop and/or mobile). */
+export function hasHeroVideo(sources: HomeVideoSources): boolean {
+  return heroBundleHasVideo(sources.desktop) || heroBundleHasVideo(sources.mobile);
+}
+
+/** No default sample clips — only admin-uploaded media is used. */
 export function resolveHomeVideoSources(
   marketing?: PublicHomeMarketing | null,
 ): HomeVideoSources {
-  const defaults = getHomeVideoSources();
-  if (marketing === null || marketing === undefined) {
-    return defaults;
+  if (marketing == null) {
+    return { desktop: null, mobile: null };
   }
 
-  const uploadedMp4 = trimUrl(marketing.hero_mp4 ?? undefined);
-  const uploadedWebm = trimUrl(marketing.hero_webm ?? undefined);
-  const uploadedPoster = trimUrl(marketing.hero_poster ?? undefined);
+  const desktop = bundleFromMarketing(
+    marketing.hero_desktop_mp4,
+    marketing.hero_desktop_webm,
+    marketing.hero_desktop_poster,
+  );
 
-  const heroMp4 = uploadedMp4 ?? uploadedWebm ?? defaults.heroMp4;
-  const heroWebm = uploadedWebm ?? uploadedMp4 ?? defaults.heroWebm;
+  const mobile = bundleFromMarketing(
+    marketing.hero_mobile_mp4,
+    marketing.hero_mobile_webm,
+    marketing.hero_mobile_poster,
+  );
 
-  return {
-    heroMp4,
-    heroWebm,
-    ambientMp4: heroMp4,
-    ambientWebm: heroWebm,
-    heroPoster: uploadedPoster ?? defaults.heroPoster,
-  };
+  return { desktop, mobile };
+}
+
+/** Prefer desktop loop for ambient panels; fall back to mobile. */
+export function resolveAmbientBundle(
+  sources: HomeVideoSources,
+): HeroMediaBundle | null {
+  if (heroBundleHasVideo(sources.desktop)) {
+    return sources.desktop;
+  }
+  if (heroBundleHasVideo(sources.mobile)) {
+    return sources.mobile;
+  }
+  return null;
 }

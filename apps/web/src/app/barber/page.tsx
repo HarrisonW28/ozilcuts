@@ -163,7 +163,7 @@ export default function BarberDashboardPage() {
           <ScreenTitle
             eyebrow={OZILCUTS_APP_NAME}
             title="Operations"
-            description="Today, your queue, haircut refs, and one-tap comms—then setup tools below."
+            description="Who's on your chair today, quick guest messages, and setup tools below."
           />
 
           <ShopOperationalIntelligenceBoard

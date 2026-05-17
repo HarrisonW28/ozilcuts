@@ -59,9 +59,15 @@
   --brand-surface-raised: var(--popover);
   --brand-muted: var(--muted-foreground);
   --brand-border: var(--border);
-  --brand-accent: oklch(0.72 0.11 55);
-  --brand-accent-foreground: oklch(0.18 0.03 55);
-  --brand-accent-muted: oklch(0.72 0.11 55 / 0.14);
+  /* Barber gold — CTAs, focus rings, hero highlights */
+  --brand-gold: oklch(0.58 0.14 72);
+  --brand-gold-foreground: oklch(0.985 0.008 90);
+  --brand-gold-muted: oklch(0.58 0.14 72 / 0.14);
+  --brand-gold-subtle: oklch(0.94 0.04 75);
+
+  --brand-accent: var(--brand-gold);
+  --brand-accent-foreground: var(--brand-gold-foreground);
+  --brand-accent-muted: var(--brand-gold-muted);
 
   --brand-success: oklch(0.62 0.14 155);
   --brand-success-muted: oklch(0.62 0.14 155 / 0.12);
@@ -113,9 +119,14 @@
 }
 
 .dark {
-  --brand-accent: oklch(0.78 0.12 58);
-  --brand-accent-foreground: oklch(0.16 0.04 58);
-  --brand-accent-muted: oklch(0.78 0.12 58 / 0.16);
+  --brand-gold: oklch(0.78 0.14 78);
+  --brand-gold-foreground: oklch(0.16 0.045 78);
+  --brand-gold-muted: oklch(0.78 0.14 78 / 0.18);
+  --brand-gold-subtle: oklch(0.28 0.04 75);
+
+  --brand-accent: var(--brand-gold);
+  --brand-accent-foreground: var(--brand-gold-foreground);
+  --brand-accent-muted: var(--brand-gold-muted);
 
   --brand-success: oklch(0.72 0.13 155);
   --brand-success-muted: oklch(0.72 0.13 155 / 0.14);

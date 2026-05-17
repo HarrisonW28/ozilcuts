@@ -143,7 +143,7 @@ function HubCard({
 }
 
 export default function AdminDashboardPage() {
-  const { profile, signOut, refreshProfile } = useSessionProfile();
+  const { profile, signOut } = useSessionProfile();
 
   const isAdmin =
     profile.kind === "ready" && profile.user.role.slug === "admin";
@@ -209,7 +209,7 @@ export default function AdminDashboardPage() {
           <ScreenTitle
             eyebrow={OZILCUTS_APP_NAME}
             title="Dashboard"
-            description="Shop overview, catalog, team, reports, inbox, and appointments—your control room for the business."
+            description="Today's bookings, your team, catalog, and reports in one place."
           />
 
           <ShopOperationalIntelligenceBoard className="rounded-2xl border border-border/50 bg-card/30 p-4 sm:p-5 dark:bg-card/20" />

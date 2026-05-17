@@ -17,7 +17,12 @@ export function resolveShopAssetUrl(
       apiBase || (typeof window !== "undefined" ? window.location.origin : "http://localhost:8000"),
     );
 
-    if (!parsed.pathname.startsWith("/storage/")) {
+    const isStoragePath = parsed.pathname.startsWith("/storage/");
+    const isMarketingAsset = parsed.pathname.includes(
+      "/public/marketing/asset",
+    );
+
+    if (!isStoragePath && !isMarketingAsset) {
       return parsed.href;
     }
 

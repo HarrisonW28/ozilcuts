@@ -346,6 +346,7 @@ export function CustomerIdentityHub({
                     key={photo.id}
                     className="relative aspect-square overflow-hidden rounded-lg border border-border/50 bg-muted/30"
                   >
+                    {/* eslint-disable-next-line @next/next/no-img-element -- API-hosted customer photos */}
                     <img
                       src={photo.url}
                       alt={photo.caption ?? "Your hair reference"}

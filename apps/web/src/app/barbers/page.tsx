@@ -91,7 +91,7 @@ export default function BarbersPage() {
           <ScreenTitle
             eyebrow={OZILCUTS_APP_NAME}
             title="The team"
-            description="Barbers first—bios, portfolios, and booking windows stay in sync."
+            description="Meet the team — portfolios, styles, and booking in a few taps."
             className="gap-5 pb-2 sm:gap-6"
           />
 
@@ -123,7 +123,7 @@ export default function BarbersPage() {
           {state.kind === "ok" && state.items.length === 0 ? (
             <EmptyState
               title="No barbers yet"
-              description="Profiles will show here once your shop publishes them. Check back soon."
+              description="The team will appear here soon — check back or ask at the studio."
               action={
                 <Button asChild variant="outline" size="sm">
                   <Link href="/">Home</Link>
@@ -138,8 +138,8 @@ export default function BarbersPage() {
               aria-label="Barber directory"
             >
               {state.items.map((row) => (
-                <li key={row.id}>
-                  <Card className="h-full overflow-hidden border-border/55 shadow-sm dark:shadow-md">
+                <li key={row.id} className="min-w-0">
+                  <Card className="h-full min-w-0 overflow-hidden border-border/55 shadow-sm dark:shadow-md">
                     <div className="border-b border-border/40 bg-gradient-to-b from-muted/45 to-muted/15 px-5 py-7 dark:from-muted/25 dark:to-muted/8">
                       <p className="text-3xl font-semibold tabular-nums tracking-tight text-foreground/90">
                         {barberInitials(row.barber.name)}
@@ -174,16 +174,20 @@ export default function BarbersPage() {
                         </p>
                       )}
                     </CardContent>
-                    <CardFooter className="flex flex-col gap-2 border-t border-border/35 bg-muted/[0.04] py-4 sm:flex-row dark:bg-muted/[0.03]">
+                    <CardFooter className="grid grid-cols-2 gap-2 border-t border-border/35 bg-muted/[0.04] p-4 py-4 dark:bg-muted/[0.03]">
                       <Button
                         asChild
                         variant="outline"
                         size="sm"
-                        className="w-full sm:flex-1"
+                        className="h-9 min-w-0 px-2 text-xs sm:text-sm"
                       >
                         <Link href={`/barbers/${row.barber.id}`}>Profile</Link>
                       </Button>
-                      <Button asChild size="sm" className="w-full sm:flex-1">
+                      <Button
+                        asChild
+                        size="sm"
+                        className="h-9 min-w-0 px-2 text-xs sm:text-sm"
+                      >
                         <Link href={`/barbers/${row.barber.id}/portfolio`}>
                           Portfolio
                         </Link>

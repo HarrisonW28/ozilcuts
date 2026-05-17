@@ -21,7 +21,8 @@ final class AdminShopHeroPosterStoreController extends Controller
         /** @var User $admin */
         $admin = $request->user();
 
-        $updated = $marketing->storeHeroPoster($admin, $request->file('poster'));
+        $variant = $request->heroVariant();
+        $updated = $marketing->storeHeroPoster($admin, $request->file('poster'), $variant);
 
         $audit->record(
             action: AuditAction::SHOP_ONBOARDING_UPDATED,
@@ -29,7 +30,13 @@ final class AdminShopHeroPosterStoreController extends Controller
             request: $request,
             subjectType: 'user',
             subjectId: $admin->id,
-            metadata: ['fields' => ['shop_hero_poster_path']],
+            metadata: [
+                'fields' => [
+                    $variant === ShopMarketingService::HERO_VARIANT_MOBILE
+                        ? 'shop_hero_poster_mobile_path'
+                        : 'shop_hero_poster_path',
+                ],
+            ],
         );
 
         return response()->json((new UserResource($updated))->toArray($request));

@@ -15,7 +15,6 @@ import type {
   NotificationPreferenceRow,
   NotificationPreferencesResponse,
 } from "@ozilcuts/types";
-import { OZILCUTS_APP_NAME } from "@ozilcuts/types";
 import {
   Button,
   Card,
@@ -42,7 +41,7 @@ function key(eventKey: NotificationEvent, channel: NotificationChannel): string 
 }
 
 export default function NotificationPreferencesPage() {
-  const { profile, signOut } = useSessionProfile();
+  const { profile } = useSessionProfile();
   const [state, setState] = useState<LoadState>({ kind: "idle" });
   const [draft, setDraft] = useState<Record<string, boolean>>({});
   const [saveBusy, setSaveBusy] = useState(false);

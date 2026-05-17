@@ -523,16 +523,23 @@ export type ShopAdminState = {
   /** Shop-wide template; new barbers start with these hours until edited per chair. */
   shop_default_hours: BarberAvailabilityPayload | null;
   shop_hero_video_path: string | null;
+  shop_hero_video_mobile_path: string | null;
   shop_hero_poster_path: string | null;
+  shop_hero_poster_mobile_path: string | null;
   shop_logo_path: string | null;
   shop_instagram_handle: string | null;
 };
 
+export type HeroMediaVariant = "desktop" | "mobile";
+
 export type PublicHomeMarketing = {
   logo_url: string | null;
-  hero_mp4: string | null;
-  hero_webm: string | null;
-  hero_poster: string | null;
+  hero_desktop_mp4: string | null;
+  hero_desktop_webm: string | null;
+  hero_desktop_poster: string | null;
+  hero_mobile_mp4: string | null;
+  hero_mobile_webm: string | null;
+  hero_mobile_poster: string | null;
   instagram_handle: string | null;
   instagram_url: string | null;
 };

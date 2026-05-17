@@ -46,7 +46,9 @@ class UserResource extends JsonResource
                 'shop_tap_to_pay_later' => (bool) $this->shop_tap_to_pay_later,
                 'shop_default_hours' => $shopHours,
                 'shop_hero_video_path' => $this->shop_hero_video_path,
+                'shop_hero_video_mobile_path' => $this->shop_hero_video_mobile_path,
                 'shop_hero_poster_path' => $this->shop_hero_poster_path,
+                'shop_hero_poster_mobile_path' => $this->shop_hero_poster_mobile_path,
                 'shop_logo_path' => $this->shop_logo_path,
                 'shop_instagram_handle' => $this->shop_instagram_handle,
             ];

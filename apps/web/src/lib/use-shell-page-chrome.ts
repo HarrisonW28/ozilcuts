@@ -8,7 +8,8 @@ import { useSessionProfile } from "@/lib/use-session-profile";
 import { usePathname } from "next/navigation";
 
 /**
- * Native app-shell routes: omit marketing SiteHeader and page-level Ozilcuts eyebrow.
+ * Native app-shell routes: SiteHeader comes from the section layout; pages only
+ * mount SiteHeader for guests/loading. Page-level Ozilcuts eyebrow is omitted in-shell.
  */
 export function useShellPageChrome() {
   const pathname = usePathname();

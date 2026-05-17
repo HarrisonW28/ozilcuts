@@ -15,7 +15,6 @@ import {
   HAIR_LENGTH_OPTIONS,
   HAIR_THICKNESS_OPTIONS,
   HAIR_TYPE_OPTIONS,
-  OZILCUTS_APP_NAME,
   SCALP_CONDITION_OPTIONS,
   type HairLength,
   type HairProfile,
@@ -82,7 +81,7 @@ function fieldErrors(err: ApiValidationError): Record<string, string> {
 }
 
 export default function HairProfilePage() {
-  const { profile: session, signOut } = useSessionProfile();
+  const { profile: session } = useSessionProfile();
   const [state, setState] = useState<LoadState>({ kind: "idle" });
   const [hairType, setHairType] = useState<"" | HairType>("");
   const [hairThickness, setHairThickness] = useState<"" | HairThickness>("");

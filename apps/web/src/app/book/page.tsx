@@ -7,11 +7,12 @@ import { BarberTrustBookingStrip } from "@/components/barber-trust";
 import { BookingSlotPicker } from "@/components/booking-slot-picker";
 import { StaffCustomerLookup } from "@/components/staff-customer-lookup";
 import { SiteHeader } from "@/components/site-header";
+import { authPathWithNext } from "@/lib/auth-redirect";
+import { AUTH_COPY, bookPageDescription } from "@/lib/user-facing-copy";
 import { useShellPageChrome } from "@/lib/use-shell-page-chrome";
 import {
   BookCatalogFormSkeleton,
   BookQuickRepeatCardSkeleton,
-  TimeSlotChipsSkeleton,
 } from "@/components/load-empty";
 import { getStoredAuthToken } from "@/lib/auth-token";
 import {
@@ -21,7 +22,6 @@ import {
 import { orderSlotsWithSuggestions } from "@/lib/booking-slot-suggestions";
 import { formatGbp } from "@/lib/format-gbp";
 import { haptic } from "@/lib/haptics";
-import { reportFilterControlClass } from "@/lib/report-filter-classes";
 import type { SmartSlotHintsLoadStatus } from "@/lib/smart-slot-hints";
 import { useSessionProfile } from "@/lib/use-session-profile";
 import { abuseBlockedMessage } from "@/lib/abuse-errors";
@@ -60,7 +60,7 @@ import {
   cn,
 } from "@ozilcuts/ui";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   Suspense,
   useCallback,
@@ -555,11 +555,7 @@ function BookingFlow() {
           <ScreenTitle
             eyebrow={inAppShell ? undefined : OZILCUTS_APP_NAME}
             title={isStaffBooker ? "Book for a customer" : "Reserve your chair"}
-            description={
-              isStaffBooker
-                ? "Look up the customer, then choose service, barber, and time—the appointment is tied to their account."
-                : "Choose a service and barber, then pick a time that fits—quiet, fast, and mobile-first."
-            }
+            description={bookPageDescription(isStaffBooker)}
             className="gap-5 sm:gap-6"
           />
 
@@ -569,7 +565,7 @@ function BookingFlow() {
 
           {profile.kind === "error" ? (
             <p className="text-sm text-destructive" role="alert">
-              Session issue. Sign in again.
+              {AUTH_COPY.sessionIssueInline}
             </p>
           ) : null}
 
@@ -603,10 +599,12 @@ function BookingFlow() {
               </CardHeader>
               <CardFooter className="flex flex-wrap gap-2">
                 <Button asChild>
-                  <Link href="/login">Sign in</Link>
+                  <Link href={authPathWithNext("/login", pathname)}>Sign in</Link>
                 </Button>
                 <Button asChild variant="outline">
-                  <Link href="/register">Create account</Link>
+                  <Link href={authPathWithNext("/register", pathname)}>
+                    Create account
+                  </Link>
                 </Button>
               </CardFooter>
             </Card>

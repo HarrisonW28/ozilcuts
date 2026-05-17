@@ -1,6 +1,7 @@
 "use client";
 
 import { SiteHeader } from "@/components/site-header";
+import { PAGE_DESCRIPTIONS } from "@/lib/user-facing-copy";
 import { useShellPageChrome } from "@/lib/use-shell-page-chrome";
 import { getStoredAuthToken } from "@/lib/auth-token";
 import { reportFilterControlClass } from "@/lib/report-filter-classes";
@@ -215,7 +216,7 @@ export default function ReschedulePage() {
           <ScreenTitle
             eyebrow={inAppShell ? undefined : OZILCUTS_APP_NAME}
             title="Reschedule appointment"
-            description="Pick a new open time. Your existing slot is shown as available so you can keep it if needed."
+            description={PAGE_DESCRIPTIONS.reschedule}
           />
 
           {profile.kind === "loading" || profile.kind === "none" ? (

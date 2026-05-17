@@ -251,7 +251,7 @@ export default function BarberCalendarPage() {
           <ScreenTitle
             eyebrow={OZILCUTS_APP_NAME}
             title="Chair"
-            description="Day timeline first, walk-in below — tap a day to switch, pinch-friendly controls."
+            description="Your day on the chair — switch dates, see the timeline, add walk-ins below."
           />
 
           {profile.kind === "loading" || profile.kind === "none" ? (
@@ -385,7 +385,7 @@ export default function BarberCalendarPage() {
                               onClick={() => setFocusedDate(d.date)}
                               aria-pressed={selected}
                               className={cn(
-                                "motion-interactive min-h-12 min-w-[4.75rem] shrink-0 snap-start rounded-xl border px-3 py-3 text-left transition-[background-color,box-shadow,border-color] duration-[var(--motion-duration-base)] ease-[var(--motion-ease-standard)] sm:min-h-[2.875rem] sm:min-w-[5.25rem] sm:py-2.5",
+                                "motion-interactive min-h-12 min-w-[4.75rem] shrink-0 snap-start rounded-xl border px-3 py-3 text-left transition-[background-color,box-shadow,border-color] duration-brand ease-brand sm:min-h-[2.875rem] sm:min-w-[5.25rem] sm:py-2.5",
                                 "touch-manipulation motion-safe:active:scale-[0.98]",
                                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                                 selected

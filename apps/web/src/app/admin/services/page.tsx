@@ -242,7 +242,7 @@ export default function AdminServicesPage() {
           <ScreenTitle
             eyebrow={OZILCUTS_APP_NAME}
             title="Service catalog"
-            description="Manage offerings, pricing, and visibility (admin only)."
+            description="Services, prices, and what's visible when guests book online."
           />
 
           {profile.kind === "loading" || profile.kind === "none" ? (

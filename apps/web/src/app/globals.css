@@ -4,17 +4,7 @@
 @tailwind components;
 @tailwind utilities;
 
-@import "../styles/content-photography.css";
-@import "../styles/home-video.css";
-@import "../styles/social-content.css";
-@import "../styles/check-in.css";
-@import "../styles/operational-live.css";
-@import "../styles/recognition.css";
-@import "../styles/notifications.css";
-@import "../styles/geofence-arrival.css";
-@import "../styles/queue-intelligence.css";
-@import "../styles/readiness.css";
-@import "../styles/presence.css";
+@import "../styles/ozilcuts-features.css";
 
 @layer base {
   :root {
@@ -26,20 +16,20 @@
     --card-foreground: oklch(0.17 0.022 264);
     --popover: oklch(0.998 0.003 90);
     --popover-foreground: oklch(0.17 0.022 264);
-    --primary: oklch(0.19 0.032 264);
-    --primary-foreground: oklch(0.985 0.003 90);
+    --primary: var(--brand-gold);
+    --primary-foreground: var(--brand-gold-foreground);
     --secondary: oklch(0.965 0.007 90);
     --secondary-foreground: oklch(0.22 0.02 264);
     --muted: oklch(0.958 0.008 90);
     --muted-foreground: oklch(0.46 0.022 264);
-    --accent: oklch(0.952 0.01 90);
-    --accent-foreground: oklch(0.22 0.02 264);
+    --accent: var(--brand-gold-subtle);
+    --accent-foreground: oklch(0.32 0.08 72);
     --destructive: oklch(0.55 0.22 27);
     --destructive-foreground: oklch(0.985 0.003 90);
     --border: oklch(0.9 0.01 90);
     --input: oklch(0.9 0.01 90);
-    --ring: oklch(0.52 0.045 264);
-    --chart-1: oklch(0.87 0 0);
+    --ring: oklch(0.58 0.12 72);
+    --chart-1: oklch(0.58 0.14 72);
     --chart-2: oklch(0.556 0 0);
     --chart-3: oklch(0.439 0 0);
     --chart-4: oklch(0.371 0 0);
@@ -93,32 +83,32 @@
     --card-foreground: oklch(0.965 0.006 90);
     --popover: oklch(0.212 0.024 264);
     --popover-foreground: oklch(0.965 0.006 90);
-    --primary: oklch(0.9 0.028 264);
-    --primary-foreground: oklch(0.145 0.032 264);
+    --primary: var(--brand-gold);
+    --primary-foreground: var(--brand-gold-foreground);
     --secondary: oklch(0.27 0.026 264);
     --secondary-foreground: oklch(0.965 0.006 90);
     --muted: oklch(0.275 0.022 264);
     --muted-foreground: oklch(0.715 0.028 264);
-    --accent: oklch(0.3 0.026 264);
-    --accent-foreground: oklch(0.965 0.006 90);
+    --accent: var(--brand-gold-subtle);
+    --accent-foreground: oklch(0.92 0.04 78);
     --destructive: oklch(0.63 0.185 22);
     --destructive-foreground: oklch(0.985 0 0);
     --border: oklch(1 0 0 / 13%);
     --input: oklch(1 0 0 / 15%);
-    --ring: oklch(0.65 0.055 264);
-    --chart-1: oklch(0.87 0 0);
+    --ring: oklch(0.72 0.12 78);
+    --chart-1: oklch(0.78 0.14 78);
     --chart-2: oklch(0.556 0 0);
     --chart-3: oklch(0.439 0 0);
     --chart-4: oklch(0.371 0 0);
     --chart-5: oklch(0.269 0 0);
     --sidebar: oklch(0.168 0.023 264);
     --sidebar-foreground: oklch(0.965 0.006 90);
-    --sidebar-primary: oklch(0.7 0.11 264);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.3 0.026 264);
-    --sidebar-accent-foreground: oklch(0.965 0.006 90);
+    --sidebar-primary: var(--brand-gold);
+    --sidebar-primary-foreground: var(--brand-gold-foreground);
+    --sidebar-accent: var(--brand-gold-subtle);
+    --sidebar-accent-foreground: oklch(0.92 0.04 78);
     --sidebar-border: oklch(1 0 0 / 12%);
-    --sidebar-ring: oklch(0.65 0.055 264);
+    --sidebar-ring: oklch(0.72 0.12 78);
     --shadow-xs: 0 1px 2px oklch(0 0 0 / 0.32);
     --shadow-sm:
       0 1px 3px oklch(0 0 0 / 0.34),
@@ -282,7 +272,7 @@
 
   /** Landing page: hero is full-bleed; body sections keep gutters via inner wrappers. */
   .page-main--home {
-    @apply px-0;
+    @apply overflow-x-clip px-0 pt-0;
   }
 
   /** Centered hero / offline / minimal states. */

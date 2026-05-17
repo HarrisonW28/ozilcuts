@@ -1,13 +1,20 @@
 "use client";
 
+import { stashAuthNextPath } from "@/lib/auth-redirect";
+import { safeNextPath } from "@/lib/safe-next-path";
 import { getGoogleOAuthRedirectUrl } from "@ozilcuts/api";
 import { Button } from "@ozilcuts/ui";
 
 type GoogleSignInButtonProps = {
   disabled?: boolean;
+  /** Post-auth return path (`?next=` on login/register). */
+  returnPath?: string | null;
 };
 
-export function GoogleSignInButton({ disabled = false }: GoogleSignInButtonProps) {
+export function GoogleSignInButton({
+  disabled = false,
+  returnPath = null,
+}: GoogleSignInButtonProps) {
   const href = getGoogleOAuthRedirectUrl();
   const unavailable = !href;
 
@@ -19,11 +26,13 @@ export function GoogleSignInButton({ disabled = false }: GoogleSignInButtonProps
       disabled={disabled || unavailable}
       title={
         unavailable
-          ? "Set NEXT_PUBLIC_API_URL to your API origin (e.g. http://localhost:8000) to enable Google sign-in."
+          ? "Google sign-in is not available right now. Use email and password instead."
           : undefined
       }
       onClick={() => {
-        if (href) window.location.href = href;
+        if (!href) return;
+        stashAuthNextPath(safeNextPath(returnPath));
+        window.location.href = href;
       }}
     >
       Continue with Google

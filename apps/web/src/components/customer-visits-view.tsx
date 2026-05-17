@@ -205,7 +205,7 @@ export function CustomerVisitsView({ data, linkAppointments = false }: Props) {
                             >
                               <article
                                 className={cn(
-                                  "motion-interactive rounded-xl border border-border/50 bg-muted/10 p-4 shadow-none transition-[border-color,background-color] duration-[var(--motion-duration-base)] ease-[var(--motion-ease-standard)]",
+                                  "motion-interactive rounded-xl border border-border/50 bg-muted/10 p-4 shadow-none transition-[border-color,background-color] duration-brand ease-brand",
                                   "hover:border-border/80 hover:bg-muted/15",
                                 )}
                               >

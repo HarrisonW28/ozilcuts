@@ -21,7 +21,8 @@ final class AdminShopHeroVideoStoreController extends Controller
         /** @var User $admin */
         $admin = $request->user();
 
-        $updated = $marketing->storeHeroVideo($admin, $request->file('video'));
+        $variant = $request->heroVariant();
+        $updated = $marketing->storeHeroVideo($admin, $request->file('video'), $variant);
 
         $audit->record(
             action: AuditAction::SHOP_ONBOARDING_UPDATED,
@@ -29,7 +30,13 @@ final class AdminShopHeroVideoStoreController extends Controller
             request: $request,
             subjectType: 'user',
             subjectId: $admin->id,
-            metadata: ['fields' => ['shop_hero_video_path']],
+            metadata: [
+                'fields' => [
+                    $variant === ShopMarketingService::HERO_VARIANT_MOBILE
+                        ? 'shop_hero_video_mobile_path'
+                        : 'shop_hero_video_path',
+                ],
+            ],
         );
 
         return response()->json((new UserResource($updated))->toArray($request));

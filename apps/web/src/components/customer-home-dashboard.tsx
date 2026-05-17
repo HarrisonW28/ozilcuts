@@ -196,7 +196,7 @@ export function CustomerHomeDashboard() {
       <ScreenTitle
         eyebrow="Your studio"
         title={firstName ? `Hi, ${firstName}` : "Your home"}
-        description="Up next, loyalty, and shortcuts — built for one-thumb days."
+        description="Your next visit, loyalty, and quick ways to book again."
         className="gap-4 pb-1 sm:gap-5"
       />
 

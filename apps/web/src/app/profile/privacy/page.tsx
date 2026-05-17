@@ -4,7 +4,6 @@ import { AccountSubnav } from "@/components/account-subnav";
 import { PrivacyHub } from "@/components/privacy";
 import { PageSessionSkeleton } from "@/components/loading";
 import { useSessionProfile } from "@/lib/use-session-profile";
-import { OZILCUTS_APP_NAME } from "@ozilcuts/types";
 import {
   Button,
   Card,

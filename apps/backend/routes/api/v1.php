@@ -35,6 +35,7 @@ use App\Http\Controllers\Api\V1\AppointmentWalkInStoreController;
 use App\Http\Controllers\Api\V1\AdminAuditLogIndexController;
 use App\Http\Controllers\Api\V1\AdminProductionSecurityController;
 use App\Http\Controllers\Api\V1\AdminSecurityReviewController;
+use App\Http\Controllers\Api\V1\AdminShopHeroPosterDestroyController;
 use App\Http\Controllers\Api\V1\AdminShopHeroPosterStoreController;
 use App\Http\Controllers\Api\V1\AdminShopHeroVideoDestroyController;
 use App\Http\Controllers\Api\V1\AdminShopHeroVideoStoreController;
@@ -42,6 +43,7 @@ use App\Http\Controllers\Api\V1\AdminShopInstagramUpdateController;
 use App\Http\Controllers\Api\V1\AdminShopLogoDestroyController;
 use App\Http\Controllers\Api\V1\AdminShopLogoStoreController;
 use App\Http\Controllers\Api\V1\PublicHomeMarketingController;
+use App\Http\Controllers\Api\V1\PublicMarketingAssetController;
 use App\Http\Controllers\Api\V1\Auth\GoogleOAuthCallbackController;
 use App\Http\Controllers\Api\V1\Auth\GoogleOAuthRedirectController;
 use App\Http\Controllers\Api\V1\Auth\LoginController;
@@ -121,6 +123,8 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/health', HealthController::class);
 Route::get('/public/home-marketing', PublicHomeMarketingController::class)
+    ->middleware('throttle:public-api');
+Route::get('/public/marketing/asset', PublicMarketingAssetController::class)
     ->middleware('throttle:public-api');
 Route::get('/payments/config', PaymentConfigController::class)
     ->middleware('throttle:public-api');
@@ -314,6 +318,8 @@ Route::middleware(['auth:sanctum', 'throttle:authenticated-api'])->group(functio
     Route::post('/admin/marketing/hero-poster', AdminShopHeroPosterStoreController::class)
         ->middleware('throttle:10,1');
     Route::delete('/admin/marketing/hero-video', AdminShopHeroVideoDestroyController::class)
+        ->middleware('throttle:10,1');
+    Route::delete('/admin/marketing/hero-poster', AdminShopHeroPosterDestroyController::class)
         ->middleware('throttle:10,1');
     Route::get('/admin/reports/revenue', RevenueReportController::class)
         ->middleware('throttle:60,1');

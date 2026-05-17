@@ -113,7 +113,7 @@ export function SmartSlotHintsPanel({
         </div>
       ) : showPersonalizedEmpty ? (
         <div className="mt-5">
-          <SmartSlotHintsEmpty variant="customer" />
+          <SmartSlotHintsEmpty variant={viewerContext} />
         </div>
       ) : !hints.personalized ? (
         <div className="mt-5">

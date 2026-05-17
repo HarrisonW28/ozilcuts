@@ -2,7 +2,6 @@
 
 import { useShopBranding } from "@/lib/shop-branding-context";
 import { cn } from "@ozilcuts/ui";
-import { OZILCUTS_APP_NAME } from "@ozilcuts/types";
 import { useEffect, useState } from "react";
 
 type SiteBrandMarkProps = {
@@ -74,21 +73,10 @@ export function SiteBrandMark({
         />
       ) : null}
 
-      {showWordmark ? (
-        variant === "site" ? (
-          <>
-            <span className="block text-sm font-semibold tracking-[-0.02em] text-foreground">
-              {OZILCUTS_APP_NAME}
-            </span>
-            <span className="hidden text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground sm:block">
-              Studio booking
-            </span>
-          </>
-        ) : (
-          <span className="block text-sm font-semibold tracking-[-0.02em] text-foreground">
-            {OZILCUTS_APP_NAME}
-          </span>
-        )
+      {showWordmark && variant === "site" ? (
+        <span className="site-brand-mark-tagline hidden text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground sm:block">
+          Studio booking
+        </span>
       ) : null}
     </span>
   );

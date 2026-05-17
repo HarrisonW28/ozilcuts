@@ -43,7 +43,7 @@ export function NotificationCard({
       className={cn(
         "motion-notification-row overflow-hidden",
         variant === "inbox" &&
-          "rounded-2xl border border-border/55 shadow-sm transition-[box-shadow,transform] duration-[var(--motion-duration-base)] ease-[var(--motion-ease-standard)] motion-safe:hover:-translate-y-px motion-safe:hover:shadow-md dark:border-border/45",
+          "rounded-2xl border border-border/55 shadow-sm transition-[box-shadow,transform] duration-brand ease-brand motion-safe:hover:-translate-y-px motion-safe:hover:shadow-md dark:border-border/45",
         accent,
         unread && variant === "inbox" && "ring-1 ring-primary/20 dark:ring-primary/25",
         className,
