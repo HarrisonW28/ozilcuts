@@ -16,6 +16,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('appointment_rebook_nudges', function (Blueprint $table): void {
+            $table->dropForeign(['source_appointment_id']);
             $table->dropUnique(['source_appointment_id']);
         });
 
@@ -25,12 +26,17 @@ return new class extends Migration
 
         Schema::table('appointment_rebook_nudges', function (Blueprint $table): void {
             $table->unique(['source_appointment_id', 'kind']);
+            $table->foreign('source_appointment_id')
+                ->references('id')
+                ->on('appointments')
+                ->cascadeOnDelete();
         });
     }
 
     public function down(): void
     {
         Schema::table('appointment_rebook_nudges', function (Blueprint $table): void {
+            $table->dropForeign(['source_appointment_id']);
             $table->dropUnique(['source_appointment_id', 'kind']);
         });
 
@@ -40,6 +46,10 @@ return new class extends Migration
 
         Schema::table('appointment_rebook_nudges', function (Blueprint $table): void {
             $table->unique(['source_appointment_id']);
+            $table->foreign('source_appointment_id')
+                ->references('id')
+                ->on('appointments')
+                ->cascadeOnDelete();
         });
     }
 };

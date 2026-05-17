@@ -27,6 +27,17 @@ web_extra_exposed_ports:
       http_port: 2999
       https_port: 3000
 
+hooks:
+    post-start:
+        - exec: |
+            set -e
+            if [ ! -f /var/www/html/apps/backend/.env ]; then
+              cp /var/www/html/apps/backend/.env.example /var/www/html/apps/backend/.env
+              cd /var/www/html/apps/backend && php artisan key:generate --force
+            fi
+            cd /var/www/html/apps/backend && composer install --no-interaction --prefer-dist
+            cd /var/www/html/apps/backend && php artisan migrate --force
+
 # Key features of DDEV's config.yaml:
 
 # name: <projectname> # Name of the project, automatically provides

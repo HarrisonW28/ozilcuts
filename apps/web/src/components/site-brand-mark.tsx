@@ -65,6 +65,7 @@ export function SiteBrandMark({
             width={120}
             height={120}
             decoding="async"
+            loading="eager"
             fetchPriority="high"
             className={cn(
               "relative z-[1] max-h-full max-w-full object-contain",

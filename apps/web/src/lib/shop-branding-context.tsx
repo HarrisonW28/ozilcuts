@@ -25,6 +25,29 @@ const ShopBrandingContext = createContext<ShopBrandingContextValue>({
   status: "loading",
 });
 
+const BRANDING_CACHE_KEY = "ozilcuts:public-shop-branding-v1";
+
+function readCachedBranding(): PublicHomeMarketing | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = sessionStorage.getItem(BRANDING_CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as PublicHomeMarketing;
+    return withResolvedUrls(parsed);
+  } catch {
+    return null;
+  }
+}
+
+function writeCachedBranding(data: PublicHomeMarketing): void {
+  if (typeof window === "undefined") return;
+  try {
+    sessionStorage.setItem(BRANDING_CACHE_KEY, JSON.stringify(data));
+  } catch {
+    // Private mode / quota — ignore.
+  }
+}
+
 function withResolvedUrls(
   data: PublicHomeMarketing | null,
 ): PublicHomeMarketing | null {
@@ -45,18 +68,28 @@ export function ShopBrandingProvider({
     () => withResolvedUrls(initialBranding),
     [initialBranding],
   );
-  const [branding, setBranding] = useState<PublicHomeMarketing | null>(seeded);
+  const cached = useMemo(() => (seeded ? null : readCachedBranding()), [seeded]);
+  const initial = seeded ?? cached;
+  const [branding, setBranding] = useState<PublicHomeMarketing | null>(initial);
   const [status, setStatus] = useState<"loading" | "ready" | "error">(
-    seeded ? "ready" : "loading",
+    initial ? "ready" : "loading",
   );
 
   const load = useCallback(() => {
     void fetchPublicHomeMarketing()
       .then((data) => {
-        setBranding(withResolvedUrls(data));
+        const resolved = withResolvedUrls(data);
+        writeCachedBranding(data);
+        setBranding(resolved);
         setStatus("ready");
       })
       .catch(() => {
+        const fallback = readCachedBranding();
+        if (fallback) {
+          setBranding(fallback);
+          setStatus("ready");
+          return;
+        }
         setBranding(null);
         setStatus("error");
       });

@@ -80,11 +80,27 @@ const nextConfig: NextConfig = {
     ];
   },
   async rewrites() {
-    if (process.env.NODE_ENV !== "development") {
-      return [];
+    const backend = (
+      process.env.BACKEND_URL ??
+      process.env.NEXT_PUBLIC_API_URL ??
+      "http://localhost:8000"
+    ).replace(/\/$/, "");
+
+    const rewrites: { source: string; destination: string }[] = [
+      {
+        source: "/shop-media/:path*",
+        destination: `${backend}/api/v1/public/marketing/asset?f=:path*`,
+      },
+    ];
+
+    if (process.env.NODE_ENV === "development") {
+      rewrites.push({
+        source: "/api/:path*",
+        destination: `${backend}/api/:path*`,
+      });
     }
-    const backend = process.env.BACKEND_URL ?? "http://localhost:8000";
-    return [{ source: "/api/:path*", destination: `${backend}/api/:path*` }];
+
+    return rewrites;
   },
 };
 
