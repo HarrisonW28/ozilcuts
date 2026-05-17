@@ -61,5 +61,12 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('public-api', static function (Request $request) use ($publicLimit) {
             return Limit::perMinute($publicLimit)->by($request->ip() ?? 'unknown');
         });
+
+        /** Logo / hero uploads — generous cap so admin settings retries do not hit 10/min. */
+        RateLimiter::for('admin-media', static function (Request $request) {
+            $key = $request->user()?->id ?? $request->ip() ?? 'guest';
+
+            return Limit::perMinute(60)->by('admin-media:'.(string) $key);
+        });
     }
 }

@@ -134,10 +134,11 @@
     font-feature-settings:
       "cv02", "cv03", "cv04", "cv11";
     /* Anchor links & in-page focus land below sticky header + notch. */
-    scroll-padding-top: max(
+    --site-header-offset: max(
       4.75rem,
       calc(3.25rem + env(safe-area-inset-top, 0px))
     );
+    scroll-padding-top: var(--site-header-offset);
     -webkit-tap-highlight-color: color-mix(
       in oklch,
       var(--foreground) 10%,

@@ -50,6 +50,15 @@ export async function readMarketingUploadError(res: Response): Promise<string> {
     }
   }
 
+  if (
+    res.status === 429 ||
+    (res.status === 422 &&
+      typeof payload?.message === "string" &&
+      /too many attempts/i.test(payload.message))
+  ) {
+    return "Too many upload attempts. Wait a minute, then try again.";
+  }
+
   if (res.status === 401) {
     return "Session expired. Sign in again, then retry the upload.";
   }

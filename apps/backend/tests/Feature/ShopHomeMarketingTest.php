@@ -149,6 +149,21 @@ class ShopHomeMarketingTest extends TestCase
             ->assertJsonPath('data.hero_desktop_mp4', null);
     }
 
+    public function test_admin_can_upload_logo_more_than_ten_times_per_minute(): void
+    {
+        Storage::fake('public');
+
+        $admin = User::factory()->admin()->create();
+
+        for ($i = 0; $i < 12; $i++) {
+            $this->actingAs($admin, 'sanctum')
+                ->post('/api/v1/admin/marketing/logo', [
+                    'logo' => UploadedFile::fake()->image("logo-{$i}.png", 200, 80),
+                ])
+                ->assertOk();
+        }
+    }
+
     public function test_customer_cannot_upload_hero_video(): void
     {
         $customer = User::factory()->create();
@@ -157,6 +172,7 @@ class ShopHomeMarketingTest extends TestCase
             ->post('/api/v1/admin/marketing/hero-video', [
                 'video' => UploadedFile::fake()->create('hero.mp4', 128, 'video/mp4'),
             ])
-            ->assertForbidden();
+            ->assertStatus(422)
+            ->assertJsonPath('message', 'This action is unauthorized.');
     }
 }

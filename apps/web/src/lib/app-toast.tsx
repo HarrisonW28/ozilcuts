@@ -88,8 +88,10 @@ export function AppToastProvider({ children }: { children: ReactNode }) {
       <div
         aria-live="polite"
         aria-relevant="additions"
-        className="pointer-events-none fixed bottom-4 right-4 z-[60] flex w-[min(100vw-2rem,22rem)] flex-col gap-2 sm:bottom-5 sm:right-5"
-        style={{ marginBottom: "max(0px, env(safe-area-inset-bottom, 0px))" }}
+        className="pointer-events-none fixed right-4 z-40 flex w-[min(100vw-2rem,22rem)] flex-col gap-2 sm:right-5"
+        style={{
+          top: "calc(var(--site-header-offset, 4.75rem) + 0.75rem)",
+        }}
       >
         {items.map((item) => (
           <div

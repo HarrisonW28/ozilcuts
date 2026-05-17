@@ -308,19 +308,19 @@ Route::middleware(['auth:sanctum', 'throttle:authenticated-api'])->group(functio
     Route::get('/admin/production-security', AdminProductionSecurityController::class)
         ->middleware('throttle:20,1');
     Route::post('/admin/marketing/logo', AdminShopLogoStoreController::class)
-        ->middleware('throttle:10,1');
+        ->middleware('throttle:admin-media');
     Route::delete('/admin/marketing/logo', AdminShopLogoDestroyController::class)
-        ->middleware('throttle:10,1');
+        ->middleware('throttle:admin-media');
     Route::patch('/admin/marketing/instagram', AdminShopInstagramUpdateController::class)
         ->middleware('throttle:30,1');
     Route::post('/admin/marketing/hero-video', AdminShopHeroVideoStoreController::class)
-        ->middleware('throttle:10,1');
+        ->middleware('throttle:admin-media');
     Route::post('/admin/marketing/hero-poster', AdminShopHeroPosterStoreController::class)
-        ->middleware('throttle:10,1');
+        ->middleware('throttle:admin-media');
     Route::delete('/admin/marketing/hero-video', AdminShopHeroVideoDestroyController::class)
-        ->middleware('throttle:10,1');
+        ->middleware('throttle:admin-media');
     Route::delete('/admin/marketing/hero-poster', AdminShopHeroPosterDestroyController::class)
-        ->middleware('throttle:10,1');
+        ->middleware('throttle:admin-media');
     Route::get('/admin/reports/revenue', RevenueReportController::class)
         ->middleware('throttle:60,1');
     Route::get('/admin/reports/revenue.csv', RevenueReportCsvController::class)

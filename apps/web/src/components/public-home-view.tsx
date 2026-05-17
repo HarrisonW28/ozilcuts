@@ -1,7 +1,6 @@
 "use client";
 
 import { ContactLocationSection } from "@/components/contact-location-section";
-import { GoogleSignInButton } from "@/components/google-sign-in-button";
 import {
   HomeAmbientVideoPanel,
   HomeCinematicHero,
@@ -91,7 +90,9 @@ export function PublicHomeView({
         aria-labelledby="home-hero-heading"
       >
         <HomeCinematicHero videoSources={videoSources}>
-          <div className="home-cinematic-hero-content relative z-10 grid gap-8 px-5 py-11 sm:gap-10 sm:px-9 sm:py-14 md:grid-cols-[minmax(0,1fr)_minmax(11.5rem,14rem)] md:items-end md:gap-12 md:px-11 md:py-16 lg:grid-cols-[minmax(0,1fr)_minmax(13rem,16rem)] lg:gap-16 lg:px-14 lg:pb-20 lg:pt-[5.5rem] xl:px-20">
+          <div className="home-cinematic-hero-content relative z-10 flex min-h-[min(100svh,56rem)] flex-col justify-end">
+            <div className="mx-auto w-full max-w-6xl px-4 pb-11 pt-11 sm:px-6 sm:pb-14 sm:pt-14 md:px-8 md:pb-16 md:pt-16 lg:pb-20 lg:pt-[5.5rem]">
+              <div className="grid gap-8 sm:gap-10 md:grid-cols-[minmax(0,1fr)_minmax(11.5rem,14rem)] md:items-end md:gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(13rem,16rem)] lg:gap-16">
             <div>
               {profilePending ? (
                 <div
@@ -117,10 +118,10 @@ export function PublicHomeView({
                     {heroDescription}
                   </div>
                 </>
-              )}
-            </div>
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center md:flex-col md:items-stretch">
-              <Button
+                  )}
+                </div>
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center md:flex-col md:items-stretch">
+                  <Button
                 asChild
                 size="lg"
                 className="home-hero-cta home-hero-cta--solid h-12 w-full text-base sm:h-[3.25rem] sm:text-[1.0625rem] md:w-full"
@@ -145,11 +146,6 @@ export function PublicHomeView({
                   >
                     <Link href="/login">Sign in</Link>
                   </Button>
-                  <div className="home-hero-or" role="separator">
-                    <span className="sr-only">Or continue with</span>
-                    <span aria-hidden>or</span>
-                  </div>
-                  <GoogleSignInButton variant="hero" />
                 </>
               ) : null}
               {showMemberActions ? (
@@ -162,6 +158,8 @@ export function PublicHomeView({
                   <Link href="/appointments">My appointments</Link>
                 </Button>
               ) : null}
+            </div>
+              </div>
             </div>
           </div>
         </HomeCinematicHero>
