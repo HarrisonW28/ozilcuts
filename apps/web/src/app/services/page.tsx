@@ -21,7 +21,6 @@ import {
   EmptyState,
 } from "@ozilcuts/ui";
 import type { ServiceSummary } from "@ozilcuts/types";
-import { OZILCUTS_APP_NAME } from "@ozilcuts/types";
 import { motion, useReducedMotion } from "framer-motion";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
@@ -83,7 +82,6 @@ export default function ServicesPage() {
           className="mx-auto w-full max-w-5xl page-stack"
         >
           <ScreenTitle
-            eyebrow={OZILCUTS_APP_NAME}
             title="The menu"
             description="Time, price, and what to expect — then book in one flow."
             className="gap-5 pb-1 sm:gap-6"

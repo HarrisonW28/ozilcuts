@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Models\Role;
 use App\Services\Customers\CustomerTagService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -18,7 +19,7 @@ final class CustomerTagSuggestionsController extends Controller
             abort(401);
         }
 
-        if (! $user->can('useStaffCrmTools')) {
+        if (! $user->hasRole(Role::SLUG_BARBER) && ! $user->isAdmin()) {
             abort(403);
         }
 

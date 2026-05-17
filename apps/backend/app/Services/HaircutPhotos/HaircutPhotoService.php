@@ -13,6 +13,10 @@ use RuntimeException;
 
 final class HaircutPhotoService
 {
+    public function __construct(
+        private readonly SecureUploadValidator $uploadValidator,
+    ) {}
+
     public const PHOTO_DISK = 'local';
 
     public const PHOTO_MAX_PER_APPOINTMENT = 12;

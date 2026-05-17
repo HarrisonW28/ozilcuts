@@ -7,7 +7,7 @@ import { BarberTrustBookingStrip } from "@/components/barber-trust";
 import { BookingSlotPicker } from "@/components/booking-slot-picker";
 import { StaffCustomerLookup } from "@/components/staff-customer-lookup";
 import { SiteHeader } from "@/components/site-header";
-import { authPathWithNext } from "@/lib/auth-redirect";
+import { SignInPromptCard } from "@/components/auth/sign-in-prompt-card";
 import { AUTH_COPY, bookPageDescription } from "@/lib/user-facing-copy";
 import { useShellPageChrome } from "@/lib/use-shell-page-chrome";
 import {
@@ -46,7 +46,6 @@ import type {
   ServiceSummary,
   StaffCustomerLookupRow,
 } from "@ozilcuts/types";
-import { OZILCUTS_APP_NAME } from "@ozilcuts/types";
 import {
   Button,
   Card,
@@ -60,7 +59,7 @@ import {
   cn,
 } from "@ozilcuts/ui";
 import Link from "next/link";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   Suspense,
   useCallback,
@@ -127,7 +126,6 @@ function formatIsoDate(date: string): string {
 }
 
 function BookingFlow() {
-  const pathname = usePathname();
   const search = useSearchParams();
   const router = useRouter();
   const today = todayIso();
@@ -554,7 +552,6 @@ function BookingFlow() {
           )}
         >
           <ScreenTitle
-            eyebrow={inAppShell ? undefined : OZILCUTS_APP_NAME}
             title={isStaffBooker ? "Book for a customer" : "Reserve your chair"}
             description={bookPageDescription(isStaffBooker)}
             className="gap-5 sm:gap-6"
@@ -591,24 +588,10 @@ function BookingFlow() {
 
 
           {profile.kind === "none" ? (
-            <Card>
-              <CardHeader>
-                <CardTitle>Sign in to continue</CardTitle>
-                <CardDescription>
-                  You need an account to confirm a booking.
-                </CardDescription>
-              </CardHeader>
-              <CardFooter className="flex flex-wrap gap-2">
-                <Button asChild>
-                  <Link href={authPathWithNext("/login", pathname)}>Sign in</Link>
-                </Button>
-                <Button asChild variant="outline">
-                  <Link href={authPathWithNext("/register", pathname)}>
-                    Create account
-                  </Link>
-                </Button>
-              </CardFooter>
-            </Card>
+            <SignInPromptCard
+              description="You need an account to confirm a booking."
+              returnTo="/book"
+            />
           ) : null}
 
           {canBookOnline ? (

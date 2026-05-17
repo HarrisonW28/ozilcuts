@@ -19,7 +19,6 @@ import type {
   AuditLogIndexMeta,
   ProductionSecurityReview,
 } from "@ozilcuts/types";
-import { OZILCUTS_APP_NAME } from "@ozilcuts/types";
 import { Button, ScreenTitle } from "@ozilcuts/ui";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
@@ -150,7 +149,6 @@ export default function AdminSecurityPage() {
       <main id="main-content" className="page-main app-shell-scroll flex-1">
         <div className="mx-auto w-full max-w-5xl page-stack">
           <ScreenTitle
-            eyebrow={OZILCUTS_APP_NAME}
             title="Security & audit"
             description="Enterprise accountability — privileged actions, auth events, and role changes in one place."
           />

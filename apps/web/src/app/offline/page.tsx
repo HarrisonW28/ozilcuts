@@ -30,7 +30,6 @@ export default function OfflinePage() {
         <Card>
           <CardHeader>
             <ScreenTitle
-              eyebrow="Ozil Cuts"
               title="You're offline"
               description={
                 <>

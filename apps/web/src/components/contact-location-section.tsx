@@ -1,13 +1,40 @@
 "use client";
 
+import { VisitLocationMap } from "@/components/visit-location-map";
 import { SocialLinksStrip } from "@/components/social";
 import { WeeklyHoursDisplay } from "@/components/weekly-hours-display";
-import { publicShopHoursRows, publicStudioLocationCopy } from "@/lib/public-site-copy";
+import { useShopBranding } from "@/lib/shop-branding-context";
+import {
+  publicShopHoursRows,
+  publicStudioLocationCopy,
+} from "@/lib/public-site-copy";
+import { weekdaysFromShopAdminPayload } from "@/lib/shop-default-hours";
 import { Button } from "@ozilcuts/ui";
 import { Clock, MapPin } from "lucide-react";
 import Link from "next/link";
+import { useMemo } from "react";
 
 export function ContactLocationSection() {
+  const { branding } = useShopBranding();
+
+  const locationTitle =
+    branding?.shop_display_name?.trim() ||
+    publicStudioLocationCopy.title;
+  const locationBody =
+    branding?.shop_visit_note?.trim() ||
+    publicStudioLocationCopy.body;
+  const publicAddress = branding?.shop_public_address?.trim() || null;
+
+  const hoursWeekdays = useMemo(() => {
+    if (branding?.shop_hours?.weekdays?.length) {
+      return weekdaysFromShopAdminPayload(branding.shop_hours);
+    }
+    return null;
+  }, [branding?.shop_hours]);
+
+  const hasMap =
+    branding?.shop_latitude != null && branding?.shop_longitude != null;
+
   return (
     <section
       id="visit"
@@ -42,13 +69,26 @@ export function ContactLocationSection() {
             </div>
             <div className="min-w-0">
               <h3 className="text-sm font-semibold text-foreground">
-                {publicStudioLocationCopy.title}
+                {locationTitle}
               </h3>
+              {publicAddress ? (
+                <p className="mt-2 text-sm font-medium leading-relaxed text-foreground/90">
+                  {publicAddress}
+                </p>
+              ) : null}
               <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                {publicStudioLocationCopy.body}
+                {locationBody}
               </p>
             </div>
           </div>
+
+          {hasMap ? (
+            <VisitLocationMap
+              latitude={branding!.shop_latitude!}
+              longitude={branding!.shop_longitude!}
+              label={`Map for ${locationTitle}`}
+            />
+          ) : null}
 
           <div>
             <div className="flex items-center gap-2">
@@ -63,7 +103,8 @@ export function ContactLocationSection() {
             </div>
             <WeeklyHoursDisplay
               className="mt-3"
-              rows={publicShopHoursRows}
+              rows={hoursWeekdays ? undefined : publicShopHoursRows}
+              weekdays={hoursWeekdays ?? undefined}
             />
           </div>
         </div>

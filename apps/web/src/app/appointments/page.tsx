@@ -5,13 +5,12 @@ import {
   buildBookFromAppointmentRow,
   buildBookFromRebookHint,
 } from "@/lib/booking-url";
-import { authPathWithNext } from "@/lib/auth-redirect";
+import { SignInPromptCard } from "@/components/auth/sign-in-prompt-card";
 import {
   appointmentsPageDescription,
   appointmentsPageTitle,
   AUTH_COPY,
 } from "@/lib/user-facing-copy";
-import { usePathname } from "next/navigation";
 import { useShellPageChrome } from "@/lib/use-shell-page-chrome";
 import {
   AppointmentListSkeleton,
@@ -48,7 +47,6 @@ import type {
   Paginated,
   RebookSuggestion,
 } from "@ozilcuts/types";
-import { OZILCUTS_APP_NAME } from "@ozilcuts/types";
 import {
   Button,
   Card,
@@ -207,7 +205,6 @@ function PaymentBadge({
 }
 
 export default function AppointmentsPage() {
-  const pathname = usePathname();
   const { profile, signOut } = useSessionProfile();
   const isMaxMd = useMediaQuery("(max-width: 767px)");
   const [state, setState] = useState<ListState>({ kind: "idle" });
@@ -463,7 +460,6 @@ export default function AppointmentsPage() {
       <main id="main-content" className="page-main app-shell-scroll flex-1">
         <div className="mx-auto w-full max-w-3xl page-stack">
           <ScreenTitle
-            eyebrow={inAppShell ? undefined : OZILCUTS_APP_NAME}
             title={
               profile.kind === "ready"
                 ? appointmentsPageTitle(profile.user.role.slug)
@@ -483,26 +479,7 @@ export default function AppointmentsPage() {
             />
           ) : null}
 
-          {profile.kind === "none" ? (
-            <Card>
-              <CardHeader>
-                <CardTitle>{AUTH_COPY.signInRequiredTitle}</CardTitle>
-                <CardDescription>
-                  {AUTH_COPY.signInRequiredDescription}
-                </CardDescription>
-              </CardHeader>
-              <CardFooter className="flex flex-wrap gap-2">
-                <Button asChild>
-                  <Link href={authPathWithNext("/login", pathname)}>Sign in</Link>
-                </Button>
-                <Button asChild variant="outline">
-                  <Link href={authPathWithNext("/register", pathname)}>
-                    Create account
-                  </Link>
-                </Button>
-              </CardFooter>
-            </Card>
-          ) : null}
+          {profile.kind === "none" ? <SignInPromptCard /> : null}
 
           {profile.kind === "ready" &&
           profile.user.role.slug === "customer" &&

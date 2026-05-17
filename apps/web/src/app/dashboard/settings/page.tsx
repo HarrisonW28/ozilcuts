@@ -2,7 +2,6 @@
 
 import { getRoleSettingsHref } from "@/lib/dashboard-routes";
 import { useSessionProfile } from "@/lib/use-session-profile";
-import { OZILCUTS_APP_NAME } from "@ozilcuts/types";
 import { ScreenTitle } from "@ozilcuts/ui";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
@@ -27,7 +26,6 @@ export default function DashboardSettingsRedirectPage() {
     <div className="flex min-h-dvh flex-col items-center justify-center px-4">
       <div className="w-full max-w-sm space-y-4 text-center">
         <ScreenTitle
-          eyebrow={OZILCUTS_APP_NAME}
           title="Settings"
           description="Opening settings for your account…"
         />

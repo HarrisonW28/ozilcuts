@@ -1,6 +1,7 @@
 "use client";
 
 import { AppShellRoutePrefetch } from "@/components/app-shell-route-prefetch";
+import { AppToastProvider } from "@/lib/app-toast";
 import { ConnectivityProvider } from "@/lib/connectivity-provider";
 import { ShopBrandingProvider } from "@/lib/shop-branding-context";
 import { InboxProvider } from "@/lib/use-inbox";
@@ -37,7 +38,9 @@ export function AppProviders({
       <ShopBrandingProvider initialBranding={initialShopBranding}>
         <SessionProfileProvider>
           <ConnectivityProvider>
-            <InboxAndPrefetchShell>{children}</InboxAndPrefetchShell>
+            <AppToastProvider>
+              <InboxAndPrefetchShell>{children}</InboxAndPrefetchShell>
+            </AppToastProvider>
           </ConnectivityProvider>
         </SessionProfileProvider>
       </ShopBrandingProvider>

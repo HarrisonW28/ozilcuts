@@ -18,9 +18,8 @@ final class CustomerNoteStoreController extends Controller
         StoreCustomerNoteRequest $request,
         User $user,
         CustomerNoteService $service,
+        AuditLogService $audit,
     ): JsonResponse {
-        $this->authorize('manageStaffCrm', $user);
-
         $author = $request->user();
         if ($author === null) {
             abort(401);

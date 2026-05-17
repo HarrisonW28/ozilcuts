@@ -16,6 +16,7 @@ final class CustomerNoteDestroyController extends Controller
         Request $request,
         CustomerNote $note,
         CustomerNoteService $service,
+        AuditLogService $audit,
     ): JsonResponse {
         $user = $request->user();
         if ($user === null) {

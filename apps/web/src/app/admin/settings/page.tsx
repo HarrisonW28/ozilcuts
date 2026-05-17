@@ -1,11 +1,11 @@
 "use client";
 
 import { AdminShopSettingsPanel } from "@/components/admin/admin-shop-settings-panel";
+import { AdminShopVisitPanel } from "@/components/admin/admin-shop-visit-panel";
 import { SiteHeader } from "@/components/site-header";
 import { refreshPublicShopBranding } from "@/lib/use-public-shop-branding";
 import { useSessionProfile } from "@/lib/use-session-profile";
 import { Button, ScreenTitle } from "@ozilcuts/ui";
-import { OZILCUTS_APP_NAME } from "@ozilcuts/types";
 import { Store } from "lucide-react";
 import Link from "next/link";
 
@@ -74,7 +74,6 @@ export default function AdminSiteSettingsPage() {
       <main id="main-content" className="page-main">
         <div className="mx-auto w-full max-w-5xl page-stack">
           <ScreenTitle
-            eyebrow={OZILCUTS_APP_NAME}
             title="Site settings"
             description="Logo, homepage look, and Instagram — what guests see before they book. Catalog and hours live on the dashboard."
           />
@@ -108,6 +107,10 @@ export default function AdminSiteSettingsPage() {
               onUpdated={handleUpdated}
             />
           </section>
+
+          {sa ? (
+            <AdminShopVisitPanel shopAdmin={sa} onUpdated={handleUpdated} />
+          ) : null}
 
           <p className="text-sm text-muted-foreground">
             <Link href="/admin" className="underline-offset-4 hover:underline">

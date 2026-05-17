@@ -20,7 +20,6 @@ import {
   patchShopOnboarding,
 } from "@ozilcuts/api";
 import type { BarberManageRow } from "@ozilcuts/types";
-import { OZILCUTS_APP_NAME } from "@ozilcuts/types";
 import {
   Button,
   Card,
@@ -344,7 +343,6 @@ export default function AdminOnboardingPage() {
       >
         <div className="mx-auto w-full max-w-lg page-stack">
           <ScreenTitle
-            eyebrow={OZILCUTS_APP_NAME}
             title="Set up your shop"
             description="A short, guided checklist—one step at a time. You can change everything later."
           />

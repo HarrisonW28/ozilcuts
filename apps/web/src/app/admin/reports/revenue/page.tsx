@@ -24,7 +24,6 @@ import type {
   RevenueReport,
   RevenueReportGranularity,
 } from "@ozilcuts/types";
-import { OZILCUTS_APP_NAME } from "@ozilcuts/types";
 import {
   Button,
   Card,
@@ -198,7 +197,6 @@ export default function AdminRevenueReportPage() {
       >
         <div className="mx-auto w-full max-w-5xl page-stack">
           <ScreenTitle
-            eyebrow={OZILCUTS_APP_NAME}
             title="Revenue report"
             description="Booked vs. collected revenue, broken down by barber, service, and time."
           />

@@ -4,7 +4,6 @@ import { ManageBarberHoursSection } from "@/components/manage-barber-hours-secti
 import { PageSessionSkeleton } from "@/components/loading";
 import { SiteHeader } from "@/components/site-header";
 import { useSessionProfile } from "@/lib/use-session-profile";
-import { OZILCUTS_APP_NAME } from "@ozilcuts/types";
 import {
   Button,
   Card,
@@ -32,7 +31,6 @@ export default function BarberHoursPage() {
       >
         <div className="mx-auto w-full max-w-3xl page-stack">
           <ScreenTitle
-            eyebrow={OZILCUTS_APP_NAME}
             title="Weekly hours"
             description="Set when you accept bookings. Times use your shop’s local schedule (stored as simple start/end times)."
           />

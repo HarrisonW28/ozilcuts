@@ -28,6 +28,11 @@ export {
 } from "./auth";
 export { getApiBaseUrl } from "./base";
 export {
+  assertMarketingUploadOk,
+  marketingUploadUrl,
+  readMarketingUploadError,
+} from "./marketingUpload";
+export {
   deleteShopHeroPoster,
   deleteShopHeroVideo,
   deleteShopLogo,

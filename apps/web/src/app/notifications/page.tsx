@@ -2,7 +2,8 @@
 
 import { NotificationInboxList } from "@/components/notifications";
 import { SiteHeader } from "@/components/site-header";
-import { AUTH_COPY, PAGE_DESCRIPTIONS } from "@/lib/user-facing-copy";
+import { SignInPromptCard } from "@/components/auth/sign-in-prompt-card";
+import { PAGE_DESCRIPTIONS } from "@/lib/user-facing-copy";
 import { useShellPageChrome } from "@/lib/use-shell-page-chrome";
 import { NotificationListSkeleton } from "@/components/load-empty";
 import { getStoredAuthToken } from "@/lib/auth-token";
@@ -21,7 +22,6 @@ import {
   snoozeRebookNudge,
 } from "@ozilcuts/api";
 import type { NotificationRecord, Paginated } from "@ozilcuts/types";
-import { OZILCUTS_APP_NAME } from "@ozilcuts/types";
 import {
   Button,
   Card,
@@ -191,7 +191,6 @@ export default function NotificationsPage() {
       <main id="main-content" className="page-main app-shell-scroll flex-1">
         <div className="mx-auto w-full max-w-3xl page-stack">
           <ScreenTitle
-            eyebrow={inAppShell ? undefined : OZILCUTS_APP_NAME}
             title="Notifications"
             description={PAGE_DESCRIPTIONS.notifications}
           />
@@ -208,21 +207,7 @@ export default function NotificationsPage() {
             </div>
           ) : null}
 
-          {profile.kind === "none" ? (
-            <Card>
-              <CardHeader>
-                <CardTitle>{AUTH_COPY.signInRequiredTitle}</CardTitle>
-                <CardDescription>
-                  {AUTH_COPY.signInRequiredDescription}
-                </CardDescription>
-              </CardHeader>
-              <CardFooter>
-                <Button asChild>
-                  <Link href="/login">Sign in</Link>
-                </Button>
-              </CardFooter>
-            </Card>
-          ) : null}
+          {profile.kind === "none" ? <SignInPromptCard /> : null}
 
           {isReady ? (
             <>

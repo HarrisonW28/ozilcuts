@@ -14,7 +14,6 @@ import type { LightboxPayload } from "@/lib/content-photography";
 import { useSessionProfile } from "@/lib/use-session-profile";
 import { ApiError, fetchBarber, fetchBarberPortfolio } from "@ozilcuts/api";
 import type { BarberProfilePublic, BarberPortfolioResponse } from "@ozilcuts/types";
-import { OZILCUTS_APP_NAME } from "@ozilcuts/types";
 import {
   Button,
   Card,
@@ -141,7 +140,6 @@ export default function BarberPortfolioPage() {
       <main id="main-content" className="page-main">
         <div className="mx-auto w-full max-w-6xl page-stack">
           <ScreenTitle
-            eyebrow={OZILCUTS_APP_NAME}
             title={
               barberState.kind === "ok"
                 ? `${barberState.barber.barber.name}`

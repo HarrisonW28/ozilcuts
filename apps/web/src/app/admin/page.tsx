@@ -14,7 +14,6 @@ import {
   ScreenTitle,
   cn,
 } from "@ozilcuts/ui";
-import { OZILCUTS_APP_NAME } from "@ozilcuts/types";
 import type { LucideIcon } from "lucide-react";
 import {
   Activity,
@@ -207,7 +206,6 @@ export default function AdminDashboardPage() {
       <main id="main-content" className="page-main">
         <div className="mx-auto w-full max-w-5xl page-stack">
           <ScreenTitle
-            eyebrow={OZILCUTS_APP_NAME}
             title="Dashboard"
             description="Today's bookings, your team, catalog, and reports in one place."
           />

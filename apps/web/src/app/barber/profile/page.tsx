@@ -11,7 +11,6 @@ import {
   updateManagedBarberProfile,
 } from "@ozilcuts/api";
 import type { BarberProfilePublic } from "@ozilcuts/types";
-import { OZILCUTS_APP_NAME } from "@ozilcuts/types";
 import {
   Button,
   Card,
@@ -195,7 +194,6 @@ export default function BarberProfileEditPage() {
       <main id="main-content" className="page-main">
         <div className="mx-auto w-full max-w-2xl page-stack">
           <ScreenTitle
-            eyebrow={OZILCUTS_APP_NAME}
             title="Your profile"
             description="What clients see on your public page—title, bio, and experience. Name and email come from your account."
           />

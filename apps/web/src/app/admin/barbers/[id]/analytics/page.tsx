@@ -6,7 +6,6 @@ import { getStoredAuthToken } from "@/lib/auth-token";
 import { useSessionProfile } from "@/lib/use-session-profile";
 import { ApiError, fetchBarber } from "@ozilcuts/api";
 import type { BarberProfilePublic } from "@ozilcuts/types";
-import { OZILCUTS_APP_NAME } from "@ozilcuts/types";
 import {
   Button,
   Card,
@@ -79,7 +78,6 @@ export default function AdminBarberAnalyticsPage() {
       >
         <div className="mx-auto w-full max-w-5xl page-stack">
           <ScreenTitle
-            eyebrow={OZILCUTS_APP_NAME}
             title={
               barberState.kind === "ok"
                 ? `${barberState.barber.barber.name} · analytics`

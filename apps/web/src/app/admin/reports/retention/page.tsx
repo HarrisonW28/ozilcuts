@@ -5,7 +5,6 @@ import { getStoredAuthToken } from "@/lib/auth-token";
 import { useSessionProfile } from "@/lib/use-session-profile";
 import { ApiError, fetchRetentionReport } from "@ozilcuts/api";
 import type { RetentionReportSnapshot } from "@ozilcuts/types";
-import { OZILCUTS_APP_NAME } from "@ozilcuts/types";
 import {
   Button,
   Card,
@@ -79,7 +78,6 @@ export default function AdminRetentionReportPage() {
       >
         <div className="mx-auto w-full max-w-5xl page-stack">
           <ScreenTitle
-            eyebrow={OZILCUTS_APP_NAME}
             title="Retention preview"
             description="Guests who may be due for a cut soon or haven't visited in a while — a snapshot for your team."
           />

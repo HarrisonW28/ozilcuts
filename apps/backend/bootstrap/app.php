@@ -36,6 +36,16 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        $exceptions->renderable(function (\RuntimeException $e, Request $request) {
+            if (! $request->is('api/v1/admin/marketing/*')) {
+                return null;
+            }
+
+            return response()->json([
+                'message' => $e->getMessage(),
+            ], 422);
+        });
+
         $exceptions->renderable(function (AbuseBlockedException $e, Request $request) {
             if (! $request->is('api/*') && ! $request->expectsJson()) {
                 return null;

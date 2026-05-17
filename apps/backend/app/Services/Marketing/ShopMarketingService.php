@@ -4,6 +4,7 @@ namespace App\Services\Marketing;
 
 use App\Models\Role;
 use App\Models\User;
+use App\Services\Availability\BarberAvailabilityService;
 use App\Services\Security\MarketingVideoValidator;
 use App\Services\Security\SecureUploadValidator;
 use Illuminate\Http\UploadedFile;
@@ -33,6 +34,12 @@ final class ShopMarketingService
      *     hero_mobile_poster: string|null,
      *     instagram_handle: string|null,
      *     instagram_url: string|null,
+     *     shop_display_name: string|null,
+     *     shop_public_address: string|null,
+     *     shop_visit_note: string|null,
+     *     shop_latitude: float|null,
+     *     shop_longitude: float|null,
+     *     shop_hours: array{weekdays: list<array{weekday: int, windows: list<array{starts_at: string, ends_at: string}>}>}|null,
      * }
      */
     public function publicHomeMarketing(): array
@@ -58,6 +65,7 @@ final class ShopMarketingService
             ),
             'instagram_handle' => $instagramHandle,
             'instagram_url' => $this->instagramProfileUrl($instagramHandle),
+            ...$this->publicVisitFields($admin),
         ];
     }
 
@@ -72,6 +80,12 @@ final class ShopMarketingService
      *     hero_mobile_poster: string|null,
      *     instagram_handle: string|null,
      *     instagram_url: string|null,
+     *     shop_display_name: string|null,
+     *     shop_public_address: string|null,
+     *     shop_visit_note: string|null,
+     *     shop_latitude: float|null,
+     *     shop_longitude: float|null,
+     *     shop_hours: array{weekdays: list<array{weekday: int, windows: list<array{starts_at: string, ends_at: string}>}>}|null,
      * }
      */
     private function emptyPublicMarketing(): array
@@ -88,7 +102,67 @@ final class ShopMarketingService
             'hero_mobile_poster' => null,
             'instagram_handle' => $handle,
             'instagram_url' => $this->instagramProfileUrl($handle),
+            'shop_display_name' => null,
+            'shop_public_address' => null,
+            'shop_visit_note' => null,
+            'shop_latitude' => null,
+            'shop_longitude' => null,
+            'shop_hours' => null,
         ];
+    }
+
+    /**
+     * @return array{
+     *     shop_display_name: string|null,
+     *     shop_public_address: string|null,
+     *     shop_visit_note: string|null,
+     *     shop_latitude: float|null,
+     *     shop_longitude: float|null,
+     *     shop_hours: array{weekdays: list<array{weekday: int, windows: list<array{starts_at: string, ends_at: string}>}>}|null,
+     * }
+     */
+    private function publicVisitFields(User $admin): array
+    {
+        $shopHours = null;
+        if (is_array($admin->shop_default_hours) && $admin->shop_default_hours !== []) {
+            $shopHours = [
+                'weekdays' => app(BarberAvailabilityService::class)->groupedFromFlatWindows($admin->shop_default_hours),
+            ];
+        }
+
+        [$latitude, $longitude] = $this->resolvePublicCoordinates($admin);
+
+        return [
+            'shop_display_name' => $admin->shop_display_name,
+            'shop_public_address' => $admin->shop_public_address,
+            'shop_visit_note' => $admin->shop_visit_note,
+            'shop_latitude' => $latitude,
+            'shop_longitude' => $longitude,
+            'shop_hours' => $shopHours,
+        ];
+    }
+
+    /**
+     * @return array{0: float|null, 1: float|null}
+     */
+    private function resolvePublicCoordinates(User $admin): array
+    {
+        if ($admin->shop_latitude !== null && $admin->shop_longitude !== null) {
+            return [(float) $admin->shop_latitude, (float) $admin->shop_longitude];
+        }
+
+        $barber = User::query()
+            ->whereHas('barberProfile', fn ($q) => $q->where('is_published', true))
+            ->whereNotNull('shop_latitude')
+            ->whereNotNull('shop_longitude')
+            ->orderBy('id')
+            ->first(['shop_latitude', 'shop_longitude']);
+
+        if ($barber === null) {
+            return [null, null];
+        }
+
+        return [(float) $barber->shop_latitude, (float) $barber->shop_longitude];
     }
 
     /**

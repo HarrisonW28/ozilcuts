@@ -4,7 +4,6 @@ import { BarberAnalyticsView } from "@/components/barber-analytics-view";
 import { PageSessionSkeleton } from "@/components/loading";
 import { SiteHeader } from "@/components/site-header";
 import { useSessionProfile } from "@/lib/use-session-profile";
-import { OZILCUTS_APP_NAME } from "@ozilcuts/types";
 import {
   Button,
   Card,
@@ -31,7 +30,6 @@ export default function BarberAnalyticsPage() {
       >
         <div className="mx-auto w-full max-w-5xl page-stack">
           <ScreenTitle
-            eyebrow={OZILCUTS_APP_NAME}
             title="My analytics"
             description="Bookings, revenue, utilization, and your top services and customers."
           />

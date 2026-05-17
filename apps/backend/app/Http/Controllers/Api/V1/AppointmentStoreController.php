@@ -27,6 +27,7 @@ final class AppointmentStoreController extends Controller
         PaymentService $payments,
         NotificationService $notifications,
         AppointmentStaffAlertService $staffAlerts,
+        AuditLogService $audit,
     ): JsonResponse {
         $user = $request->user();
         if ($user === null) {

@@ -27,7 +27,36 @@ class ShopHomeMarketingTest extends TestCase
             ->assertJsonPath('data.hero_mobile_webm', null)
             ->assertJsonPath('data.hero_mobile_poster', null)
             ->assertJsonPath('data.instagram_handle', 'ozil.cuts')
-            ->assertJsonPath('data.instagram_url', 'https://www.instagram.com/ozil.cuts/');
+            ->assertJsonPath('data.instagram_url', 'https://www.instagram.com/ozil.cuts/')
+            ->assertJsonPath('data.shop_hours', null)
+            ->assertJsonPath('data.shop_latitude', null);
+    }
+
+    public function test_public_home_marketing_includes_visit_hours_and_map_coordinates(): void
+    {
+        $admin = User::factory()->admin()->create([
+            'shop_display_name' => 'Ozil Cuts Studio',
+            'shop_public_address' => '12 High Street',
+            'shop_visit_note' => 'Ring the bell on arrival.',
+            'shop_latitude' => 51.5074,
+            'shop_longitude' => -0.1278,
+            'shop_default_hours' => [
+                ['weekday' => 1, 'starts_at' => '10:00', 'ends_at' => '18:00'],
+                ['weekday' => 2, 'starts_at' => '10:00', 'ends_at' => '18:00'],
+            ],
+        ]);
+
+        $this->getJson('/api/v1/public/home-marketing')
+            ->assertOk()
+            ->assertJsonPath('data.shop_display_name', 'Ozil Cuts Studio')
+            ->assertJsonPath('data.shop_public_address', '12 High Street')
+            ->assertJsonPath('data.shop_visit_note', 'Ring the bell on arrival.')
+            ->assertJsonPath('data.shop_latitude', 51.5074)
+            ->assertJsonPath('data.shop_longitude', -0.1278)
+            ->assertJsonPath('data.shop_hours.weekdays.0.weekday', 1)
+            ->assertJsonPath('data.shop_hours.weekdays.0.windows.0.starts_at', '10:00');
+
+        $this->assertSame('Ozil Cuts Studio', $admin->shop_display_name);
     }
 
     public function test_admin_can_set_instagram_handle_and_public_endpoint_reflects_it(): void

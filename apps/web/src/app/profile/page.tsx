@@ -1,6 +1,7 @@
 "use client";
 
 import { AccountSubnav } from "@/components/account-subnav";
+import { SignInPromptCard } from "@/components/auth/sign-in-prompt-card";
 import {
   PageSessionSkeleton,
   ProfileFormCardSkeleton,
@@ -199,22 +200,7 @@ export default function ProfilePage() {
           ) : null}
 
           {session.kind === "none" ? (
-            <Card>
-              <CardHeader>
-                <CardTitle>Sign in required</CardTitle>
-                <CardDescription>
-                  Create an account or sign in to edit your profile.
-                </CardDescription>
-              </CardHeader>
-              <CardFooter className="flex flex-wrap gap-2">
-                <Button asChild>
-                  <Link href="/login">Sign in</Link>
-                </Button>
-                <Button asChild variant="outline">
-                  <Link href="/register">Create account</Link>
-                </Button>
-              </CardFooter>
-            </Card>
+            <SignInPromptCard description="Create an account or sign in to edit your profile." />
           ) : null}
 
           {session.kind === "ready" && !isCustomer ? (

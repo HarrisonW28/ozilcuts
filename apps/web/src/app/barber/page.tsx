@@ -15,7 +15,6 @@ import {
   ScreenTitle,
   cn,
 } from "@ozilcuts/ui";
-import { OZILCUTS_APP_NAME } from "@ozilcuts/types";
 import type { LucideIcon } from "lucide-react";
 import {
   BarChart3,
@@ -161,7 +160,6 @@ export default function BarberDashboardPage() {
       <main id="main-content" className="page-main">
         <div className="mx-auto w-full max-w-5xl page-stack">
           <ScreenTitle
-            eyebrow={OZILCUTS_APP_NAME}
             title="Operations"
             description="Who's on your chair today, quick guest messages, and setup tools below."
           />

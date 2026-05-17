@@ -51,6 +51,24 @@ final class ShopOnboardingUpdateController extends Controller
             $user->shop_default_hours = $payload['shop_default_hours'];
         }
 
+        if (array_key_exists('shop_public_address', $payload)) {
+            $address = $payload['shop_public_address'];
+            $user->shop_public_address = $address === '' ? null : $address;
+        }
+
+        if (array_key_exists('shop_visit_note', $payload)) {
+            $note = $payload['shop_visit_note'];
+            $user->shop_visit_note = $note === '' ? null : $note;
+        }
+
+        if (array_key_exists('shop_latitude', $payload)) {
+            $user->shop_latitude = $payload['shop_latitude'];
+        }
+
+        if (array_key_exists('shop_longitude', $payload)) {
+            $user->shop_longitude = $payload['shop_longitude'];
+        }
+
         $user->save();
         $user->load('role');
 

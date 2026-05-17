@@ -528,6 +528,10 @@ export type ShopAdminState = {
   shop_hero_poster_mobile_path: string | null;
   shop_logo_path: string | null;
   shop_instagram_handle: string | null;
+  shop_public_address: string | null;
+  shop_visit_note: string | null;
+  shop_latitude: number | null;
+  shop_longitude: number | null;
 };
 
 export type HeroMediaVariant = "desktop" | "mobile";
@@ -542,6 +546,12 @@ export type PublicHomeMarketing = {
   hero_mobile_poster: string | null;
   instagram_handle: string | null;
   instagram_url: string | null;
+  shop_display_name: string | null;
+  shop_public_address: string | null;
+  shop_visit_note: string | null;
+  shop_latitude: number | null;
+  shop_longitude: number | null;
+  shop_hours: BarberAvailabilityPayload | null;
 };
 
 export type PatchShopOnboardingInput = {
@@ -553,6 +563,10 @@ export type PatchShopOnboardingInput = {
   complete?: boolean;
   /** Flat rows; same shape as replace barber availability `windows`. */
   shop_default_hours?: BarberAvailabilityWindowInput[] | null;
+  shop_public_address?: string | null;
+  shop_visit_note?: string | null;
+  shop_latitude?: number | null;
+  shop_longitude?: number | null;
 };
 
 export type ServiceStarterPackResponse = {

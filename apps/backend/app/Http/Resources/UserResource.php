@@ -51,6 +51,14 @@ class UserResource extends JsonResource
                 'shop_hero_poster_mobile_path' => $this->shop_hero_poster_mobile_path,
                 'shop_logo_path' => $this->shop_logo_path,
                 'shop_instagram_handle' => $this->shop_instagram_handle,
+                'shop_public_address' => $this->shop_public_address,
+                'shop_visit_note' => $this->shop_visit_note,
+                'shop_latitude' => $this->shop_latitude !== null
+                    ? (float) $this->shop_latitude
+                    : null,
+                'shop_longitude' => $this->shop_longitude !== null
+                    ? (float) $this->shop_longitude
+                    : null,
             ];
         }
 

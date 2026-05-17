@@ -1,4 +1,3 @@
-import { OZILCUTS_APP_NAME } from "@ozilcuts/types";
 import { ScreenTitle } from "@ozilcuts/ui";
 import Link from "next/link";
 
@@ -12,7 +11,6 @@ export default function TermsPage() {
           </Link>
         </p>
         <ScreenTitle
-          eyebrow={OZILCUTS_APP_NAME}
           title="Terms of service"
           description="The basics for using Ozilcuts to book and manage your visits."
         />

@@ -13,7 +13,6 @@ import {
   Label,
   ScreenTitle,
 } from "@ozilcuts/ui";
-import { OZILCUTS_APP_NAME } from "@ozilcuts/types";
 import Link from "next/link";
 
 export default function AdminProfilePage() {
@@ -78,7 +77,6 @@ export default function AdminProfilePage() {
       <main id="main-content" className="page-main">
         <div className="mx-auto w-full max-w-2xl page-stack">
           <ScreenTitle
-            eyebrow={OZILCUTS_APP_NAME}
             title="Your profile"
             description="Account details for this admin login. Shop branding and policies are managed from the shop dashboard and setup checklist."
           />

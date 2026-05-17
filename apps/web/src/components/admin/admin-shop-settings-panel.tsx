@@ -1,9 +1,14 @@
 "use client";
 
+import { useAppToast } from "@/lib/app-toast";
 import { getStoredAuthToken } from "@/lib/auth-token";
+import {
+  validateMarketingHeroPosterFile,
+  validateMarketingHeroVideoFile,
+  validateMarketingLogoFile,
+} from "@/lib/marketing-upload-limits";
 import { useShopBranding } from "@/lib/shop-branding-context";
 import {
-  ApiError,
   deleteShopHeroPoster,
   deleteShopHeroVideo,
   deleteShopLogo,
@@ -56,7 +61,11 @@ type HeroMediaSlotProps = {
   hasVideo: boolean;
   hasPoster: boolean;
   busy: BusyKind;
-  onRun: (action: () => Promise<void>, kind: BusyKind) => void;
+  onRun: (
+    action: () => Promise<void>,
+    kind: BusyKind,
+    options?: { preflight?: () => string | null },
+  ) => void;
 };
 
 function HeroMediaSlot({
@@ -96,9 +105,13 @@ function HeroMediaSlot({
             const file = e.target.files?.[0];
             e.target.value = "";
             if (!file) return;
-            void onRun(async () => {
-              await uploadShopHeroVideo(tokenFromStorage(), file, variant);
-            }, `video-${variant}`);
+            void onRun(
+              async () => {
+                await uploadShopHeroVideo(tokenFromStorage(), file, variant);
+              },
+              `video-${variant}`,
+              { preflight: () => validateMarketingHeroVideoFile(file) },
+            );
           }}
         />
         <input
@@ -110,9 +123,13 @@ function HeroMediaSlot({
             const file = e.target.files?.[0];
             e.target.value = "";
             if (!file) return;
-            void onRun(async () => {
-              await uploadShopHeroPoster(tokenFromStorage(), file, variant);
-            }, `poster-${variant}`);
+            void onRun(
+              async () => {
+                await uploadShopHeroPoster(tokenFromStorage(), file, variant);
+              },
+              `poster-${variant}`,
+              { preflight: () => validateMarketingHeroPosterFile(file) },
+            );
           }}
         />
         <Button
@@ -187,10 +204,9 @@ export function AdminShopSettingsPanel({
   useEffect(() => {
     setLogoPreviewFailed(false);
   }, [logoUrl]);
+  const toast = useAppToast();
   const logoInputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState<BusyKind>(null);
-  const [message, setMessage] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const [instagramDraft, setInstagramDraft] = useState(
     () => instagramHandle ?? "",
   );
@@ -199,35 +215,49 @@ export function AdminShopSettingsPanel({
     setInstagramDraft(instagramHandle ?? "");
   }, [instagramHandle]);
 
-  const run = async (action: () => Promise<void>, kind: BusyKind) => {
+  const run = async (
+    action: () => Promise<void>,
+    kind: BusyKind,
+    options?: { preflight?: () => string | null },
+  ) => {
     const token = getStoredAuthToken();
     if (!token) {
-      setError("Sign in required.");
+      toast.error("Sign in required.");
+      return;
+    }
+    const preflightError = options?.preflight?.() ?? null;
+    if (preflightError) {
+      toast.error(preflightError);
       return;
     }
     setBusy(kind);
-    setError(null);
-    setMessage(null);
     try {
       await action();
       if (kind === "logo-remove") {
-        setMessage("Shop logo removed.");
+        toast.success("Shop logo removed.");
       } else if (kind === "logo") {
-        setMessage("Logo uploaded. It appears in the site header and app chrome.");
+        toast.success("Logo uploaded — visible in the header and app chrome.");
       } else if (kind === "instagram") {
-        setMessage("Instagram handle saved.");
+        toast.success("Instagram handle saved.");
       } else if (typeof kind === "string" && kind.startsWith("video-remove-")) {
-        setMessage("Hero video removed.");
+        toast.success("Hero video removed.");
       } else if (typeof kind === "string" && kind.startsWith("poster-remove-")) {
-        setMessage("Hero poster removed.");
+        toast.success("Hero poster removed.");
       } else if (typeof kind === "string" && kind.startsWith("video-")) {
-        setMessage("Hero video uploaded. It appears on the public homepage.");
+        toast.success("Hero video uploaded — live on the homepage.");
       } else if (typeof kind === "string" && kind.startsWith("poster-")) {
-        setMessage("Hero poster uploaded.");
+        toast.success("Hero poster uploaded.");
       }
       onUpdated();
     } catch (e: unknown) {
-      setError(e instanceof ApiError ? e.message : "Upload failed. Try again.");
+      let message = "Upload failed. Try again.";
+      if (e instanceof Error && e.message) {
+        message =
+          e.message === "Failed to fetch"
+            ? "Could not reach the API. Check your connection and NEXT_PUBLIC_API_URL."
+            : e.message;
+      }
+      toast.error(message);
     } finally {
       setBusy(null);
     }
@@ -280,9 +310,13 @@ export function AdminShopSettingsPanel({
                 const file = e.target.files?.[0];
                 e.target.value = "";
                 if (!file) return;
-                void run(async () => {
-                  await uploadShopLogo(tokenFromStorage(), file);
-                }, "logo");
+                void run(
+                  async () => {
+                    await uploadShopLogo(tokenFromStorage(), file);
+                  },
+                  "logo",
+                  { preflight: () => validateMarketingLogoFile(file) },
+                );
               }}
             />
             <Button
@@ -419,19 +453,6 @@ export function AdminShopSettingsPanel({
         </CardContent>
       </Card>
 
-      {message ? (
-        <p
-          className="text-sm text-emerald-700 dark:text-emerald-300 lg:col-span-2"
-          role="status"
-        >
-          {message}
-        </p>
-      ) : null}
-      {error ? (
-        <p className="text-sm text-destructive lg:col-span-2" role="alert">
-          {error}
-        </p>
-      ) : null}
     </div>
   );
 }

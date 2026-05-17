@@ -1,6 +1,10 @@
 import type { HeroMediaVariant, PublicHomeMarketing } from "@ozilcuts/types";
 
 import { getApiBaseUrl } from "./base";
+import {
+  assertMarketingUploadOk,
+  marketingUploadUrl,
+} from "./marketingUpload";
 
 type PublicHomeMarketingResponse = {
   data: PublicHomeMarketing;
@@ -29,26 +33,19 @@ export async function uploadShopHeroVideo(
   body.append("video", video);
   body.append("variant", variant);
 
-  const res = await fetch(`${getApiBaseUrl()}/api/v1/admin/marketing/hero-video`, {
-    method: "POST",
-    headers: {
-      Accept: "application/json",
-      Authorization: `Bearer ${token}`,
+  const res = await fetch(
+    marketingUploadUrl("/api/v1/admin/marketing/hero-video"),
+    {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body,
     },
-    body,
-  });
+  );
 
-  if (!res.ok) {
-    const payload = await res.json().catch(() => null);
-    const message =
-      payload &&
-      typeof payload === "object" &&
-      "message" in payload &&
-      typeof (payload as { message: unknown }).message === "string"
-        ? (payload as { message: string }).message
-        : "Unable to upload hero video.";
-    throw new Error(message);
-  }
+  await assertMarketingUploadOk(res);
 }
 
 export async function uploadShopHeroPoster(
@@ -60,18 +57,19 @@ export async function uploadShopHeroPoster(
   body.append("poster", poster);
   body.append("variant", variant);
 
-  const res = await fetch(`${getApiBaseUrl()}/api/v1/admin/marketing/hero-poster`, {
-    method: "POST",
-    headers: {
-      Accept: "application/json",
-      Authorization: `Bearer ${token}`,
+  const res = await fetch(
+    marketingUploadUrl("/api/v1/admin/marketing/hero-poster"),
+    {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body,
     },
-    body,
-  });
+  );
 
-  if (!res.ok) {
-    throw new Error("Unable to upload hero poster.");
-  }
+  await assertMarketingUploadOk(res);
 }
 
 export async function deleteShopHeroVideo(
@@ -80,7 +78,7 @@ export async function deleteShopHeroVideo(
 ): Promise<void> {
   const query = variant ? `?variant=${encodeURIComponent(variant)}` : "";
   const res = await fetch(
-    `${getApiBaseUrl()}/api/v1/admin/marketing/hero-video${query}`,
+    marketingUploadUrl(`/api/v1/admin/marketing/hero-video${query}`),
     {
       method: "DELETE",
       headers: {
@@ -90,9 +88,7 @@ export async function deleteShopHeroVideo(
     },
   );
 
-  if (!res.ok) {
-    throw new Error("Unable to remove hero video.");
-  }
+  await assertMarketingUploadOk(res);
 }
 
 export async function deleteShopHeroPoster(
@@ -100,7 +96,9 @@ export async function deleteShopHeroPoster(
   variant: HeroMediaVariant,
 ): Promise<void> {
   const res = await fetch(
-    `${getApiBaseUrl()}/api/v1/admin/marketing/hero-poster?variant=${encodeURIComponent(variant)}`,
+    marketingUploadUrl(
+      `/api/v1/admin/marketing/hero-poster?variant=${encodeURIComponent(variant)}`,
+    ),
     {
       method: "DELETE",
       headers: {
@@ -110,16 +108,14 @@ export async function deleteShopHeroPoster(
     },
   );
 
-  if (!res.ok) {
-    throw new Error("Unable to remove hero poster.");
-  }
+  await assertMarketingUploadOk(res);
 }
 
 export async function uploadShopLogo(token: string, logo: File): Promise<void> {
   const body = new FormData();
   body.append("logo", logo);
 
-  const res = await fetch(`${getApiBaseUrl()}/api/v1/admin/marketing/logo`, {
+  const res = await fetch(marketingUploadUrl("/api/v1/admin/marketing/logo"), {
     method: "POST",
     headers: {
       Accept: "application/json",
@@ -128,13 +124,11 @@ export async function uploadShopLogo(token: string, logo: File): Promise<void> {
     body,
   });
 
-  if (!res.ok) {
-    throw new Error("Unable to upload shop logo.");
-  }
+  await assertMarketingUploadOk(res);
 }
 
 export async function deleteShopLogo(token: string): Promise<void> {
-  const res = await fetch(`${getApiBaseUrl()}/api/v1/admin/marketing/logo`, {
+  const res = await fetch(marketingUploadUrl("/api/v1/admin/marketing/logo"), {
     method: "DELETE",
     headers: {
       Accept: "application/json",
@@ -142,34 +136,25 @@ export async function deleteShopLogo(token: string): Promise<void> {
     },
   });
 
-  if (!res.ok) {
-    throw new Error("Unable to remove shop logo.");
-  }
+  await assertMarketingUploadOk(res);
 }
 
 export async function updateShopInstagramHandle(
   token: string,
   instagramHandle: string | null,
 ): Promise<void> {
-  const res = await fetch(`${getApiBaseUrl()}/api/v1/admin/marketing/instagram`, {
-    method: "PATCH",
-    headers: {
-      Accept: "application/json",
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
+  const res = await fetch(
+    marketingUploadUrl("/api/v1/admin/marketing/instagram"),
+    {
+      method: "PATCH",
+      headers: {
+        Accept: "application/json",
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ instagram_handle: instagramHandle }),
     },
-    body: JSON.stringify({ instagram_handle: instagramHandle }),
-  });
+  );
 
-  if (!res.ok) {
-    const payload = await res.json().catch(() => null);
-    const message =
-      payload &&
-      typeof payload === "object" &&
-      "message" in payload &&
-      typeof (payload as { message: unknown }).message === "string"
-        ? (payload as { message: string }).message
-        : "Unable to save Instagram handle.";
-    throw new Error(message);
-  }
+  await assertMarketingUploadOk(res);
 }

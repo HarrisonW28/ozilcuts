@@ -38,6 +38,8 @@ class User extends Authenticatable
         'shop_default_hours',
         'shop_latitude',
         'shop_longitude',
+        'shop_public_address',
+        'shop_visit_note',
         'shop_hero_video_path',
         'shop_hero_video_mobile_path',
         'shop_hero_poster_path',

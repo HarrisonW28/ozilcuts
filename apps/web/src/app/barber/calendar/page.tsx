@@ -32,7 +32,6 @@ import type {
   AppointmentRecord,
   BarberAvailabilityPayload,
 } from "@ozilcuts/types";
-import { OZILCUTS_APP_NAME } from "@ozilcuts/types";
 import {
   Button,
   Card,
@@ -249,7 +248,6 @@ export default function BarberCalendarPage() {
       >
         <div className="mx-auto w-full max-w-6xl page-stack">
           <ScreenTitle
-            eyebrow={OZILCUTS_APP_NAME}
             title="Chair"
             description="Your day on the chair — switch dates, see the timeline, add walk-ins below."
           />

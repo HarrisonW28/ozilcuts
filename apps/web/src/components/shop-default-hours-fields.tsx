@@ -20,11 +20,14 @@ function minutesFromTimeString(t: string): number {
 export type ShopDefaultHoursFieldsProps = {
   value: BarberAvailabilityDay[];
   onChange: (next: BarberAvailabilityDay[]) => void;
+  /** Adjust helper copy for onboarding vs public homepage settings. */
+  context?: "onboarding" | "public";
 };
 
 export function ShopDefaultHoursFields({
   value,
   onChange,
+  context = "onboarding",
 }: ShopDefaultHoursFieldsProps) {
   const derived = quickSelectionFromWeekdays(value);
   const [selected, setSelected] = useState<Set<number>>(derived.selected);
@@ -83,8 +86,9 @@ export function ShopDefaultHoursFields({
           Default shop hours
         </h3>
         <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
-          New barbers copy these bookable hours until you change them per chair.
-          Step three is where you fine-tune individual schedules.
+          {context === "public"
+            ? "Shown on the homepage visit section and used as the template for new barbers."
+            : "New barbers copy these bookable hours until you change them per chair. Step three is where you fine-tune individual schedules."}
         </p>
       </div>
       <div className="flex flex-wrap gap-2">

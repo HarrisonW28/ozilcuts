@@ -123,7 +123,7 @@ export function PublicHomeView({
               <Button
                 asChild
                 size="lg"
-                className="h-12 w-full text-base shadow-md sm:h-[3.25rem] sm:text-[1.0625rem] md:w-full"
+                className="home-hero-cta home-hero-cta--solid h-12 w-full text-base sm:h-[3.25rem] sm:text-[1.0625rem] md:w-full"
               >
                 <Link href="/book">Book now</Link>
               </Button>
@@ -133,7 +133,7 @@ export function PublicHomeView({
                     asChild
                     variant="outline"
                     size="lg"
-                    className="h-12 w-full border-white/35 bg-white/10 text-white backdrop-blur-sm hover:bg-white/20 hover:text-white sm:h-[3.25rem] md:w-full"
+                    className="home-hero-cta h-12 w-full text-base sm:h-[3.25rem] sm:text-[1.0625rem] md:w-full"
                   >
                     <Link href="/register">Create account</Link>
                   </Button>
@@ -141,10 +141,15 @@ export function PublicHomeView({
                     asChild
                     variant="ghost"
                     size="lg"
-                    className="h-12 w-full text-white hover:bg-white/15 hover:text-white sm:h-[3.25rem] md:w-full"
+                    className="home-hero-cta home-hero-cta--ghost h-12 w-full text-base sm:h-[3.25rem] sm:text-[1.0625rem] md:w-full"
                   >
                     <Link href="/login">Sign in</Link>
                   </Button>
+                  <div className="home-hero-or" role="separator">
+                    <span className="sr-only">Or continue with</span>
+                    <span aria-hidden>or</span>
+                  </div>
+                  <GoogleSignInButton variant="hero" />
                 </>
               ) : null}
               {showMemberActions ? (
@@ -152,7 +157,7 @@ export function PublicHomeView({
                   asChild
                   variant="outline"
                   size="lg"
-                  className="h-12 w-full border-white/35 bg-white/10 text-white backdrop-blur-sm hover:bg-white/20 hover:text-white sm:h-[3.25rem] md:w-full"
+                  className="home-hero-cta h-12 w-full text-base sm:h-[3.25rem] sm:text-[1.0625rem] md:w-full"
                 >
                   <Link href="/appointments">My appointments</Link>
                 </Button>
@@ -160,13 +165,6 @@ export function PublicHomeView({
             </div>
           </div>
         </HomeCinematicHero>
-        {showGuestActions ? (
-          <div className="mx-auto mt-8 max-w-md px-5 sm:px-9 md:px-11">
-            <div className="border-t border-border/40 pt-8 dark:border-border/35">
-              <GoogleSignInButton />
-            </div>
-          </div>
-        ) : null}
       </section>
 
       <div className="mx-auto w-full max-w-6xl space-y-16 px-4 sm:px-6 md:space-y-24 md:px-8 lg:space-y-28">

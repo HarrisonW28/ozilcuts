@@ -11,7 +11,6 @@ import { getStoredAuthToken } from "@/lib/auth-token";
 import { useSessionProfile } from "@/lib/use-session-profile";
 import { ApiError, fetchAppointment } from "@ozilcuts/api";
 import type { AppointmentRecord } from "@ozilcuts/types";
-import { OZILCUTS_APP_NAME } from "@ozilcuts/types";
 import {
   Button,
   Card,
@@ -125,7 +124,6 @@ export default function AppointmentCheckInPage() {
       <main id="main-content" className="page-main app-shell-scroll flex-1">
         <div className="mx-auto w-full max-w-lg page-stack">
           <ScreenTitle
-            eyebrow={inAppShell ? undefined : OZILCUTS_APP_NAME}
             title="Check-in"
             description={PAGE_DESCRIPTIONS.checkIn}
           />

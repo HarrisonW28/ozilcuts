@@ -6,7 +6,6 @@ import { getStoredAuthToken } from "@/lib/auth-token";
 import { useSessionProfile } from "@/lib/use-session-profile";
 import { ApiError, fetchCustomerAnalytics } from "@ozilcuts/api";
 import type { CustomerAnalyticsResponse } from "@ozilcuts/types";
-import { OZILCUTS_APP_NAME } from "@ozilcuts/types";
 import {
   Button,
   Card,
@@ -83,7 +82,6 @@ export default function AdminCustomerAnalyticsPage() {
       >
         <div className="mx-auto w-full max-w-5xl page-stack">
           <ScreenTitle
-            eyebrow={OZILCUTS_APP_NAME}
             title={
               state.kind === "ok"
                 ? `${state.data.summary.customer_name} · visits`

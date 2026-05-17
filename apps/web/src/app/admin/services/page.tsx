@@ -34,7 +34,6 @@ import {
   Label,
   ScreenTitle,
 } from "@ozilcuts/ui";
-import { OZILCUTS_APP_NAME } from "@ozilcuts/types";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 
@@ -240,7 +239,6 @@ export default function AdminServicesPage() {
       >
         <div className="mx-auto w-full max-w-3xl page-stack">
           <ScreenTitle
-            eyebrow={OZILCUTS_APP_NAME}
             title="Service catalog"
             description="Services, prices, and what's visible when guests book online."
           />

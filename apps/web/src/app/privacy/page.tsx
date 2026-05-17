@@ -1,4 +1,3 @@
-import { OZILCUTS_APP_NAME } from "@ozilcuts/types";
 import { ScreenTitle } from "@ozilcuts/ui";
 import Link from "next/link";
 
@@ -12,7 +11,6 @@ export default function PrivacyPolicyPage() {
           </Link>
         </p>
         <ScreenTitle
-          eyebrow={OZILCUTS_APP_NAME}
           title="Privacy policy"
           description="How Ozilcuts handles your data when you book, check in, and visit the studio."
         />

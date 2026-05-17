@@ -28,6 +28,10 @@ class PatchShopOnboardingRequest extends FormRequest
             'shop_tap_to_pay_later' => ['sometimes', 'boolean'],
             'complete' => ['sometimes', 'boolean'],
             'shop_default_hours' => ['sometimes', 'nullable', 'array'],
+            'shop_public_address' => ['sometimes', 'nullable', 'string', 'max:500'],
+            'shop_visit_note' => ['sometimes', 'nullable', 'string', 'max:2000'],
+            'shop_latitude' => ['sometimes', 'nullable', 'numeric', 'between:-90,90'],
+            'shop_longitude' => ['sometimes', 'nullable', 'numeric', 'between:-180,180'],
         ], $this->availabilityFlatWindowItemRules('shop_default_hours'));
     }
 

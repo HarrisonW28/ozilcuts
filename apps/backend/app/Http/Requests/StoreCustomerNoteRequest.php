@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -9,10 +10,10 @@ class StoreCustomerNoteRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        $customer = $this->route('user');
+        $actor = $this->user();
 
-        return $customer instanceof User
-            && $this->user()?->can('manageStaffCrm', $customer) === true;
+        return $actor !== null
+            && ($actor->hasRole(Role::SLUG_BARBER) || $actor->isAdmin());
     }
 
     /**

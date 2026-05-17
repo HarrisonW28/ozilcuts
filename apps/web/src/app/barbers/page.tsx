@@ -20,7 +20,6 @@ import {
   EmptyState,
 } from "@ozilcuts/ui";
 import type { BarberProfilePublic } from "@ozilcuts/types";
-import { OZILCUTS_APP_NAME } from "@ozilcuts/types";
 import { motion, useReducedMotion } from "framer-motion";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
@@ -89,7 +88,6 @@ export default function BarbersPage() {
           className="mx-auto w-full max-w-5xl page-stack"
         >
           <ScreenTitle
-            eyebrow={OZILCUTS_APP_NAME}
             title="The team"
             description="Meet the team — portfolios, styles, and booking in a few taps."
             className="gap-5 pb-2 sm:gap-6"

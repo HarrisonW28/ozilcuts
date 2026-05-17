@@ -20,7 +20,6 @@ import {
   fetchCustomerAnalyticsAggregate,
 } from "@ozilcuts/api";
 import type { CustomerAnalyticsAggregate } from "@ozilcuts/types";
-import { OZILCUTS_APP_NAME } from "@ozilcuts/types";
 import {
   Button,
   Card,
@@ -144,7 +143,6 @@ export default function AdminCustomersReportPage() {
       >
         <div className="mx-auto w-full max-w-6xl page-stack">
           <ScreenTitle
-            eyebrow={OZILCUTS_APP_NAME}
             title="Customers"
             description="Aggregate customer-base report: who's active, who's new, who's coming back, and lifetime value."
           />

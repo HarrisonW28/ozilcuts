@@ -6,7 +6,6 @@ import { getStoredAuthToken } from "@/lib/auth-token";
 import { useSessionProfile } from "@/lib/use-session-profile";
 import { ApiError, fetchManageBarbers } from "@ozilcuts/api";
 import type { BarberManageRow } from "@ozilcuts/types";
-import { OZILCUTS_APP_NAME } from "@ozilcuts/types";
 import {
   Button,
   Card,
@@ -92,7 +91,6 @@ export default function AdminBarberHoursPage() {
       >
         <div className="mx-auto w-full max-w-3xl page-stack">
           <ScreenTitle
-            eyebrow={OZILCUTS_APP_NAME}
             title="Bookable hours"
             description={
               barberName

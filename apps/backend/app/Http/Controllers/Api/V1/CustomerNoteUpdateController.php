@@ -17,6 +17,7 @@ final class CustomerNoteUpdateController extends Controller
         UpdateCustomerNoteRequest $request,
         CustomerNote $note,
         CustomerNoteService $service,
+        AuditLogService $audit,
     ): JsonResponse {
         $user = $request->user();
         if ($user === null) {
