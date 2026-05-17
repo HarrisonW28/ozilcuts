@@ -143,6 +143,7 @@ export default function Home() {
             profilePending={profilePending}
             profileReady={profile.kind === "ready"}
             videoSources={resolveHomeVideoSources(homeMarketing)}
+            instagramHandle={homeMarketing?.instagram_handle ?? null}
             servicesPreview={
               catalogPreview.kind === "ok" ? catalogPreview.services : []
             }

@@ -19,24 +19,31 @@ export function HomeVideoStaticFallback({
       ? "home-video-fallback-hero"
       : "home-video-fallback-ambient";
 
-  if (poster) {
+  if (poster && variant === "hero") {
     return (
-      <div
+      <Image
+        src={poster}
+        alt=""
+        fill
         className={cn(
-          variant === "hero" ? "home-cinematic-hero-media" : "home-video-layer relative",
+          "object-cover object-center motion-safe:scale-[1.04]",
           className,
         )}
-        aria-hidden
-      >
+        sizes="100vw"
+        priority
+      />
+    );
+  }
+
+  if (poster) {
+    return (
+      <div className={cn("home-video-layer relative", className)} aria-hidden>
         <Image
           src={poster}
           alt=""
           fill
-          className={cn(
-            variant === "hero" ? "object-cover motion-safe:scale-[1.04]" : "home-video-ambient",
-          )}
-          sizes={variant === "hero" ? "100vw" : "(max-width: 640px) 50vw, 16rem"}
-          priority={variant === "hero"}
+          className="home-video-ambient object-cover"
+          sizes="(max-width: 640px) 50vw, 16rem"
         />
       </div>
     );
@@ -44,7 +51,11 @@ export function HomeVideoStaticFallback({
 
   return (
     <div
-      className={cn("home-video-layer", fallbackClass, className)}
+      className={cn(
+        variant === "hero" ? "home-video-fallback-hero" : "home-video-layer",
+        variant !== "hero" && fallbackClass,
+        className,
+      )}
       aria-hidden
     />
   );

@@ -115,3 +115,30 @@ export async function deleteShopLogo(token: string): Promise<void> {
     throw new Error("Unable to remove shop logo.");
   }
 }
+
+export async function updateShopInstagramHandle(
+  token: string,
+  instagramHandle: string | null,
+): Promise<void> {
+  const res = await fetch(`${getApiBaseUrl()}/api/v1/admin/marketing/instagram`, {
+    method: "PATCH",
+    headers: {
+      Accept: "application/json",
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ instagram_handle: instagramHandle }),
+  });
+
+  if (!res.ok) {
+    const payload = await res.json().catch(() => null);
+    const message =
+      payload &&
+      typeof payload === "object" &&
+      "message" in payload &&
+      typeof (payload as { message: unknown }).message === "string"
+        ? (payload as { message: string }).message
+        : "Unable to save Instagram handle.";
+    throw new Error(message);
+  }
+}

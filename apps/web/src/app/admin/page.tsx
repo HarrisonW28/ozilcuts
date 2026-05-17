@@ -274,23 +274,16 @@ export default function AdminDashboardPage() {
           </section>
 
           <section
-            aria-labelledby="admin-shop-heading"
+            aria-labelledby="admin-manage-shop-heading"
             className="space-y-4 rounded-2xl border border-border/50 bg-card/30 p-4 shadow-sm sm:p-5 dark:bg-card/20"
           >
             <SectionHeading
-              id="admin-shop-heading"
-              title="Site settings"
+              id="admin-manage-shop-heading"
+              title="Manage shop"
               icon={LayoutGrid}
-              description="What clients see online and who works the chair."
+              description="Services, team, and the guided setup checklist."
             />
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-              <HubCard
-                icon={Store}
-                title="Branding & homepage"
-                description="Shop logo and full-width hero video on the public landing page."
-                href="/admin/settings"
-                cta="Open shop settings"
-              />
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               <HubCard
                 icon={LayoutGrid}
                 title="Catalog & services"
@@ -315,9 +308,28 @@ export default function AdminDashboardPage() {
                 }
                 href="/admin/onboarding"
                 cta={setupIncomplete ? "Resume checklist" : "Open checklist"}
-                className="sm:col-span-2 xl:col-span-1"
               />
             </div>
+          </section>
+
+          <section
+            aria-labelledby="admin-site-settings-heading"
+            className="space-y-4 rounded-2xl border border-border/50 bg-card/30 p-4 shadow-sm sm:p-5 dark:bg-card/20"
+          >
+            <SectionHeading
+              id="admin-site-settings-heading"
+              title="Site settings"
+              icon={Store}
+              description="What clients see on the public site—logo, homepage video, and branding."
+            />
+            <HubCard
+              icon={Store}
+              title="Branding & homepage"
+              description="Upload your shop logo and full-width hero video for the landing page."
+              href="/admin/settings"
+              cta="Open site settings"
+              className="max-w-md"
+            />
           </section>
 
           <section

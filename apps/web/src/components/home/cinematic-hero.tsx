@@ -13,7 +13,7 @@ type HomeCinematicHeroProps = {
 };
 
 /**
- * Full-bleed hero shell: deferred muted loop video and editorial gradients.
+ * Full-bleed hero shell: video backdrop (same bounds as shell) with text/CTAs above.
  */
 export function HomeCinematicHero({
   children,
@@ -28,36 +28,25 @@ export function HomeCinematicHero({
       ref={autoplay.containerRef}
       className={cn("home-cinematic-hero-shell", className)}
     >
-      <HomeBackgroundVideo
-        variant="hero"
-        autoplay={autoplay}
-        sources={videoSources}
-      />
+      <div className="home-cinematic-hero-backdrop" aria-hidden>
+        <HomeBackgroundVideo
+          variant="hero"
+          autoplay={autoplay}
+          sources={videoSources}
+        />
+        <div className="home-cinematic-hero-overlay" />
+        <div className="home-cinematic-hero-gradient-main" />
+        <div className="home-cinematic-hero-gradient-glow" />
+        <div className="home-cinematic-hero-gradient-floor" />
+        {!allowMotion ? (
+          <p className="sr-only">
+            Background motion is off — reduced motion, data saver, or a slow
+            connection is active.
+          </p>
+        ) : null}
+      </div>
 
-      <div className="home-cinematic-hero-overlay" aria-hidden />
-
-      <div
-        className="home-cinematic-hero-gradient-main"
-        aria-hidden
-      />
-      <div
-        className="home-cinematic-hero-gradient-glow"
-        aria-hidden
-      />
-      <div
-        className="home-cinematic-hero-gradient-floor"
-        aria-hidden
-      />
-
-      {!allowMotion ? (
-        <p className="sr-only">
-          Background motion is off — reduced motion, data saver, or a slow
-          connection is active.
-        </p>
-      ) : null}
-
-
-      <div className="relative z-10">{children}</div>
+      <div className="home-cinematic-hero-foreground">{children}</div>
     </div>
   );
 }

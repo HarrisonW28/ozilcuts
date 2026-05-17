@@ -151,7 +151,7 @@ export function getAccountMenuGroups(
       links: [
         {
           href: "/dashboard/settings",
-          label: "Shop settings",
+          label: "Site settings",
           icon: "settings",
         },
       ],

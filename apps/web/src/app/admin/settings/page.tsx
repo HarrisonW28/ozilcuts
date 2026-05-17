@@ -6,9 +6,10 @@ import { refreshPublicShopBranding } from "@/lib/use-public-shop-branding";
 import { useSessionProfile } from "@/lib/use-session-profile";
 import { Button, ScreenTitle } from "@ozilcuts/ui";
 import { OZILCUTS_APP_NAME } from "@ozilcuts/types";
+import { Store } from "lucide-react";
 import Link from "next/link";
 
-export default function AdminShopSettingsPage() {
+export default function AdminSiteSettingsPage() {
   const { profile, signOut, refreshProfile } = useSessionProfile();
 
   const isAdmin =
@@ -71,19 +72,40 @@ export default function AdminShopSettingsPage() {
     <div className="flex min-h-dvh flex-1 flex-col">
       <SiteHeader profile={profile} onSignOut={signOut} />
       <main id="main-content" className="page-main">
-        <div className="mx-auto w-full max-w-2xl page-stack">
+        <div className="mx-auto w-full max-w-5xl page-stack">
           <ScreenTitle
             eyebrow={OZILCUTS_APP_NAME}
-            title="Shop settings"
-            description="Logo, homepage hero video, and other client-facing branding for your shop."
+            title="Site settings"
+            description="Client-facing branding for your public site. Catalog, team, and hours are under Manage shop on the dashboard."
           />
 
-          <AdminShopSettingsPanel
-            hasLogo={Boolean(sa?.shop_logo_path)}
-            hasHeroVideo={Boolean(sa?.shop_hero_video_path)}
-            hasHeroPoster={Boolean(sa?.shop_hero_poster_path)}
-            onUpdated={handleUpdated}
-          />
+          <section
+            aria-labelledby="site-settings-branding-heading"
+            className="space-y-4 rounded-2xl border border-border/50 bg-card/30 p-4 shadow-sm sm:p-5 dark:bg-card/20"
+          >
+            <div className="space-y-1">
+              <h2
+                id="site-settings-branding-heading"
+                className="flex items-center gap-2 text-sm font-semibold tracking-tight text-foreground"
+              >
+                <span className="flex size-8 items-center justify-center rounded-lg bg-primary/10 text-primary dark:bg-primary/15">
+                  <Store className="size-4" aria-hidden />
+                </span>
+                Branding & homepage
+              </h2>
+              <p className="max-w-2xl pl-10 text-sm text-muted-foreground">
+                Logo, Instagram handle, and full-width hero video on the landing page.
+              </p>
+            </div>
+
+            <AdminShopSettingsPanel
+              hasLogo={Boolean(sa?.shop_logo_path)}
+              hasHeroVideo={Boolean(sa?.shop_hero_video_path)}
+              hasHeroPoster={Boolean(sa?.shop_hero_poster_path)}
+              instagramHandle={sa?.shop_instagram_handle ?? null}
+              onUpdated={handleUpdated}
+            />
+          </section>
 
           <p className="text-sm text-muted-foreground">
             <Link href="/admin" className="underline-offset-4 hover:underline">

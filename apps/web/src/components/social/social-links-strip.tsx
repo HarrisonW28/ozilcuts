@@ -1,6 +1,10 @@
 "use client";
 
-import { getSocialConfig, type SocialLink } from "@/lib/social-config";
+import {
+  getSocialConfig,
+  type SocialConfigOverrides,
+  type SocialLink,
+} from "@/lib/social-config";
 import { cn } from "@ozilcuts/ui";
 import { InstagramIcon } from "@/components/social/instagram-icon";
 import { useMemo } from "react";
@@ -29,13 +33,15 @@ type SocialLinksStripProps = {
   className?: string;
   /** Compact pills for footers; default shows handle text on sm+. */
   variant?: "default" | "compact";
+  socialOverrides?: SocialConfigOverrides;
 };
 
 export function SocialLinksStrip({
   className,
   variant = "default",
+  socialOverrides,
 }: SocialLinksStripProps) {
-  const config = useMemo(() => getSocialConfig(), []);
+  const config = useMemo(() => getSocialConfig(socialOverrides), [socialOverrides]);
   if (config.links.length === 0) return null;
 
   return (

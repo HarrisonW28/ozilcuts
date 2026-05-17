@@ -29,7 +29,7 @@ import {
 import type { BarberProfilePublic, ServiceSummary } from "@ozilcuts/types";
 import { OZILCUTS_APP_NAME } from "@ozilcuts/types";
 import Link from "next/link";
-import type { ReactNode } from "react";
+import { useMemo, type ReactNode } from "react";
 
 type HealthCopy = {
   line: ReactNode;
@@ -48,6 +48,7 @@ type PublicHomeViewProps = {
   previewsLoading: boolean;
   health: HealthCopy;
   videoSources?: HomeVideoSources;
+  instagramHandle?: string | null;
 };
 
 export function PublicHomeView({
@@ -61,7 +62,15 @@ export function PublicHomeView({
   previewsLoading,
   health,
   videoSources,
+  instagramHandle,
 }: PublicHomeViewProps) {
+  const socialOverrides = useMemo(
+    () =>
+      instagramHandle != null && instagramHandle !== ""
+        ? { instagramHandle }
+        : undefined,
+    [instagramHandle],
+  );
   const showGuestActions =
     profileGuest || (profilePending && !hasStoredAuthSession());
   const showMemberActions =
@@ -445,7 +454,7 @@ export function PublicHomeView({
         id="social"
         className="scroll-mt-28 border-t border-border/35 pt-16 dark:border-border/25 md:pt-20"
       >
-        <InstagramSection />
+        <InstagramSection socialOverrides={socialOverrides} />
       </HomeMotionSection>
 
       <HomeMotionSection
@@ -484,7 +493,7 @@ export function PublicHomeView({
       </HomeMotionSection>
 
       <footer className="border-t border-border/45 pt-8 md:pt-10">
-        <SocialLinksStrip className="mb-6" />
+        <SocialLinksStrip className="mb-6" socialOverrides={socialOverrides} />
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <p
             className="max-w-xl text-xs leading-relaxed text-muted-foreground"

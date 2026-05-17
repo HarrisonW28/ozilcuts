@@ -16,4 +16,7 @@ return [
         'max_kilobytes' => (int) env('MARKETING_LOGO_MAX_KB', 2048),
     ],
 
+    /** Used on the public site when the admin has not set a handle yet. */
+    'default_instagram_handle' => env('MARKETING_DEFAULT_INSTAGRAM_HANDLE', 'ozil.cuts'),
+
 ];

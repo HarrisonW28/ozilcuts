@@ -34,6 +34,7 @@ export {
   uploadShopHeroPoster,
   uploadShopHeroVideo,
   uploadShopLogo,
+  updateShopInstagramHandle,
 } from "./publicHomeMarketing";
 export {
   fetchBarberAnalytics,

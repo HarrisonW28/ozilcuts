@@ -2,6 +2,8 @@ import { AppProviders } from "@/components/app-providers";
 import { InstallPrompt } from "@/components/install-prompt";
 import { ServiceWorkerRegister } from "@/components/service-worker-register";
 import { ThemeProvider } from "@/components/theme-provider";
+import { loadShopBranding } from "@/lib/shop-branding-server";
+import { resolveShopAssetUrl } from "@/lib/shop-asset-url";
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
@@ -45,17 +47,25 @@ export const viewport: Viewport = {
   ],
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const initialShopBranding = await loadShopBranding();
+  const preloadLogoUrl = resolveShopAssetUrl(initialShopBranding?.logo_url);
+
   return (
     <html
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} min-h-dvh`}
       suppressHydrationWarning
     >
+      <head>
+        {preloadLogoUrl ? (
+          <link rel="preload" as="image" href={preloadLogoUrl} />
+        ) : null}
+      </head>
       <body className="app-root flex min-h-dvh flex-col">
         <ThemeProvider
           attribute="class"
@@ -63,7 +73,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <AppProviders>
+          <AppProviders initialShopBranding={initialShopBranding}>
             {children}
             <InstallPrompt />
             <ServiceWorkerRegister />

@@ -22,7 +22,26 @@ class ShopHomeMarketingTest extends TestCase
             ->assertJsonPath('data.logo_url', null)
             ->assertJsonPath('data.hero_mp4', null)
             ->assertJsonPath('data.hero_webm', null)
-            ->assertJsonPath('data.hero_poster', null);
+            ->assertJsonPath('data.hero_poster', null)
+            ->assertJsonPath('data.instagram_handle', 'ozil.cuts')
+            ->assertJsonPath('data.instagram_url', 'https://www.instagram.com/ozil.cuts/');
+    }
+
+    public function test_admin_can_set_instagram_handle_and_public_endpoint_reflects_it(): void
+    {
+        $admin = User::factory()->admin()->create();
+
+        $this->actingAs($admin, 'sanctum')
+            ->patchJson('/api/v1/admin/marketing/instagram', [
+                'instagram_handle' => '@ozil.cuts',
+            ])
+            ->assertOk()
+            ->assertJsonPath('shop_admin.shop_instagram_handle', 'ozil.cuts');
+
+        $this->getJson('/api/v1/public/home-marketing')
+            ->assertOk()
+            ->assertJsonPath('data.instagram_handle', 'ozil.cuts')
+            ->assertJsonPath('data.instagram_url', 'https://www.instagram.com/ozil.cuts/');
     }
 
     public function test_admin_can_upload_logo_and_public_endpoint_serves_url(): void

@@ -525,6 +525,7 @@ export type ShopAdminState = {
   shop_hero_video_path: string | null;
   shop_hero_poster_path: string | null;
   shop_logo_path: string | null;
+  shop_instagram_handle: string | null;
 };
 
 export type PublicHomeMarketing = {
@@ -532,6 +533,8 @@ export type PublicHomeMarketing = {
   hero_mp4: string | null;
   hero_webm: string | null;
   hero_poster: string | null;
+  instagram_handle: string | null;
+  instagram_url: string | null;
 };
 
 export type PatchShopOnboardingInput = {

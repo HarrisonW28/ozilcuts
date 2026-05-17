@@ -23,6 +23,8 @@ final class ShopMarketingService
      *     hero_mp4: string|null,
      *     hero_webm: string|null,
      *     hero_poster: string|null,
+     *     instagram_handle: string|null,
+     *     instagram_url: string|null,
      * }
      */
     public function publicHomeMarketing(): array
@@ -34,18 +36,38 @@ final class ShopMarketingService
                 'hero_mp4' => null,
                 'hero_webm' => null,
                 'hero_poster' => null,
+                'instagram_handle' => $this->defaultInstagramHandle(),
+                'instagram_url' => $this->instagramProfileUrl($this->defaultInstagramHandle()),
             ];
         }
 
         $videoUrl = $this->publicUrl($admin->shop_hero_video_path);
         $extension = $this->extensionFromPath($admin->shop_hero_video_path);
+        $instagramHandle = $this->effectiveInstagramHandle($admin);
 
         return [
             'logo_url' => $this->publicUrl($admin->shop_logo_path),
             'hero_mp4' => $extension === 'mp4' ? $videoUrl : null,
             'hero_webm' => $extension === 'webm' ? $videoUrl : null,
             'hero_poster' => $this->publicUrl($admin->shop_hero_poster_path),
+            'instagram_handle' => $instagramHandle,
+            'instagram_url' => $this->instagramProfileUrl($instagramHandle),
         ];
+    }
+
+    public function updateInstagramHandle(User $admin, ?string $handle): User
+    {
+        $this->assertShopAdmin($admin);
+
+        if ($handle === null || trim($handle) === '') {
+            $admin->shop_instagram_handle = null;
+        } else {
+            $admin->shop_instagram_handle = $this->normalizeInstagramHandle($handle);
+        }
+
+        $admin->save();
+
+        return $admin->fresh(['role']);
     }
 
     public function storeLogo(User $admin, UploadedFile $file): User
@@ -173,5 +195,39 @@ final class ShopMarketingService
         $extension = strtolower(pathinfo($path, PATHINFO_EXTENSION));
 
         return $extension !== '' ? $extension : null;
+    }
+
+    private function effectiveInstagramHandle(User $admin): ?string
+    {
+        $stored = $admin->shop_instagram_handle;
+        if (is_string($stored) && trim($stored) !== '') {
+            return $this->normalizeInstagramHandle($stored);
+        }
+
+        return $this->defaultInstagramHandle();
+    }
+
+    private function defaultInstagramHandle(): ?string
+    {
+        $default = config('marketing.default_instagram_handle');
+        if (! is_string($default) || trim($default) === '') {
+            return null;
+        }
+
+        return $this->normalizeInstagramHandle($default);
+    }
+
+    private function normalizeInstagramHandle(string $handle): string
+    {
+        return ltrim(trim($handle), '@');
+    }
+
+    private function instagramProfileUrl(?string $handle): ?string
+    {
+        if ($handle === null || $handle === '') {
+            return null;
+        }
+
+        return 'https://www.instagram.com/'.$handle.'/';
     }
 }

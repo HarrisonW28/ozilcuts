@@ -1,7 +1,11 @@
 "use client";
 
 import { InstagramHighlightTile } from "@/components/social/instagram-highlight-tile";
-import { getSocialConfig, hasSocialPresence } from "@/lib/social-config";
+import {
+  getSocialConfig,
+  hasSocialPresence,
+  type SocialConfigOverrides,
+} from "@/lib/social-config";
 import { Button, Skeleton, cn } from "@ozilcuts/ui";
 import { InstagramIcon } from "@/components/social/instagram-icon";
 import Link from "next/link";
@@ -10,13 +14,18 @@ import { useEffect, useMemo, useState } from "react";
 type InstagramSectionProps = {
   className?: string;
   id?: string;
+  socialOverrides?: SocialConfigOverrides;
 };
 
 /**
  * Lightweight Instagram highlights row — link-out tiles only, no embeds.
  */
-export function InstagramSection({ className, id = "instagram" }: InstagramSectionProps) {
-  const config = useMemo(() => getSocialConfig(), []);
+export function InstagramSection({
+  className,
+  id = "instagram",
+  socialOverrides,
+}: InstagramSectionProps) {
+  const config = useMemo(() => getSocialConfig(socialOverrides), [socialOverrides]);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {

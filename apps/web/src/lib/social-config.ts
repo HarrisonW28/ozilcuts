@@ -100,9 +100,16 @@ function parseHighlightsJson(raw: string | undefined): InstagramHighlight[] {
   }
 }
 
-export function getSocialConfig(): SocialConfig {
+export type SocialConfigOverrides = {
+  instagramHandle?: string | null;
+};
+
+export function getSocialConfig(overrides?: SocialConfigOverrides): SocialConfig {
+  const envHandle = trim(process.env.NEXT_PUBLIC_INSTAGRAM_HANDLE);
   const instagramHandle =
-    trim(process.env.NEXT_PUBLIC_INSTAGRAM_HANDLE) ?? "ozilcuts";
+    overrides?.instagramHandle !== undefined
+      ? trim(overrides.instagramHandle ?? undefined) ?? null
+      : envHandle ?? "ozil.cuts";
   const tiktokHandle = trim(process.env.NEXT_PUBLIC_TIKTOK_HANDLE);
   const ig = instagramHandle ? normalizeHandle(instagramHandle) : null;
 

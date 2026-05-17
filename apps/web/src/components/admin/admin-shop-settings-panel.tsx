@@ -1,11 +1,12 @@
 "use client";
 
 import { getStoredAuthToken } from "@/lib/auth-token";
-import { usePublicShopBranding } from "@/lib/use-public-shop-branding";
+import { useShopBranding } from "@/lib/shop-branding-context";
 import {
   ApiError,
   deleteShopHeroVideo,
   deleteShopLogo,
+  updateShopInstagramHandle,
   uploadShopHeroPoster,
   uploadShopHeroVideo,
   uploadShopLogo,
@@ -17,33 +18,57 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  Input,
+  Label,
 } from "@ozilcuts/ui";
-import { Film, ImageIcon, Store, Trash2 } from "lucide-react";
-import Image from "next/image";
-import { useRef, useState } from "react";
+import { Film, ImageIcon, Instagram, Store, Trash2 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 
 type AdminShopSettingsPanelProps = {
   hasLogo: boolean;
   hasHeroVideo: boolean;
   hasHeroPoster: boolean;
+  instagramHandle: string | null;
   onUpdated: () => void;
 };
 
-type BusyKind = "logo" | "logo-remove" | "video" | "poster" | "remove" | null;
+type BusyKind =
+  | "logo"
+  | "logo-remove"
+  | "video"
+  | "poster"
+  | "remove"
+  | "instagram"
+  | null;
+
+const DEFAULT_INSTAGRAM = "ozil.cuts";
 
 export function AdminShopSettingsPanel({
   hasLogo,
   hasHeroVideo,
   hasHeroPoster,
+  instagramHandle,
   onUpdated,
 }: AdminShopSettingsPanelProps) {
-  const branding = usePublicShopBranding();
+  const { logoUrl } = useShopBranding();
+  const [logoPreviewFailed, setLogoPreviewFailed] = useState(false);
+
+  useEffect(() => {
+    setLogoPreviewFailed(false);
+  }, [logoUrl]);
   const logoInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
   const posterInputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState<BusyKind>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [instagramDraft, setInstagramDraft] = useState(
+    () => instagramHandle ?? "",
+  );
+
+  useEffect(() => {
+    setInstagramDraft(instagramHandle ?? "");
+  }, [instagramHandle]);
 
   const run = async (action: () => Promise<void>, kind: BusyKind) => {
     const token = getStoredAuthToken();
@@ -61,11 +86,13 @@ export function AdminShopSettingsPanel({
           ? "Shop logo removed."
           : kind === "logo"
             ? "Logo uploaded. It appears in the site header and app chrome."
-            : kind === "remove"
-              ? "Homepage hero video removed."
-              : kind === "video"
-                ? "Hero video uploaded. It appears on the public homepage."
-                : "Hero poster uploaded.",
+            : kind === "instagram"
+              ? "Instagram handle saved."
+              : kind === "remove"
+                ? "Homepage hero video removed."
+                : kind === "video"
+                  ? "Hero video uploaded. It appears on the public homepage."
+                  : "Hero poster uploaded.",
       );
       onUpdated();
     } catch (e: unknown) {
@@ -76,8 +103,8 @@ export function AdminShopSettingsPanel({
   };
 
   return (
-    <div className="space-y-6">
-      <Card>
+    <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
+      <Card className="h-full">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
             <Store className="size-5 text-primary" aria-hidden />
@@ -90,18 +117,18 @@ export function AdminShopSettingsPanel({
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex flex-wrap items-center gap-4">
-            <div className="flex size-16 items-center justify-center overflow-hidden rounded-xl border border-border/60 bg-muted/30">
-              {branding?.logo_url ? (
-                <Image
-                  src={branding.logo_url}
+            <div className="flex size-16 items-center justify-center overflow-hidden rounded-xl border border-border/60 bg-muted/30 p-1">
+              {logoUrl && !logoPreviewFailed ? (
+                <img
+                  src={logoUrl}
                   alt=""
-                  width={64}
-                  height={64}
-                  className="size-full object-contain p-1"
-                  unoptimized
+                  className="max-h-full max-w-full object-contain"
+                  onError={() => setLogoPreviewFailed(true)}
                 />
               ) : (
-                <span className="text-xs text-muted-foreground">No logo</span>
+                <span className="text-xs text-muted-foreground">
+                  {hasLogo && logoPreviewFailed ? "Preview unavailable" : "No logo"}
+                </span>
               )}
             </div>
             <p className="min-w-0 flex-1 text-sm text-muted-foreground">
@@ -153,7 +180,7 @@ export function AdminShopSettingsPanel({
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="h-full lg:col-span-1">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
             <Film className="size-5 text-primary" aria-hidden />
@@ -237,13 +264,88 @@ export function AdminShopSettingsPanel({
         </CardContent>
       </Card>
 
+      <Card className="h-full lg:col-span-2">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <Instagram className="size-5 text-primary" aria-hidden />
+            Instagram
+          </CardTitle>
+          <CardDescription>
+            Handle shown in the homepage social section and footer links. Leave
+            blank to use the default{" "}
+            <span className="font-medium text-foreground">@{DEFAULT_INSTAGRAM}</span>.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="max-w-md space-y-2">
+            <Label htmlFor="shop-instagram-handle">Handle</Label>
+            <div className="flex gap-2">
+              <span className="flex h-10 items-center rounded-md border border-input bg-muted/40 px-3 text-sm text-muted-foreground">
+                @
+              </span>
+              <Input
+                id="shop-instagram-handle"
+                value={instagramDraft}
+                onChange={(e) => setInstagramDraft(e.target.value.replace(/^@/, ""))}
+                placeholder={DEFAULT_INSTAGRAM}
+                autoComplete="off"
+                spellCheck={false}
+                disabled={busy !== null}
+                className="flex-1"
+              />
+            </div>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            {instagramHandle
+              ? `Live on site as @${instagramHandle}.`
+              : `Using default @${DEFAULT_INSTAGRAM} on the public site.`}
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              type="button"
+              disabled={busy !== null}
+              onClick={() =>
+                void run(async () => {
+                  const trimmed = instagramDraft.trim();
+                  await updateShopInstagramHandle(
+                    tokenFromStorage(),
+                    trimmed.length > 0 ? trimmed : null,
+                  );
+                  setInstagramDraft(trimmed);
+                }, "instagram")
+              }
+            >
+              {busy === "instagram" ? "Saving…" : "Save handle"}
+            </Button>
+            {instagramHandle ? (
+              <Button
+                type="button"
+                variant="outline"
+                disabled={busy !== null}
+                onClick={() => {
+                  setInstagramDraft("");
+                  void run(async () => {
+                    await updateShopInstagramHandle(tokenFromStorage(), null);
+                  }, "instagram");
+                }}
+              >
+                Use default
+              </Button>
+            ) : null}
+          </div>
+        </CardContent>
+      </Card>
+
       {message ? (
-        <p className="text-sm text-emerald-700 dark:text-emerald-300" role="status">
+        <p
+          className="text-sm text-emerald-700 dark:text-emerald-300 lg:col-span-2"
+          role="status"
+        >
           {message}
         </p>
       ) : null}
       {error ? (
-        <p className="text-sm text-destructive" role="alert">
+        <p className="text-sm text-destructive lg:col-span-2" role="alert">
           {error}
         </p>
       ) : null}

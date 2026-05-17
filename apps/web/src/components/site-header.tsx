@@ -11,7 +11,7 @@ import { NotificationsBell } from "@/components/notifications-bell";
 import { NotificationsToaster } from "@/components/notifications-toaster";
 import { SiteAccountMenu } from "@/components/site-account-menu";
 import { shouldHideMobileDrawerNav } from "@/lib/app-shell-nav";
-import { usePublicShopBranding } from "@/lib/use-public-shop-branding";
+import { SiteBrandMark } from "@/components/site-brand-mark";
 import {
   getAccountMenuGroups,
   getPrimaryNavSections,
@@ -20,7 +20,6 @@ import type { ProfileState } from "@/lib/use-session-profile";
 import { Button, buttonVariants, cn } from "@ozilcuts/ui";
 import { OZILCUTS_APP_NAME } from "@ozilcuts/types";
 import { Menu, X } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -49,8 +48,6 @@ export function SiteHeader({ profile, onSignOut }: SiteHeaderProps) {
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const mobilePanelRef = useRef<ElementRef<"nav">>(null);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
-  const branding = usePublicShopBranding();
-
   const navSections = getPrimaryNavSections(profile);
   const accountMenuGroups =
     profile.kind === "ready" ? getAccountMenuGroups(profile) : [];
@@ -108,28 +105,9 @@ export function SiteHeader({ profile, onSignOut }: SiteHeaderProps) {
             <Link
               href="/"
               aria-label={`${OZILCUTS_APP_NAME} — Home`}
-              className="motion-interactive -mx-1 shrink-0 rounded-md px-1 touch-manipulation outline-none focus-visible:ring-2 focus-visible:ring-ring/45 focus-visible:ring-offset-2 focus-visible:ring-offset-background md:-mx-0 md:px-0"
+              className="motion-interactive -mx-1 flex shrink-0 items-center rounded-md px-1 touch-manipulation outline-none focus-visible:ring-2 focus-visible:ring-ring/45 focus-visible:ring-offset-2 focus-visible:ring-offset-background md:-mx-0 md:px-0"
             >
-              {branding?.logo_url ? (
-                <Image
-                  src={branding.logo_url}
-                  alt={OZILCUTS_APP_NAME}
-                  width={120}
-                  height={36}
-                  className="h-8 w-auto max-w-[140px] object-contain object-left sm:h-9"
-                  unoptimized
-                  priority
-                />
-              ) : (
-                <>
-                  <span className="block text-sm font-semibold tracking-[-0.02em] text-foreground">
-                    {OZILCUTS_APP_NAME}
-                  </span>
-                  <span className="hidden text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground sm:block">
-                    Studio booking
-                  </span>
-                </>
-              )}
+              <SiteBrandMark variant="site" />
             </Link>
             <nav
               aria-label="Primary"

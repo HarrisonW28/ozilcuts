@@ -1,6 +1,7 @@
 "use client";
 
 import { AppShellHeaderAccountSkeleton } from "@/components/header-session-chrome";
+import { SiteBrandMark } from "@/components/site-brand-mark";
 import { NotificationsBell } from "@/components/notifications-bell";
 import { NotificationsToaster } from "@/components/notifications-toaster";
 import { SiteAccountMenu } from "@/components/site-account-menu";
@@ -74,11 +75,9 @@ export function AppShellHeader({
               <Link
                 href="/"
                 aria-label={`${OZILCUTS_APP_NAME} — Home`}
-                className="motion-interactive -mx-0.5 shrink-0 rounded-md px-1.5 py-1 touch-manipulation outline-none focus-visible:ring-2 focus-visible:ring-ring/45 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                className="motion-interactive -mx-0.5 flex shrink-0 items-center rounded-md px-1.5 py-1 touch-manipulation outline-none focus-visible:ring-2 focus-visible:ring-ring/45 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
               >
-                <span className="block text-sm font-semibold tracking-[-0.02em] text-foreground">
-                  {OZILCUTS_APP_NAME}
-                </span>
+                <SiteBrandMark variant="shell" />
               </Link>
             )}
             {title ? (
