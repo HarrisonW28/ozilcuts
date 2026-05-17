@@ -1,6 +1,5 @@
 "use client";
 
-import { SiteHeader } from "@/components/site-header";
 import {
   buildBookFromAppointmentRow,
   buildBookFromRebookHint,
@@ -205,7 +204,7 @@ function PaymentBadge({
 }
 
 export default function AppointmentsPage() {
-  const { profile, signOut } = useSessionProfile();
+  const { profile } = useSessionProfile();
   const isMaxMd = useMediaQuery("(max-width: 767px)");
   const [state, setState] = useState<ListState>({ kind: "idle" });
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -450,27 +449,25 @@ export default function AppointmentsPage() {
     }
   }
 
-  const { inAppShell } = useShellPageChrome();
+  const { showScreenTitle } = useShellPageChrome();
+  const pageTitle =
+    profile.kind === "ready"
+      ? appointmentsPageTitle(profile.user.role.slug)
+      : "Appointments";
+  const pageDescription =
+    profile.kind === "ready"
+      ? appointmentsPageDescription(profile.user.role.slug)
+      : "Your upcoming visits and booking history.";
 
   return (
     <>
-      {!inAppShell ? (
-        <SiteHeader profile={profile} onSignOut={signOut} />
-      ) : null}
       <main id="main-content" className="page-main app-shell-scroll flex-1">
         <div className="mx-auto w-full max-w-3xl page-stack">
-          <ScreenTitle
-            title={
-              profile.kind === "ready"
-                ? appointmentsPageTitle(profile.user.role.slug)
-                : "Appointments"
-            }
-            description={
-              profile.kind === "ready"
-                ? appointmentsPageDescription(profile.user.role.slug)
-                : "Your upcoming visits and booking history."
-            }
-          />
+          {showScreenTitle ? (
+            <ScreenTitle title={pageTitle} description={pageDescription} />
+          ) : (
+            <h1 className="sr-only">{pageTitle}</h1>
+          )}
 
           {profile.kind === "loading" ? (
             <PageSessionSkeleton

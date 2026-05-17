@@ -7,9 +7,22 @@ import {
 import { useSessionProfile } from "@/lib/use-session-profile";
 import { usePathname } from "next/navigation";
 
+/** Bottom-tab roots where the tab label replaces a large in-page ScreenTitle. */
+const APP_SHELL_TAB_ROOTS = new Set([
+  "/home",
+  "/book",
+  "/appointments",
+  "/profile",
+  "/notifications",
+]);
+
+export function isAppShellTabRoot(pathname: string): boolean {
+  return APP_SHELL_TAB_ROOTS.has(pathname);
+}
+
 /**
- * Native app-shell routes: SiteHeader comes from the section layout; pages only
- * mount SiteHeader for guests/loading. Page-level Ozilcuts eyebrow is omitted in-shell.
+ * Native app-shell routes: SiteHeader comes from the section layout.
+ * Tab-root screens omit the large ScreenTitle block (bottom nav carries wayfinding).
  */
 export function useShellPageChrome() {
   const pathname = usePathname();
@@ -20,6 +33,8 @@ export function useShellPageChrome() {
   const inAppShell = Boolean(
     roleSlug && shouldShowAppShellDock(pathname, roleSlug),
   );
+
+  const showScreenTitle = !(inAppShell && isAppShellTabRoot(pathname));
 
   /** @deprecated Prefer `inAppShell`. */
   const useCompactShellHeader =
@@ -32,6 +47,7 @@ export function useShellPageChrome() {
 
   return {
     inAppShell,
+    showScreenTitle,
     useCompactShellHeader,
     hideSiteHeaderMobileMenu,
     roleSlug,

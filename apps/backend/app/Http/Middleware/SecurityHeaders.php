@@ -24,7 +24,13 @@ final class SecurityHeaders
         );
         $response->headers->set('X-Permitted-Cross-Domain-Policies', 'none');
         $response->headers->set('Cross-Origin-Opener-Policy', 'same-origin');
-        $response->headers->set('Cross-Origin-Resource-Policy', 'same-site');
+
+        $isPublicMarketingAsset = $request->is('api/v1/public/marketing/asset');
+
+        $response->headers->set(
+            'Cross-Origin-Resource-Policy',
+            $isPublicMarketingAsset ? 'cross-origin' : 'same-site',
+        );
 
         if ((bool) config('security.headers.enable_csp', true) && ! $request->is('api/*')) {
             $response->headers->set(
@@ -40,7 +46,10 @@ final class SecurityHeaders
             );
         }
 
-        if ($request->is('api/*')) {
+        if ($isPublicMarketingAsset) {
+            $response->headers->set('Cache-Control', 'public, max-age=86400');
+            $response->headers->remove('Pragma');
+        } elseif ($request->is('api/*')) {
             $response->headers->set('Cache-Control', 'no-store, private');
             $response->headers->set('Pragma', 'no-cache');
         }

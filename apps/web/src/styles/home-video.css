@@ -20,17 +20,22 @@
 
   .home-cinematic-hero-shell {
     @apply relative isolate w-full max-w-none overflow-hidden rounded-none border-0 shadow-none ring-0;
+    display: grid;
+    grid-template: 1fr / 1fr;
     min-height: min(100svh, 56rem);
   }
 
-  /** Video + overlays: pinned to shell bounds, behind foreground. */
+  /** Video + overlays: same grid cell as foreground, rendered first (behind). */
   .home-cinematic-hero-backdrop {
-    @apply pointer-events-none absolute inset-0 z-0 overflow-hidden;
+    @apply pointer-events-none relative z-0 overflow-hidden;
+    grid-area: 1 / 1;
+    min-height: min(100svh, 56rem);
   }
 
-  /** Text / CTAs — defines hero height; stacks above backdrop. */
+  /** Text / CTAs — same grid cell, above backdrop in paint order. */
   .home-cinematic-hero-foreground {
-    @apply relative z-20 w-full isolate;
+    @apply relative z-10 w-full;
+    grid-area: 1 / 1;
     min-height: min(100svh, 56rem);
   }
 

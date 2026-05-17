@@ -1,8 +1,6 @@
 "use client";
 
-import { SiteHeader } from "@/components/site-header";
 import { PAGE_DESCRIPTIONS } from "@/lib/user-facing-copy";
-import { useShellPageChrome } from "@/lib/use-shell-page-chrome";
 import { getStoredAuthToken } from "@/lib/auth-token";
 import { reportFilterControlClass } from "@/lib/report-filter-classes";
 import { useSessionProfile } from "@/lib/use-session-profile";
@@ -203,13 +201,8 @@ export default function ReschedulePage() {
 
   const isReady = profile.kind === "ready";
 
-  const { inAppShell } = useShellPageChrome();
-
   return (
     <>
-      {!inAppShell ? (
-        <SiteHeader profile={profile} onSignOut={signOut} />
-      ) : null}
       <main id="main-content" className="page-main app-shell-scroll flex-1">
         <div className="mx-auto w-full max-w-2xl page-stack">
           <ScreenTitle

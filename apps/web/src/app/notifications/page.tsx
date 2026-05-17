@@ -1,7 +1,6 @@
 "use client";
 
 import { NotificationInboxList } from "@/components/notifications";
-import { SiteHeader } from "@/components/site-header";
 import { SignInPromptCard } from "@/components/auth/sign-in-prompt-card";
 import { PAGE_DESCRIPTIONS } from "@/lib/user-facing-copy";
 import { useShellPageChrome } from "@/lib/use-shell-page-chrome";
@@ -45,7 +44,7 @@ type LoadState =
   | { kind: "error"; message: string };
 
 export default function NotificationsPage() {
-  const { profile, signOut } = useSessionProfile();
+  const { profile } = useSessionProfile();
   const inbox = useInbox();
   const searchParams = useSearchParams();
   const initialFilter = searchParams.get("filter");
@@ -181,19 +180,20 @@ export default function NotificationsPage() {
     }
   }
 
-  const { inAppShell } = useShellPageChrome();
+  const { showScreenTitle } = useShellPageChrome();
 
   return (
     <>
-      {!inAppShell ? (
-        <SiteHeader profile={profile} onSignOut={signOut} />
-      ) : null}
       <main id="main-content" className="page-main app-shell-scroll flex-1">
         <div className="mx-auto w-full max-w-3xl page-stack">
-          <ScreenTitle
-            title="Notifications"
-            description={PAGE_DESCRIPTIONS.notifications}
-          />
+          {showScreenTitle ? (
+            <ScreenTitle
+              title="Notifications"
+              description={PAGE_DESCRIPTIONS.notifications}
+            />
+          ) : (
+            <h1 className="sr-only">Notifications</h1>
+          )}
 
           {profile.kind === "loading" ? (
             <div

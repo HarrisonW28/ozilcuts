@@ -11,9 +11,7 @@ import { HaircutPhotosSection } from "@/components/haircut-photos-section";
 import { HaircutShareCardLoader } from "@/components/social";
 import { StaffAiCustomerSummaryPanel } from "@/components/staff-ai-customer-summary-panel";
 import { StaffCustomerRecognitionPanel } from "@/components/staff-customer-recognition-panel";
-import { SiteHeader } from "@/components/site-header";
 import { buildBookFromRebookHint, buildBookHref } from "@/lib/booking-url";
-import { useShellPageChrome } from "@/lib/use-shell-page-chrome";
 import { StaffPosCheckoutCard } from "@/components/staff-pos-checkout-card";
 import { getStoredAuthToken } from "@/lib/auth-token";
 import { formatGbp } from "@/lib/format-gbp";
@@ -168,7 +166,7 @@ export default function ConfirmationPage() {
     return t === "1" || t === "true";
   })();
 
-  const { profile, signOut } = useSessionProfile();
+  const { profile } = useSessionProfile();
   const [state, setState] = useState<LoadState>({ kind: "idle" });
   const [calendarUrl, setCalendarUrl] = useState<string | null>(null);
   const [pending, setPending] = useState<AppointmentPendingPayment | null>(
@@ -372,13 +370,8 @@ export default function ConfirmationPage() {
     };
   }, [isStaff, appointment]);
 
-  const { inAppShell } = useShellPageChrome();
-
   return (
     <>
-      {!inAppShell ? (
-        <SiteHeader profile={profile} onSignOut={signOut} />
-      ) : null}
       <main id="main-content" className="page-main app-shell-scroll flex-1">
         <div className="mx-auto w-full max-w-2xl page-stack">
           <ScreenTitle

@@ -4,9 +4,7 @@ import { AppointmentArrivalPanel } from "@/components/appointment-arrival-panel"
 import { AppointmentContextThread } from "@/components/appointment-context-thread";
 import { BarberReadinessPanel } from "@/components/barber-readiness-panel";
 import { CheckInPageSkeleton } from "@/components/loading";
-import { SiteHeader } from "@/components/site-header";
 import { PAGE_DESCRIPTIONS } from "@/lib/user-facing-copy";
-import { useShellPageChrome } from "@/lib/use-shell-page-chrome";
 import { getStoredAuthToken } from "@/lib/auth-token";
 import { useSessionProfile } from "@/lib/use-session-profile";
 import { ApiError, fetchAppointment } from "@ozilcuts/api";
@@ -42,7 +40,7 @@ export default function AppointmentCheckInPage() {
         ? Number.parseInt(rawId[0] ?? "", 10)
         : NaN;
 
-  const { profile, signOut } = useSessionProfile();
+  const { profile } = useSessionProfile();
   const [state, setState] = useState<LoadState>({ kind: "idle" });
   const [checkInUrl, setCheckInUrl] = useState("");
 
@@ -114,13 +112,8 @@ export default function AppointmentCheckInPage() {
 
   const token = getStoredAuthToken();
 
-  const { inAppShell } = useShellPageChrome();
-
   return (
     <>
-      {!inAppShell ? (
-        <SiteHeader profile={profile} onSignOut={signOut} />
-      ) : null}
       <main id="main-content" className="page-main app-shell-scroll flex-1">
         <div className="mx-auto w-full max-w-lg page-stack">
           <ScreenTitle

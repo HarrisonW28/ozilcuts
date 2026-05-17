@@ -82,14 +82,6 @@ export function ContactLocationSection() {
             </div>
           </div>
 
-          {hasMap ? (
-            <VisitLocationMap
-              latitude={branding!.shop_latitude!}
-              longitude={branding!.shop_longitude!}
-              label={`Map for ${locationTitle}`}
-            />
-          ) : null}
-
           <div>
             <div className="flex items-center gap-2">
               <Clock
@@ -109,28 +101,38 @@ export function ContactLocationSection() {
           </div>
         </div>
 
-        <div className="flex flex-col justify-center gap-4 rounded-xl border border-border/50 bg-card/85 p-6 shadow-sm dark:bg-card/50 sm:p-7">
-          <p className="text-sm font-medium leading-snug text-foreground">
-            Ready when you are
-          </p>
-          <p className="text-sm leading-relaxed text-muted-foreground">
-            Hold a time, then fine-tune service and barber in the booking flow.
-            Menu and team are one tap away if you want to browse first.
-          </p>
-          <div className="flex flex-col gap-3 pt-1">
-            <Button
-              asChild
-              size="lg"
-              className="h-12 w-full text-base shadow-sm sm:h-[3.25rem]"
-            >
-              <Link href="/book">Book now</Link>
-            </Button>
-            <Button asChild variant="outline" className="h-11 w-full sm:h-12">
-              <Link href="/services">View menu</Link>
-            </Button>
-            <Button asChild variant="ghost" className="h-11 w-full">
-              <Link href="/barbers">Meet the team</Link>
-            </Button>
+        <div className="flex flex-col gap-6 md:gap-8">
+          {hasMap ? (
+            <VisitLocationMap
+              latitude={branding!.shop_latitude!}
+              longitude={branding!.shop_longitude!}
+              label={`Map for ${locationTitle}`}
+            />
+          ) : null}
+
+          <div className="flex flex-col justify-center gap-4 rounded-xl border border-border/50 bg-card/85 p-6 shadow-sm dark:bg-card/50 sm:p-7">
+            <p className="text-sm font-medium leading-snug text-foreground">
+              Ready when you are
+            </p>
+            <p className="text-sm leading-relaxed text-muted-foreground">
+              Hold a time, then fine-tune service and barber in the booking flow.
+              Menu and team are one tap away if you want to browse first.
+            </p>
+            <div className="flex flex-col gap-3 pt-1">
+              <Button
+                asChild
+                size="lg"
+                className="h-12 w-full text-base shadow-sm sm:h-[3.25rem]"
+              >
+                <Link href="/book">Book now</Link>
+              </Button>
+              <Button asChild variant="outline" className="h-11 w-full sm:h-12">
+                <Link href="/services">View menu</Link>
+              </Button>
+              <Button asChild variant="ghost" className="h-11 w-full">
+                <Link href="/barbers">Meet the team</Link>
+              </Button>
+            </div>
           </div>
         </div>
       </div>

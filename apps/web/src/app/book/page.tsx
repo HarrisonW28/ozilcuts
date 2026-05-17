@@ -6,7 +6,6 @@ import { BookingSelectionChips } from "@/components/booking-selection-chips";
 import { BarberTrustBookingStrip } from "@/components/barber-trust";
 import { BookingSlotPicker } from "@/components/booking-slot-picker";
 import { StaffCustomerLookup } from "@/components/staff-customer-lookup";
-import { SiteHeader } from "@/components/site-header";
 import { SignInPromptCard } from "@/components/auth/sign-in-prompt-card";
 import { AUTH_COPY, bookPageDescription } from "@/lib/user-facing-copy";
 import { useShellPageChrome } from "@/lib/use-shell-page-chrome";
@@ -140,7 +139,7 @@ function BookingFlow() {
   const initialDate = parseIsoDateParam(search.get("date"), today);
   const wantsExpress = search.get("express") === "1";
 
-  const { profile, signOut } = useSessionProfile();
+  const { profile } = useSessionProfile();
 
   const [catalog, setCatalog] = useState<CatalogState>({ kind: "loading" });
   const [serviceId, setServiceId] = useState<number | null>(initialServiceId);
@@ -520,7 +519,8 @@ function BookingFlow() {
     barberId !== null &&
     selectedSlot !== null &&
     (!isStaffBooker || selectedCustomer !== null);
-  const { inAppShell, useCompactShellHeader } = useShellPageChrome();
+  const { inAppShell, showScreenTitle, useCompactShellHeader } =
+    useShellPageChrome();
   const needsMobileBookPadding =
     bookingSelectionComplete && !useCompactShellHeader;
 
@@ -540,9 +540,6 @@ function BookingFlow() {
 
   return (
     <>
-      {!inAppShell ? (
-        <SiteHeader profile={profile} onSignOut={signOut} />
-      ) : null}
       <main id="main-content" className="page-main app-shell-scroll flex-1">
         <div
           className={cn(
@@ -551,11 +548,17 @@ function BookingFlow() {
               "pb-[calc(5.75rem+env(safe-area-inset-bottom,0px))] lg:pb-0",
           )}
         >
-          <ScreenTitle
-            title={isStaffBooker ? "Book for a customer" : "Reserve your chair"}
-            description={bookPageDescription(isStaffBooker)}
-            className="gap-5 sm:gap-6"
-          />
+          {showScreenTitle ? (
+            <ScreenTitle
+              title={isStaffBooker ? "Book for a customer" : "Reserve your chair"}
+              description={bookPageDescription(isStaffBooker)}
+              className="gap-5 sm:gap-6"
+            />
+          ) : (
+            <h1 className="sr-only">
+              {isStaffBooker ? "Book for a customer" : "Reserve your chair"}
+            </h1>
+          )}
 
           {profile.kind === "loading" || profile.kind === "none" ? (
             <BookCatalogFormSkeleton />

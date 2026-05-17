@@ -100,7 +100,9 @@ class ShopHomeMarketingTest extends TestCase
 
         $logoUrl = $home['logo_url'] ?? '';
         $this->assertIsString($logoUrl);
-        $this->get($logoUrl)->assertOk();
+        $this->get($logoUrl)
+            ->assertOk()
+            ->assertHeader('Cross-Origin-Resource-Policy', 'cross-origin');
     }
 
     public function test_admin_can_upload_desktop_hero_video_and_public_endpoint_serves_url(): void

@@ -90,7 +90,7 @@ export function PublicHomeView({
         aria-labelledby="home-hero-heading"
       >
         <HomeCinematicHero videoSources={videoSources}>
-          <div className="home-cinematic-hero-content relative z-10 flex min-h-[min(100svh,56rem)] flex-col justify-end">
+          <div className="home-cinematic-hero-content flex min-h-[min(100svh,56rem)] flex-col justify-end">
             <div className="mx-auto w-full max-w-6xl px-4 pb-11 pt-11 sm:px-6 sm:pb-14 sm:pt-14 md:px-8 md:pb-16 md:pt-16 lg:pb-20 lg:pt-[5.5rem]">
               <div className="grid gap-8 sm:gap-10 md:grid-cols-[minmax(0,1fr)_minmax(11.5rem,14rem)] md:items-end md:gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(13rem,16rem)] lg:gap-16">
             <div>
