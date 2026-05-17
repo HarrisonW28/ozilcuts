@@ -87,11 +87,14 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     if (asChild) {
       return (
         <Slot
+          ref={ref}
           data-slot="button"
           className={classes}
           aria-busy={pending ? true : undefined}
           {...(props as ComponentPropsWithoutRef<typeof Slot>)}
-        />
+        >
+          {children}
+        </Slot>
       );
     }
 
