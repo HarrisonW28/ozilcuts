@@ -40,6 +40,7 @@ class User extends Authenticatable
         'shop_longitude',
         'shop_hero_video_path',
         'shop_hero_poster_path',
+        'shop_logo_path',
     ];
 
     /**

@@ -57,8 +57,8 @@ export function HomeBackgroundVideo({
   const layerClass =
     variant === "hero"
       ? autoplay
-        ? "pointer-events-none absolute inset-0 -z-30 overflow-hidden rounded-[inherit]"
-        : "home-video-layer -z-30 rounded-[inherit]"
+        ? "pointer-events-none absolute inset-0 -z-30 overflow-hidden"
+        : "home-video-layer -z-30"
       : "relative h-full w-full";
 
   return (

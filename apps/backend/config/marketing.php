@@ -12,4 +12,8 @@ return [
         'max_kilobytes' => (int) env('MARKETING_HERO_POSTER_MAX_KB', 5120),
     ],
 
+    'logo' => [
+        'max_kilobytes' => (int) env('MARKETING_LOGO_MAX_KB', 2048),
+    ],
+
 ];

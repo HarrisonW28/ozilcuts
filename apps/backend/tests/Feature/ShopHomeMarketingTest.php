@@ -19,9 +19,32 @@ class ShopHomeMarketingTest extends TestCase
 
         $this->getJson('/api/v1/public/home-marketing')
             ->assertOk()
+            ->assertJsonPath('data.logo_url', null)
             ->assertJsonPath('data.hero_mp4', null)
             ->assertJsonPath('data.hero_webm', null)
             ->assertJsonPath('data.hero_poster', null);
+    }
+
+    public function test_admin_can_upload_logo_and_public_endpoint_serves_url(): void
+    {
+        Storage::fake('public');
+
+        $admin = User::factory()->admin()->create();
+
+        $this->actingAs($admin, 'sanctum')
+            ->post('/api/v1/admin/marketing/logo', [
+                'logo' => UploadedFile::fake()->image('logo.png', 200, 80),
+            ])
+            ->assertOk()
+            ->assertJsonPath('shop_admin.shop_logo_path', fn ($path) => is_string($path) && $path !== '');
+
+        $admin->refresh();
+        $this->assertNotNull($admin->shop_logo_path);
+        Storage::disk('public')->assertExists($admin->shop_logo_path);
+
+        $this->getJson('/api/v1/public/home-marketing')
+            ->assertOk()
+            ->assertJsonPath('data.logo_url', fn ($url) => is_string($url) && str_contains($url, 'logo'));
     }
 
     public function test_admin_can_upload_hero_video_and_public_endpoint_serves_url(): void

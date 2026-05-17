@@ -29,9 +29,11 @@ export {
 export { getApiBaseUrl } from "./base";
 export {
   deleteShopHeroVideo,
+  deleteShopLogo,
   fetchPublicHomeMarketing,
   uploadShopHeroPoster,
   uploadShopHeroVideo,
+  uploadShopLogo,
 } from "./publicHomeMarketing";
 export {
   fetchBarberAnalytics,

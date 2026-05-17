@@ -19,6 +19,7 @@ final class ShopMarketingService
 
     /**
      * @return array{
+     *     logo_url: string|null,
      *     hero_mp4: string|null,
      *     hero_webm: string|null,
      *     hero_poster: string|null,
@@ -29,6 +30,7 @@ final class ShopMarketingService
         $admin = $this->shopAdmin();
         if ($admin === null) {
             return [
+                'logo_url' => null,
                 'hero_mp4' => null,
                 'hero_webm' => null,
                 'hero_poster' => null,
@@ -39,10 +41,46 @@ final class ShopMarketingService
         $extension = $this->extensionFromPath($admin->shop_hero_video_path);
 
         return [
+            'logo_url' => $this->publicUrl($admin->shop_logo_path),
             'hero_mp4' => $extension === 'mp4' ? $videoUrl : null,
             'hero_webm' => $extension === 'webm' ? $videoUrl : null,
             'hero_poster' => $this->publicUrl($admin->shop_hero_poster_path),
         ];
+    }
+
+    public function storeLogo(User $admin, UploadedFile $file): User
+    {
+        $this->assertShopAdmin($admin);
+        $this->imageValidator->assertValidImage($file);
+
+        if ($admin->shop_logo_path !== null) {
+            Storage::disk('public')->delete($admin->shop_logo_path);
+        }
+
+        $extension = strtolower((string) ($file->extension() ?: $file->getClientOriginalExtension()));
+        $path = $file->storeAs(
+            'marketing/logo',
+            'logo-'.now()->format('YmdHis').'.'.$extension,
+            'public',
+        );
+
+        $admin->shop_logo_path = $path;
+        $admin->save();
+
+        return $admin->fresh(['role']);
+    }
+
+    public function clearLogo(User $admin): User
+    {
+        $this->assertShopAdmin($admin);
+
+        if ($admin->shop_logo_path !== null) {
+            Storage::disk('public')->delete($admin->shop_logo_path);
+            $admin->shop_logo_path = null;
+            $admin->save();
+        }
+
+        return $admin->fresh(['role']);
     }
 
     public function storeHeroVideo(User $admin, UploadedFile $file): User

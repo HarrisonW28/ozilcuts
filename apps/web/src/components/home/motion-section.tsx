@@ -23,8 +23,8 @@ export function HomeMotionSection({
     <motion.section
       {...props}
       className={cn(className)}
-      initial={reduceMotion ? false : { opacity: 0, y: 20 }}
-      whileInView={reduceMotion ? undefined : { opacity: 1, y: 0 }}
+      initial={reduceMotion === false ? { opacity: 0, y: 20 } : false}
+      whileInView={reduceMotion === false ? { opacity: 1, y: 0 } : undefined}
       viewport={{ once: true, margin: "-48px 0px -24px 0px", amount: 0.2 }}
       transition={{
         duration: 0.4,

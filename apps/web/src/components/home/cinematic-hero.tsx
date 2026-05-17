@@ -1,7 +1,6 @@
 "use client";
 
 import { HomeBackgroundVideo } from "@/components/home/background-video";
-import { useHomeVideoPlayback } from "@/components/home/video-playback-context";
 import { useHomeVideoAutoplay } from "@/hooks/use-home-video-autoplay";
 import type { HomeVideoSources } from "@/lib/home-video-config";
 import { cn } from "@ozilcuts/ui";
@@ -14,8 +13,7 @@ type HomeCinematicHeroProps = {
 };
 
 /**
- * Full-bleed hero shell: deferred muted loop video, editorial gradients, and an
- * optional user pause control (session-scoped).
+ * Full-bleed hero shell: deferred muted loop video and editorial gradients.
  */
 export function HomeCinematicHero({
   children,
@@ -23,8 +21,7 @@ export function HomeCinematicHero({
   videoSources,
 }: HomeCinematicHeroProps) {
   const autoplay = useHomeVideoAutoplay({ enabled: true });
-  const { allowMotion, userPaused } = autoplay;
-  const { toggleUserPause } = useHomeVideoPlayback();
+  const { allowMotion } = autoplay;
 
   return (
     <div
@@ -59,22 +56,6 @@ export function HomeCinematicHero({
         </p>
       ) : null}
 
-      {allowMotion ? (
-        <div className="absolute right-3 top-3 z-20 sm:right-4 sm:top-4">
-          <button
-            type="button"
-            onClick={toggleUserPause}
-            aria-pressed={userPaused}
-            className={cn(
-              "pointer-events-auto rounded-full border border-white/35 bg-black/45 px-3 py-1.5 text-micro font-semibold uppercase tracking-widecaps text-white shadow-sm backdrop-blur-md",
-              "transition-[background-color,box-shadow] motion-safe:duration-[var(--motion-duration-fast)] motion-safe:ease-[var(--motion-ease-standard)]",
-              "hover:bg-black/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent",
-            )}
-          >
-            {userPaused ? "Play motion" : "Pause motion"}
-          </button>
-        </div>
-      ) : null}
 
       <div className="relative z-10">{children}</div>
     </div>

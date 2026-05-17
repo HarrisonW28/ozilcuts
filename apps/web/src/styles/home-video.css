@@ -9,7 +9,7 @@
   }
 
   .home-video-hero {
-    @apply h-full min-h-[22rem] w-full scale-[1.03] object-cover opacity-[0.72] saturate-[0.95] sm:min-h-0 sm:opacity-[0.78] dark:opacity-[0.68] dark:saturate-[0.9];
+    @apply absolute left-1/2 top-0 h-full min-h-full w-[100vw] max-w-none -translate-x-1/2 object-cover object-center opacity-[0.72] saturate-[0.95] sm:opacity-[0.78] dark:opacity-[0.68] dark:saturate-[0.9];
   }
 
   .home-video-ambient {
@@ -21,7 +21,7 @@
   }
 
   .home-video-fallback-hero {
-    @apply h-full min-h-[22rem] w-full bg-gradient-to-br from-muted/60 via-background/80 to-primary/[0.08] sm:min-h-full dark:from-muted/35 dark:via-background/70 dark:to-primary/[0.12];
+    @apply absolute left-1/2 top-0 h-full min-h-full w-[100vw] max-w-none -translate-x-1/2 bg-gradient-to-br from-muted/60 via-background/80 to-primary/[0.08] dark:from-muted/35 dark:via-background/70 dark:to-primary/[0.12];
   }
 
   .home-video-fallback-ambient {
@@ -29,11 +29,13 @@
   }
 
   .home-hero-bleed {
-    @apply relative left-1/2 w-screen max-w-[100vw] -translate-x-1/2;
+    @apply relative w-[100vw] max-w-[100vw] overflow-hidden;
+    margin-left: calc(50% - 50vw);
+    margin-right: calc(50% - 50vw);
   }
 
   .home-cinematic-hero-shell {
-    @apply relative isolate min-h-[min(88vh,52rem)] overflow-hidden rounded-none border-0 bg-card shadow-none ring-0 dark:bg-card/95;
+    @apply relative isolate w-full min-h-[min(88vh,52rem)] overflow-hidden rounded-none border-0 bg-card shadow-none ring-0 dark:bg-card/95;
   }
 
   .home-cinematic-hero-overlay {

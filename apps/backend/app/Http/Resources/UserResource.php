@@ -47,6 +47,7 @@ class UserResource extends JsonResource
                 'shop_default_hours' => $shopHours,
                 'shop_hero_video_path' => $this->shop_hero_video_path,
                 'shop_hero_poster_path' => $this->shop_hero_poster_path,
+                'shop_logo_path' => $this->shop_logo_path,
             ];
         }
 

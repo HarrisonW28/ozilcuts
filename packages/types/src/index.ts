@@ -524,9 +524,11 @@ export type ShopAdminState = {
   shop_default_hours: BarberAvailabilityPayload | null;
   shop_hero_video_path: string | null;
   shop_hero_poster_path: string | null;
+  shop_logo_path: string | null;
 };
 
 export type PublicHomeMarketing = {
+  logo_url: string | null;
   hero_mp4: string | null;
   hero_webm: string | null;
   hero_poster: string | null;

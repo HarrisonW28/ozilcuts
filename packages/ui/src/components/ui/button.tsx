@@ -1,7 +1,10 @@
-import { Button as ButtonPrimitive } from "@base-ui/react/button";
 import { Slot } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";
-import type { ComponentPropsWithoutRef } from "react";
+import {
+  forwardRef,
+  type ButtonHTMLAttributes,
+  type ComponentPropsWithoutRef,
+} from "react";
 
 import { cn } from "../../lib/utils";
 
@@ -43,7 +46,7 @@ const buttonVariants = cva(
   },
 );
 
-type ButtonProps = ButtonPrimitive.Props &
+type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> &
   VariantProps<typeof buttonVariants> & {
     /** Merge styles onto a child element (e.g. `next/link`). */
     asChild?: boolean;
@@ -63,48 +66,58 @@ function ButtonPendingSpinner() {
   );
 }
 
-function Button({
-  className,
-  variant = "default",
-  size = "default",
-  asChild = false,
-  pending = false,
-  disabled,
-  children,
-  ...props
-}: ButtonProps) {
-  const classes = cn(buttonVariants({ variant, size, className }));
-  const mergedDisabled = Boolean(disabled || pending);
+const Button = forwardRef<HTMLButtonElement, ButtonProps>(
+  (
+    {
+      className,
+      variant = "default",
+      size = "default",
+      asChild = false,
+      pending = false,
+      disabled,
+      type = "button",
+      children,
+      ...props
+    },
+    ref,
+  ) => {
+    const classes = cn(buttonVariants({ variant, size, className }));
+    const mergedDisabled = Boolean(disabled || pending);
 
-  if (asChild) {
+    if (asChild) {
+      return (
+        <Slot
+          data-slot="button"
+          className={classes}
+          aria-busy={pending ? true : undefined}
+          {...(props as ComponentPropsWithoutRef<typeof Slot>)}
+        />
+      );
+    }
+
     return (
-      <Slot
+      <button
+        ref={ref}
+        type={type}
         data-slot="button"
         className={classes}
+        disabled={mergedDisabled}
         aria-busy={pending ? true : undefined}
-        {...(props as ComponentPropsWithoutRef<typeof Slot>)}
-      />
+        {...props}
+      >
+        {pending ? (
+          <>
+            <ButtonPendingSpinner />
+            {children}
+          </>
+        ) : (
+          children
+        )}
+      </button>
     );
-  }
+  },
+);
 
-  return (
-    <ButtonPrimitive
-      data-slot="button"
-      className={classes}
-      disabled={mergedDisabled}
-      aria-busy={pending ? true : undefined}
-      {...props}
-    >
-      {pending ? (
-        <>
-          <ButtonPendingSpinner />
-          {children}
-        </>
-      ) : (
-        children
-      )}
-    </ButtonPrimitive>
-  );
-}
+Button.displayName = "Button";
 
 export { Button, buttonVariants };

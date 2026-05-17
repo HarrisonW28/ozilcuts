@@ -38,6 +38,8 @@ use App\Http\Controllers\Api\V1\AdminSecurityReviewController;
 use App\Http\Controllers\Api\V1\AdminShopHeroPosterStoreController;
 use App\Http\Controllers\Api\V1\AdminShopHeroVideoDestroyController;
 use App\Http\Controllers\Api\V1\AdminShopHeroVideoStoreController;
+use App\Http\Controllers\Api\V1\AdminShopLogoDestroyController;
+use App\Http\Controllers\Api\V1\AdminShopLogoStoreController;
 use App\Http\Controllers\Api\V1\PublicHomeMarketingController;
 use App\Http\Controllers\Api\V1\Auth\GoogleOAuthCallbackController;
 use App\Http\Controllers\Api\V1\Auth\GoogleOAuthRedirectController;
@@ -300,6 +302,10 @@ Route::middleware(['auth:sanctum', 'throttle:authenticated-api'])->group(functio
         ->middleware('throttle:30,1');
     Route::get('/admin/production-security', AdminProductionSecurityController::class)
         ->middleware('throttle:20,1');
+    Route::post('/admin/marketing/logo', AdminShopLogoStoreController::class)
+        ->middleware('throttle:10,1');
+    Route::delete('/admin/marketing/logo', AdminShopLogoDestroyController::class)
+        ->middleware('throttle:10,1');
     Route::post('/admin/marketing/hero-video', AdminShopHeroVideoStoreController::class)
         ->middleware('throttle:10,1');
     Route::post('/admin/marketing/hero-poster', AdminShopHeroPosterStoreController::class)

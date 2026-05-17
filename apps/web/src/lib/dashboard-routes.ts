@@ -23,7 +23,7 @@ export function getRoleSettingsHref(profile: ProfileState): string | null {
     case "barber":
       return "/notifications";
     case "admin":
-      return "/admin/services";
+      return "/admin/settings";
     default:
       return "/profile";
   }

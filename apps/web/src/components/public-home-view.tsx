@@ -6,7 +6,6 @@ import {
   HomeAmbientVideoPanel,
   HomeCinematicHero,
   HomeMotionSection,
-  HomeVideoPlaybackProvider,
 } from "@/components/home";
 import {
   GallerySyncBanner,
@@ -51,15 +50,7 @@ type PublicHomeViewProps = {
   videoSources?: HomeVideoSources;
 };
 
-export function PublicHomeView(props: PublicHomeViewProps) {
-  return (
-    <HomeVideoPlaybackProvider>
-      <PublicHomeViewInner {...props} />
-    </HomeVideoPlaybackProvider>
-  );
-}
-
-function PublicHomeViewInner({
+export function PublicHomeView({
   heroTitle,
   heroDescription,
   profileGuest,
@@ -79,7 +70,7 @@ function PublicHomeViewInner({
   return (
     <div className="space-y-16 md:space-y-24 lg:space-y-28">
       <section
-        className="home-hero-bleed motion-enter scroll-mt-28"
+        className="home-hero-bleed scroll-mt-28"
         aria-labelledby="home-hero-heading"
       >
         <HomeCinematicHero videoSources={videoSources}>

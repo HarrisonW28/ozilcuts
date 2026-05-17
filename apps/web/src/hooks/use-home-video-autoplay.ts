@@ -1,6 +1,5 @@
 "use client";
 
-import { useOptionalHomeVideoPlayback } from "@/components/home/video-playback-context";
 import {
   readNavigatorSaveData,
   readSlowConnection,
@@ -15,7 +14,7 @@ export type UseHomeVideoAutoplayOptions = {
 
 /**
  * Defers loading until the container is on screen, respects reduced motion,
- * Save-Data, slow connections, tab visibility, and global user pause.
+ * Save-Data, slow connections, and tab visibility.
  */
 export function useHomeVideoAutoplay({
   enabled,
@@ -23,8 +22,6 @@ export function useHomeVideoAutoplay({
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const reduceMotion = useReducedMotion();
-  const playback = useOptionalHomeVideoPlayback();
-  const userPaused = playback?.userPaused ?? false;
 
   const [saveData, setSaveData] = useState(false);
   const [slowConnection, setSlowConnection] = useState(false);
@@ -83,14 +80,14 @@ export function useHomeVideoAutoplay({
   useEffect(() => {
     const v = videoRef.current;
     if (!v || !shouldMountVideo) return;
-    if (userPaused || !inView || !tabVisible) {
+    if (!inView || !tabVisible) {
       v.pause();
       return;
     }
     void v.play().catch(() => {
       /* autoplay policy */
     });
-  }, [shouldMountVideo, userPaused, inView, tabVisible]);
+  }, [shouldMountVideo, inView, tabVisible]);
 
   const onVideoError = useCallback(() => {
     setLoadError(true);
@@ -113,7 +110,6 @@ export function useHomeVideoAutoplay({
     reduceMotion: reduceMotion === true,
     saveData,
     slowConnection,
-    userPaused,
     loadError,
     isBuffering: shouldMountVideo && !isReady && !loadError,
     showStaticFallback: !allowMotion || loadError,

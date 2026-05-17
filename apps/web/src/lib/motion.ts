@@ -14,7 +14,8 @@ export const ozilcutsPageEnterTransition: Transition = {
 export function ozilcutsPageEnterInitial(
   prefersReducedMotion: boolean | null,
 ): { opacity: number; y: number } {
-  if (prefersReducedMotion === true) {
+  /** `null` during SSR/hydration — never hide content until motion preference is known. */
+  if (prefersReducedMotion !== false) {
     return { opacity: 1, y: 0 };
   }
   return { opacity: 0, y: 8 };

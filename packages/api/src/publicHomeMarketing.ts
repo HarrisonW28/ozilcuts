@@ -83,3 +83,35 @@ export async function deleteShopHeroVideo(token: string): Promise<void> {
     throw new Error("Unable to remove hero video.");
   }
 }
+
+export async function uploadShopLogo(token: string, logo: File): Promise<void> {
+  const body = new FormData();
+  body.append("logo", logo);
+
+  const res = await fetch(`${getApiBaseUrl()}/api/v1/admin/marketing/logo`, {
+    method: "POST",
+    headers: {
+      Accept: "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body,
+  });
+
+  if (!res.ok) {
+    throw new Error("Unable to upload shop logo.");
+  }
+}
+
+export async function deleteShopLogo(token: string): Promise<void> {
+  const res = await fetch(`${getApiBaseUrl()}/api/v1/admin/marketing/logo`, {
+    method: "DELETE",
+    headers: {
+      Accept: "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!res.ok) {
+    throw new Error("Unable to remove shop logo.");
+  }
+}
