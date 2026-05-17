@@ -6,6 +6,7 @@ import {
   HomeCinematicHero,
   HomeMotionSection,
 } from "@/components/home";
+import { SiteBrandMark } from "@/components/site-brand-mark";
 import {
   GallerySyncBanner,
   InstagramSection,
@@ -103,11 +104,19 @@ export function PublicHomeView({
                   <h1 id="home-hero-heading" className="sr-only">
                     Home
                   </h1>
+                  <Skeleton className="home-hero-logo h-16 w-48 max-w-full rounded-lg sm:h-20 sm:w-56" />
                   <Skeleton className="h-12 w-[min(100%,22rem)] rounded-lg sm:h-14" />
                   <Skeleton className="h-20 w-full max-w-xl rounded-lg" />
                 </div>
               ) : (
                 <>
+                  <Link
+                    href="/"
+                    aria-label="Home"
+                    className="home-hero-logo motion-interactive inline-flex touch-manipulation outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent"
+                  >
+                    <SiteBrandMark variant="site" size="large" />
+                  </Link>
                   <h1
                     id="home-hero-heading"
                     className="text-balance text-[2.35rem] font-semibold leading-[1.06] tracking-[-0.03em] text-foreground sm:text-5xl sm:tracking-tight md:text-6xl lg:text-[3.45rem]"

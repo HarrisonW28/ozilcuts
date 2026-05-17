@@ -222,18 +222,11 @@ export function SiteHeader({ profile, onSignOut }: SiteHeaderProps) {
         >
           {isHome ? (
             <>
-              <div className="flex min-w-0 items-center gap-2 justify-self-start sm:gap-3">
+              <div className="flex min-w-0 items-center gap-2 sm:gap-3">
                 {mobileMenuButton}
                 {desktopNav}
               </div>
-              <Link
-                href="/"
-                aria-label="Home"
-                className={cn(logoLinkClass, "site-header-logo justify-self-center px-1")}
-              >
-                <SiteBrandMark variant="site" size="large" />
-              </Link>
-              <div className="flex items-center justify-end gap-2 justify-self-end sm:gap-3">
+              <div className="flex items-center justify-end gap-2 sm:gap-3">
                 <div className="hidden md:flex md:items-center">
                   <ModeToggle />
                 </div>
