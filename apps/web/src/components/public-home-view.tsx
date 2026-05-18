@@ -92,7 +92,21 @@ export function PublicHomeView({
       >
         <HomeCinematicHero videoSources={videoSources}>
           <div className="home-cinematic-hero-content flex min-h-0 flex-1 flex-col justify-end">
-            <div className="mx-auto w-full max-w-6xl px-4 pb-11 pt-11 sm:px-6 sm:pb-14 sm:pt-14 md:px-8 md:pb-16 md:pt-16 lg:pb-20 lg:pt-[5.5rem]">
+            <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col justify-end px-4 pb-11 pt-8 sm:px-6 sm:pb-14 sm:pt-10 md:px-8 md:pb-16 md:pt-12 lg:pb-20 lg:pt-14">
+              {!profilePending ? (
+                <Link
+                  href="/"
+                  aria-label="Home"
+                  className="home-hero-logo motion-interactive inline-flex touch-manipulation outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent"
+                >
+                  <SiteBrandMark variant="site" size="large" />
+                </Link>
+              ) : (
+                <Skeleton
+                  className="home-hero-logo mx-auto h-20 w-56 max-w-full rounded-lg sm:h-24 sm:w-64 md:h-28 md:w-72"
+                  aria-hidden
+                />
+              )}
               <div className="grid gap-8 sm:gap-10 md:grid-cols-[minmax(0,1fr)_minmax(11.5rem,14rem)] md:items-end md:gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(13rem,16rem)] lg:gap-16">
             <div>
               {profilePending ? (
@@ -104,19 +118,11 @@ export function PublicHomeView({
                   <h1 id="home-hero-heading" className="sr-only">
                     Home
                   </h1>
-                  <Skeleton className="home-hero-logo h-16 w-48 max-w-full rounded-lg sm:h-20 sm:w-56" />
                   <Skeleton className="h-12 w-[min(100%,22rem)] rounded-lg sm:h-14" />
                   <Skeleton className="h-20 w-full max-w-xl rounded-lg" />
                 </div>
               ) : (
                 <>
-                  <Link
-                    href="/"
-                    aria-label="Home"
-                    className="home-hero-logo motion-interactive inline-flex touch-manipulation outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent"
-                  >
-                    <SiteBrandMark variant="site" size="large" />
-                  </Link>
                   <h1
                     id="home-hero-heading"
                     className="text-balance text-[2.35rem] font-semibold leading-[1.06] tracking-[-0.03em] text-foreground sm:text-5xl sm:tracking-tight md:text-6xl lg:text-[3.45rem]"

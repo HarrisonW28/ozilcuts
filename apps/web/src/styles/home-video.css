@@ -18,7 +18,13 @@
   }
 
   .home-cinematic-hero-shell {
-    @apply relative isolate flex w-full max-w-none flex-col overflow-hidden rounded-none border-0 shadow-none ring-0;
+    @apply relative isolate grid w-full max-w-none overflow-hidden rounded-none border-0 shadow-none ring-0;
+    grid-template: 1fr / 1fr;
+    height: clamp(
+      28rem,
+      calc(100svh - var(--site-header-offset, 4.75rem)),
+      56rem
+    );
     min-height: clamp(
       28rem,
       calc(100svh - var(--site-header-offset, 4.75rem)),
@@ -26,28 +32,30 @@
     );
   }
 
-  /** Video + overlays: pinned to shell bounds (same box as foreground). */
+  /** Video + overlays: same grid cell as foreground — always fills shell. */
   .home-cinematic-hero-backdrop {
-    @apply pointer-events-none absolute inset-0 z-0 overflow-hidden;
+    @apply pointer-events-none relative z-0 min-h-0 w-full overflow-hidden;
+    grid-area: 1 / 1;
+    min-height: 100%;
   }
 
-  /** Content layer — same min-height as shell; sits above backdrop. */
+  /** Content layer — stacked above backdrop in the same grid cell. */
   .home-cinematic-hero-foreground {
-    @apply relative z-10 flex min-h-0 w-full flex-1 flex-col bg-transparent;
-    min-height: clamp(
-      28rem,
-      calc(100svh - var(--site-header-offset, 4.75rem)),
-      56rem
-    );
+    @apply relative z-10 flex min-h-0 w-full flex-col bg-transparent;
+    grid-area: 1 / 1;
   }
 
-  /** Matches foreground bounds; cover-fill regardless of upload size. */
+  /** Full-bleed media stage inside backdrop. */
   .home-cinematic-hero-media {
-    @apply pointer-events-none absolute inset-0 h-full w-full overflow-hidden;
+    @apply pointer-events-none absolute inset-0 size-full overflow-hidden;
+  }
+
+  .home-hero-video-slot {
+    @apply absolute inset-0 size-full overflow-hidden;
   }
 
   .home-hero-logo {
-    @apply mb-5 block sm:mb-6 md:mb-8;
+    @apply mb-5 flex w-full justify-center sm:mb-6 md:mb-8;
   }
 
   .home-hero-logo .site-brand-mark-tagline {
@@ -55,7 +63,12 @@
   }
 
   .home-video-hero {
-    @apply absolute inset-0 block h-full w-full min-h-full min-w-full object-cover object-center opacity-[0.72] saturate-[0.95] motion-safe:scale-[1.02] sm:opacity-[0.78] dark:opacity-[0.68] dark:saturate-[0.9];
+    @apply absolute inset-0 block size-full min-h-full min-w-full object-cover object-center opacity-[0.72] saturate-[0.95] sm:opacity-[0.78] dark:opacity-[0.68] dark:saturate-[0.9];
+  }
+
+  /** Center-crop when object-fit alone leaves letterboxing on odd aspect ratios. */
+  .home-video-hero--cover {
+    @apply inset-auto left-1/2 top-1/2 h-auto w-auto min-h-full min-w-full max-w-none -translate-x-1/2 -translate-y-1/2 object-cover;
   }
 
   .home-video-ambient {
@@ -139,6 +152,10 @@
   }
 
   /** Homepage: logo lives in hero; header is nav + account only */
+  .site-header--home {
+    @apply bg-background shadow-[0_1px_0_0_var(--border)] supports-[backdrop-filter]:bg-background;
+  }
+
   .site-header--home .site-header-bar {
     @apply flex flex-wrap items-center justify-between gap-2 sm:gap-3;
   }

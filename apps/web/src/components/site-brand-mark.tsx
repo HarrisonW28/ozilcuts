@@ -16,7 +16,7 @@ const logoShellClassBySize = {
   default:
     "relative flex h-9 min-h-9 min-w-9 max-h-10 max-w-[10rem] shrink-0 items-center justify-center sm:h-10 sm:min-h-10 sm:min-w-10 sm:max-w-[11rem]",
   large:
-    "relative flex h-[4.5rem] min-h-[4.5rem] min-w-[4.5rem] max-h-[6.75rem] max-w-[min(100%,22rem)] shrink-0 items-center justify-center sm:h-[5.5rem] sm:min-h-[5.5rem] sm:min-w-[5.5rem] sm:max-w-[26rem] md:h-[6.75rem] md:min-h-[6.75rem] md:min-w-[6.75rem] md:max-w-[28rem]",
+    "relative flex h-[5.5rem] min-h-[5.5rem] min-w-[5.5rem] max-h-[8.5rem] max-w-[min(100%,28rem)] shrink-0 items-center justify-center sm:h-[6.75rem] sm:min-h-[6.75rem] sm:min-w-[6.75rem] sm:max-w-[32rem] md:h-[8.5rem] md:min-h-[8.5rem] md:min-w-[8.5rem] md:max-w-[36rem]",
 } as const;
 
 /**
@@ -49,7 +49,9 @@ export function SiteBrandMark({
           ? size === "large"
             ? "flex-col items-center gap-0"
             : "flex-col items-start gap-0"
-          : "items-center justify-center",
+          : size === "large"
+            ? "flex-col items-center justify-center"
+            : "items-center justify-center",
         className,
       )}
     >

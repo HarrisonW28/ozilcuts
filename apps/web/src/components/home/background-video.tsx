@@ -69,10 +69,7 @@ function SlotVideo({
 }: SlotVideoProps) {
   return (
     <div
-      className={cn(
-        "absolute inset-0 size-full min-h-full min-w-full overflow-hidden",
-        visibilityClass,
-      )}
+      className={cn("home-hero-video-slot", visibilityClass)}
       aria-hidden
     >
       {showStaticFallback ? (
@@ -89,7 +86,6 @@ function SlotVideo({
           loop
           playsInline
           preload={preload}
-          poster={bundle.poster ?? undefined}
           disablePictureInPicture
           disableRemotePlayback
           onError={onVideoError}
@@ -128,7 +124,9 @@ export function HomeBackgroundVideo({
   const mobileRef = useRef<HTMLVideoElement>(null);
 
   const videoClass =
-    variant === "hero" ? "home-video-hero" : "home-video-ambient";
+    variant === "hero"
+      ? "home-video-hero home-video-hero--cover"
+      : "home-video-ambient";
 
   const layerClass =
     variant === "hero"
